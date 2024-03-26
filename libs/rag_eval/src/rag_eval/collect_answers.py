@@ -1,10 +1,12 @@
-import pandas as pd
 import json
+
+import pandas as pd
 from openai import AzureOpenAI
 
 
 def to_context(doc_chunks):
     return [attachment["data"] for attachment in doc_chunks]
+
 
 def find_stage(stages, stage_name):
     for stage in stages:
@@ -13,10 +15,15 @@ def find_stage(stages, stage_name):
     return None
 
 
-def ask_dial_app(question, app_name, retrieval_stage=None, messages_template='[{{ "role": "user", "content": "{}" }}]'):
+def ask_dial_app(
+    question,
+    app_name,
+    retrieval_stage=None,
+    messages_template='[{{ "role": "user", "content": "{}" }}]',
+):
     dial_client = AzureOpenAI(
-        azure_endpoint = 'https://dev-dial-core.staging.deltixhub.io',
-        api_version="2023-05-15"
+        azure_endpoint="https://dev-dial-core.staging.deltixhub.io",
+        api_version="2023-05-15",
     )
 
     messages = json.loads(messages_template.format(question))
@@ -36,9 +43,7 @@ def ask_dial_app(question, app_name, retrieval_stage=None, messages_template='[{
             doc_chunks = ans_message.custom_content["attachments"]
     except Exception as e:
         print(repr(e))
-        
-    return pd.Series({
-        "question": question,
-        "answer": answer,
-        "context": to_context(doc_chunks)
-    })
+
+    return pd.Series(
+        {"question": question, "answer": answer, "context": to_context(doc_chunks)}
+    )
