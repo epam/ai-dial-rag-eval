@@ -18,6 +18,11 @@ datasets = get_all_datasets_list()
 dataset_path = st.sidebar.selectbox("Select dataset", datasets)
 
 
+if st.sidebar.button("Refresh cache"):
+    st.cache_data.clear()
+
+st.markdown(f"Dataset: {dataset_path}")
+
 show_as_dataset = st.toggle("View as dataframe", value=True)
 
 

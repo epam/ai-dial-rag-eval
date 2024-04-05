@@ -61,7 +61,7 @@ st.markdown("Eval data with metrics")
 
 show_as_highlighted_table = st.toggle("Highlighted table", value=False)
 if show_as_highlighted_table:
-    highlight_df = highlight_details(eval_data_with_metrics)
+    highlight_df = highlight_details(eval_data_with_metrics, canonize_strings=True)
     st.markdown(highlight_df.to_html(), unsafe_allow_html=True)
 else:
     metrics_columns = ["Recall", "Precision", "F1", "MRR"]
