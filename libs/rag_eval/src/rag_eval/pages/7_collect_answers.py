@@ -1,8 +1,9 @@
 import pandas as pd
 import streamlit as st
-from collect_answers import ask_dial_app
-from data import get_questions_datasets_list, read_dataset, write_answers
 from stqdm import stqdm
+
+from rag_eval.collect_answers import ask_dial_app
+from rag_eval.data import get_questions_datasets_list, read_dataset, write_answers
 
 st.set_page_config(
     page_title="Questions",

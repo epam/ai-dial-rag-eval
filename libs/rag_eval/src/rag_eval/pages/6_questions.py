@@ -2,7 +2,8 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
-from data import write_questions
+
+from rag_eval.data import write_questions
 
 st.set_page_config(
     page_title="Questions",

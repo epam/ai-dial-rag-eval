@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from data import get_evaluation_results_datasets_list, read_dataset
+
+from rag_eval.data import get_evaluation_results_datasets_list, read_dataset
 
 st.set_page_config(
     page_title="Comparison",

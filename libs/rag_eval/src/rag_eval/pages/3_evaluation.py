@@ -1,13 +1,14 @@
 import streamlit as st
-from data import (
+
+from rag_eval.data import (
     get_answers_datasets_list,
     get_ground_truth_datasets_list,
     read_answers,
     read_ground_truth,
     write_evaluation_results,
 )
-from evaluate import evaluation_report
-from highlight import highlight_details
+from rag_eval.evaluate import evaluation_report
+from rag_eval.highlight import highlight_details
 
 st.set_page_config(
     page_title="Evaluation",

@@ -1,8 +1,9 @@
 import pandas as pd
 import streamlit as st
-from data import get_answers_datasets_list, read_dataset, write_ground_truth
-from extract_facts import extract_facts_raw_mixtral
 from stqdm import stqdm
+
+from rag_eval.data import get_answers_datasets_list, read_dataset, write_ground_truth
+from rag_eval.extract_facts import extract_facts_raw_mixtral
 
 st.set_page_config(
     page_title="Ground truth",

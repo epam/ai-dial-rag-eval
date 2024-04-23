@@ -1,11 +1,19 @@
-from rag_eval.match_facts import match_facts  # noqa: F401
-from rag_eval.metrics import (  # noqa: F401
-    calculate_f1,
-    calculate_mrr,
-    calculate_precision,
-    calculate_recall,
-)
+import os
+from pathlib import Path
+
+import pytest
+from streamlit.testing.v1 import AppTest
+
+os.environ["DATA_ROOT_PATH"] = "../../data"
+
+APP_ROOT_PATH = Path(__file__).parent.parent / "src/rag_eval"
+
+PAGES_PATH = [str(p) for p in APP_ROOT_PATH.glob("pages/*.py")]
 
 
-def test():
-    pass
+@pytest.mark.parametrize("page_path", PAGES_PATH)
+def test_app(page_path):
+    app = AppTest.from_file(page_path)
+    app.run()
+
+    assert not app.exception

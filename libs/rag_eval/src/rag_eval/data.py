@@ -1,3 +1,4 @@
+import os
 import posixpath
 from dataclasses import dataclass
 
@@ -8,7 +9,11 @@ import streamlit as st
 # TODO : Make fs and dir paths configurable
 fs = fsspec.filesystem("file")
 
-data_dir = fs.info("data", detail=False)["name"]
+
+data_root_path = os.environ.get("DATA_ROOT_PATH", "./data")
+# data_root_path = os.environ.get("DATA_ROOT_PATH", "../../data")
+
+data_dir = fs.info(data_root_path, detail=False)["name"]
 ground_truth_dir = posixpath.join(data_dir, "ground_truth")
 answers_dir = posixpath.join(data_dir, "answers")
 evaluation_results_dir = posixpath.join(data_dir, "evaluation_results")

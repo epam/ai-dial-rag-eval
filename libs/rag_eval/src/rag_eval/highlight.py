@@ -1,4 +1,4 @@
-from match_facts import canonize
+from rag_eval.match_facts import canonize
 
 
 def highlight_context_by_facts(

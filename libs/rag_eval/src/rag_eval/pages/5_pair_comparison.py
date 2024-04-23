@@ -1,6 +1,7 @@
 import streamlit as st
-from data import get_evaluation_results_datasets_list, read_dataset
-from highlight import highlight_context_by_facts
+
+from rag_eval.data import get_evaluation_results_datasets_list, read_dataset
+from rag_eval.highlight import highlight_context_by_facts
 
 st.set_page_config(
     page_title="Pairwise comparison",
