@@ -1,7 +1,9 @@
 from match_facts import canonize
 
 
-def highlight_context_by_facts(row=None, facts_column="ground_truth_facts", context_column="context"):
+def highlight_context_by_facts(
+    row=None, facts_column="ground_truth_facts", context_column="context"
+):
     facts = row[facts_column]
     contexts = row[context_column]
 
