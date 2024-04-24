@@ -1,7 +1,6 @@
 import pandas as pd
-
-from rag_eval.match_facts import match_facts
-from rag_eval.metrics import (
+from rag_eval_metrics.facts.citation import CitationMatcher
+from rag_eval_metrics.metrics import (
     calculate_f1,
     calculate_mrr,
     calculate_precision,
@@ -12,7 +11,9 @@ from rag_eval.metrics import (
 def evaluate_retrieval(row):
     ground_truth_facts = row["ground_truth_facts"]
     context = row["context"]
-    facts_ranks, context_relevance = match_facts(ground_truth_facts, context)
+    facts_ranks, context_relevance = CitationMatcher.match_facts(
+        ground_truth_facts, context
+    )
 
     recall = calculate_recall(facts_ranks)
     precision = calculate_precision(context_relevance)

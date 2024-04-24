@@ -18,6 +18,7 @@ openpyxl = "^3.1.2"
 stqdm = "^0.0.5"
 langchain = "^0.1.14"
 langchain-openai = "^0.1.1"
+rag-eval-metrics = "*"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -32,6 +33,7 @@ flake8-black = "^0.3.6"
 flake8-bugbear = "^24.2.6"
 isort = "^5.13.2"
 flake8-isort = "^6.1.1"
+rag-eval-metrics = { path = "../rag_eval_metrics", develop = true}
 
 [build-system]
 requires = ["poetry-core"]

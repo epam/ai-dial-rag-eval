@@ -1,4 +1,4 @@
-from rag_eval.match_facts import canonize
+from rag_eval_metrics.facts.citation import CitationMatcher
 
 
 def highlight_context_by_facts(
@@ -40,11 +40,11 @@ def highlight_details(eval_data, canonize_strings=False):
     eval_data_canonized = eval_data.copy()
     if canonize_strings:
         eval_data_canonized["context"] = eval_data["context"].apply(
-            lambda x: [canonize(s) for s in x]
+            lambda x: [CitationMatcher._canonize(s) for s in x]
         )
         eval_data_canonized["ground_truth_facts"] = eval_data[
             "ground_truth_facts"
-        ].apply(lambda x: [canonize(s) for s in x])
+        ].apply(lambda x: [CitationMatcher._canonize(s) for s in x])
 
     eval_data_highlighted["context"] = eval_data_canonized.apply(
         highlight_context_by_facts, axis=1

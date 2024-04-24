@@ -1,6 +1,6 @@
 import nox
 
-nox.options.sessions = ("lint", "tests")
+nox.options.sessions = ("lint", "tests", "typecheck")
 nox.options.reuse_existing_virtualenvs = True
 locations = ("src", "tests", "noxfile.py")
 
@@ -27,8 +27,16 @@ def lint(session):
         "flake8-black",
         "flake8-bugbear",
         "flake8-isort",
+        "pyright",
     )
     session.run("flake8", *args)
+
+
+@nox.session(python=["3.11"])
+def typecheck(session):
+    args = session.posargs or ("src", "tests")
+    session.run("poetry", "install", external=True)
+    session.run("pyright", *args)
 
 
 @nox.session(python=["3.11"])
