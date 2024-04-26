@@ -1,13 +1,7 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import NamedTuple, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
-
-FactsRanks = np.ndarray
-ContextRelevance = np.ndarray
-
-FactMatchResult = tuple[FactsRanks, ContextRelevance]
-
 
 FactType = TypeVar("FactType")
 ContextChunk = str
@@ -16,12 +10,21 @@ Context = list[ContextChunk]
 Facts = list[FactType]
 
 
-class Matcher(Generic[FactType]):
+FactsRanks = np.ndarray
+ContextRelevance = np.ndarray
+
+
+class FactMatchResult(NamedTuple):
+    facts_ranks: FactsRanks
+    context_relevance: ContextRelevance
+
+
+@runtime_checkable
+class Matcher(Protocol[FactType]):
     @staticmethod
-    def match_facts(
+    def match_facts(  # noqa: E704
         facts: list[FactType], context: list[ContextChunk]
-    ) -> FactMatchResult:
-        raise NotImplementedError
+    ) -> FactMatchResult: ...
 
 
 Documents = list[str]

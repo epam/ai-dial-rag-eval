@@ -1,11 +1,17 @@
 import numpy as np
 
-from rag_eval_metrics.types import ContextRelevance, FactMatchResult, FactsRanks
+from rag_eval_metrics.types import (
+    Context,
+    ContextChunk,
+    ContextRelevance,
+    FactMatchResult,
+    Facts,
+    FactsRanks,
+)
 
 
 class CitationMatcher:
     Fact = str
-    ContextChunk = str
 
     @staticmethod
     def _canonize(text: str) -> str:
@@ -16,12 +22,12 @@ class CitationMatcher:
 
     @staticmethod
     def _match(fact: Fact, context_chunk: ContextChunk) -> bool:
-        return CitationMatcher._canonize(fact) in CitationMatcher._canonize(
-            context_chunk
-        )
+        canonized_fact = CitationMatcher._canonize(fact)
+        canonized_context_chunk = CitationMatcher._canonize(context_chunk)
+        return canonized_fact in canonized_context_chunk
 
     @staticmethod
-    def match_facts(facts: list[Fact], context: list[ContextChunk]) -> FactMatchResult:
+    def match_facts(facts: Facts[Fact], context: Context) -> FactMatchResult:
         facts_ranks: FactsRanks = np.full(len(facts), -1, dtype=int)
         context_relevance: ContextRelevance = np.zeros(len(context), dtype=int)
 
@@ -34,4 +40,6 @@ class CitationMatcher:
             if chunk_index >= 0:
                 context_relevance[facts_ranks[i]] += 1
 
-        return facts_ranks, context_relevance
+        return FactMatchResult(
+            facts_ranks=facts_ranks, context_relevance=context_relevance
+        )

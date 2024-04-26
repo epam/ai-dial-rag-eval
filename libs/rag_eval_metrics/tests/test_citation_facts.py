@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from rag_eval_metrics.facts.citation import CitationMatcher
+from rag_eval_metrics.facts.match_facts import match_facts
 
 
 def test_match_facts():
@@ -20,23 +21,24 @@ def test_dataframe():
             {"facts": ["fact2"], "context": ["some text with fact2"]},
             {
                 "facts": ["fact3", "fact4"],
-                "context": ["some text wit fact3 and fact4", "some extra text"],
+                "context": ["some text with fact3 and fact4", "some extra text"],
             },
         ]
     )
 
     result = data.apply(
-        lambda row: CitationMatcher.match_facts(row["facts"], row["context"]),
+        match_facts,
+        matched=CitationMatcher,
         axis=1,
+        result_type="expand",
     )
 
-    pd.testing.assert_series_equal(
+    pd.testing.assert_frame_equal(
         result,
-        pd.Series(
-            [
-                ([-1], [0, 0]),
-                ([0], [1]),
-                ([0, 0], [2, 0]),
-            ]
+        pd.DataFrame(
+            {
+                "facts_ranks": [[-1], [0], [0, 0]],
+                "context_relevance": [[0, 0], [1], [2, 0]],
+            }
         ),
     )

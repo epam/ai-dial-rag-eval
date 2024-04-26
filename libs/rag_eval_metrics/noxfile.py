@@ -2,10 +2,12 @@ import nox
 
 nox.options.sessions = ("lint", "tests", "typecheck")
 nox.options.reuse_existing_virtualenvs = True
-locations = ("src", "tests", "noxfile.py")
+
+LOCATIONS = ("src", "tests", "noxfile.py")
+PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12"]
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=PYTHON_VERSIONS)
 def tests(session):
     args = session.posargs or [
         "--cov=src",
@@ -20,7 +22,7 @@ def tests(session):
 
 @nox.session(python=["3.11"])
 def lint(session):
-    args = session.posargs or locations
+    args = session.posargs or LOCATIONS
     session.install(
         "flake8",
         "flake8-bandit",
@@ -32,7 +34,7 @@ def lint(session):
     session.run("flake8", *args)
 
 
-@nox.session(python=["3.11"])
+@nox.session(python=PYTHON_VERSIONS)
 def typecheck(session):
     args = session.posargs or ("src", "tests")
     session.run("poetry", "install", external=True)
@@ -41,13 +43,13 @@ def typecheck(session):
 
 @nox.session(python=["3.11"])
 def black(session):
-    args = session.posargs or locations
+    args = session.posargs or LOCATIONS
     session.install("black")
     session.run("black", *args)
 
 
 @nox.session(python=["3.11"])
 def isort(session):
-    args = session.posargs or locations
+    args = session.posargs or LOCATIONS
     session.install("isort")
     session.run("isort", *args)
