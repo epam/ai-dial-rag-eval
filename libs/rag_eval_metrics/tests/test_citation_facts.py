@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from rag_eval_metrics.dataframe.match_facts import match_facts
 from rag_eval_metrics.facts.citation import CitationMatcher
-from rag_eval_metrics.facts.match_facts import match_facts
 
 
 def test_match_facts():
@@ -28,7 +28,7 @@ def test_dataframe():
 
     result = data.apply(
         match_facts,
-        matched=CitationMatcher,
+        matcher=CitationMatcher,
         axis=1,
         result_type="expand",
     )
