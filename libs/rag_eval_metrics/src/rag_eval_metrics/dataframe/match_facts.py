@@ -5,6 +5,10 @@ from rag_eval_metrics.types import Matcher
 
 DEFAULT_MATCHER = CitationMatcher
 
+KEY_COLUMNS = ["documents", "question"]
+GROUND_TRUTH_COLUMNS = KEY_COLUMNS + ["facts"]
+ANSWERS_COLUMNS = KEY_COLUMNS + ["context"]
+
 
 def match_facts(row: pd.Series, matcher: Matcher) -> pd.Series:
     result_row = matcher.match_facts(row.facts, row.context)
@@ -19,7 +23,7 @@ def match_facts_dataframe(
     data = pd.merge(
         ground_truth,
         answers,
-        on=["question"],
+        on=KEY_COLUMNS,
     )
 
     result = data.apply(
@@ -29,6 +33,4 @@ def match_facts_dataframe(
         result_type="expand",
     )
 
-    result = pd.merge(data, result, left_index=True, right_index=True)
-
-    return result
+    return pd.merge(data, result, left_index=True, right_index=True)

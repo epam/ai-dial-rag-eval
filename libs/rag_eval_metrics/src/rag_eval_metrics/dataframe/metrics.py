@@ -10,6 +10,4 @@ def calculate_metrics(match_result_data: pd.DataFrame) -> pd.DataFrame:
         result_type="expand",
     )
 
-    # pyright complains that result is pd.DataFrame | pd.Series
-    assert isinstance(result, pd.DataFrame)
-    return result
+    return pd.merge(match_result_data, result, left_index=True, right_index=True)

@@ -15,14 +15,14 @@ test_fs, _ = fsspec.url_to_fs(f"dir::file://{TEST_DATA_PATH}/")
 
 def test_data_from_fsspec():
     ground_truth = pd.read_parquet(
-        "ground_truth_1.parquet",
+        "ground_truth_2.parquet",
         filesystem=test_fs,
-        columns=["question", "facts"],
+        columns=["documents", "question", "facts"],
     )
     answers = pd.read_parquet(
-        "answers_1.parquet",
+        "answers_2.parquet",
         filesystem=test_fs,
-        columns=["question", "context"],
+        columns=["documents", "question", "context"],
     )
 
     matched_result = match_facts_dataframe(ground_truth, answers)
