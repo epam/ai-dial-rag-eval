@@ -52,7 +52,7 @@ if not st.session_state.facts.empty:
         {
             "question": answers_data_selected["question"],
             "ground_truth_answer": answers_data_selected["answer"],
-            "ground_truth_facts": st.session_state.facts["facts"].apply(
+            "facts": st.session_state.facts["facts"].apply(
                 lambda x: "\n\n".join(x if x is not None else [])
             ),
             "validation_result": st.session_state.facts["validation_result"],
@@ -65,7 +65,7 @@ if not st.session_state.facts.empty:
         {
             "question": answers_data_selected["question"],
             "ground_truth_answer": answers_data_selected["answer"],
-            "ground_truth_facts": st.session_state.facts["facts"],
+            "facts": st.session_state.facts["facts"],
             "validation_result": st.session_state.facts["validation_result"],
         }
     )

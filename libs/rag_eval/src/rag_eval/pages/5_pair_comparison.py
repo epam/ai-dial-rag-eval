@@ -22,8 +22,8 @@ with st.spinner("Loading evaluation results..."):
     evaluation_result_2_data = read_dataset(evaluation_result_2)
 
     merge_columns = ["question"]
-    common_columns = ["ground_truth_facts"]
-    comparison_columns = ["context", "Recall"]
+    common_columns = ["facts"]
+    comparison_columns = ["context", "recall"]
 
     comparison_data = evaluation_result_1_data[
         merge_columns + common_columns + comparison_columns
@@ -33,9 +33,6 @@ with st.spinner("Loading evaluation results..."):
         suffixes=("_1", "_2"),
         validate="1:1",
     )
-
-# comparison_data["context_1"] = comparison_data["context_1"].apply(
-#    lambda x: "\n\n".join(x.tolist()))
 
 
 for column in ["context_1", "context_2"]:

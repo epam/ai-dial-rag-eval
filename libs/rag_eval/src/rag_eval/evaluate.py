@@ -7,11 +7,12 @@ def evaluation_report(ground_truth, answers, name="evaluation"):
     print(f"Ground truth: {len(ground_truth)}")
     print(f"Answers: {len(answers)}")
 
-    ground_truth_renames = ground_truth.rename(columns={"ground_truth_facts": "facts"})
-    eval_data = match_facts_dataframe(ground_truth_renames, answers)
+    eval_data = match_facts_dataframe(ground_truth, answers)
     print(f"Eval data dial-rag: {len(eval_data)}")
 
     metrics = calculate_metrics(eval_data)
+    metrics.drop(columns=eval_data.columns, inplace=True)
+
     metrics["len_facts"] = eval_data.facts_ranks.apply(len)
     metrics["len_context"] = eval_data.context_relevance.apply(len)
 

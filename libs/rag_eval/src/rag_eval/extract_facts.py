@@ -120,8 +120,8 @@ Example of the response format:
 
 def extract_facts_raw_mixtral_iteration(row, temperature=0, answer_column="answer"):
     model = AzureChatOpenAI(
-        # deployment_name='Mixtral-8x7B-Instruct-v0.1',
-        deployment_name="gpt-4-32k",
+        deployment_name='Mixtral-8x7B-Instruct-v0.1',
+        #deployment_name="gpt-4-32k",
         azure_endpoint="https://dev-dial-core.staging.deltixhub.io",
         openai_api_version="2023-03-15-preview",
         verbose=True,

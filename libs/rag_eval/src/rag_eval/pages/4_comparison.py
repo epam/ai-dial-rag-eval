@@ -25,11 +25,11 @@ with st.spinner("Loading evaluation results..."):
         row = pd.DataFrame(
             {
                 "Dataset": [dataset.display_name],
-                "Recall": [data["Recall"].mean()],
-                "Recall details": [data["Recall"].tolist()],
+                "Recall": [data["recall"].mean()],
+                "Recall details": [data["recall"].tolist()],
             }
         )
-        print(data["Recall"].tolist())
+        print(data["recall"].tolist())
         print()
 
         all_results = pd.concat([all_results, row], ignore_index=True)

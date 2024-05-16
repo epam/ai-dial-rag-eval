@@ -24,11 +24,15 @@ answers_path = st.sidebar.selectbox("Answers", get_answers_datasets_list())
 
 
 ground_truth_data = read_ground_truth(ground_truth_path)
+if not "documents" in ground_truth_data.columns:
+    ground_truth_data["documents"] = [""] * len(ground_truth_data)
 with st.expander(f"Ground truth: {ground_truth_path}"):
     st.dataframe(ground_truth_data)
 
 
 answers_data = read_answers(answers_path)
+if not "documents" in answers_data.columns:
+    answers_data["documents"] = [""] * len(answers_data)
 with st.expander(f"Answers: {answers_path}"):
     st.dataframe(answers_data)
 
