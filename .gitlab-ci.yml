@@ -10,3 +10,7 @@ test:
     - if: $CI_COMMIT_BRANCH  == "development"
   tags:
     - kubernetes
+  artifacts:
+    when: always
+    reports:
+      junit: libs/rag_eval_metrics/junit.xml

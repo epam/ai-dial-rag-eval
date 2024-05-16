@@ -15,6 +15,7 @@ def tests(session):
         "xml:coverage.xml",
         "--cov-report",
         "term",
+        "--junitxml=junit.xml",
     ]
     session.run("poetry", "install", external=True)
     session.run("pytest", *args)
