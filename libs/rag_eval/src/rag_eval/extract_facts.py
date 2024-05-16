@@ -1,10 +1,11 @@
 import json
 from json import JSONDecodeError
-from langchain_openai import AzureChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+
 import numpy as np
 import pandas as pd
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import AzureChatOpenAI
 
 
 def parse_facts(facts_raw):
@@ -13,7 +14,7 @@ def parse_facts(facts_raw):
         json_str = facts_raw.split("```json")[1].split("```")[0].strip()
 
     try:
-        #return json.loads(json_str)["facts"]
+        # return json.loads(json_str)["facts"]
         return json.loads(json_str, strict=False)["citations"]
     except JSONDecodeError as e:
         print(facts_raw)
@@ -54,8 +55,8 @@ def validate_facts(row, debug=True):
         if debug:
             print("No facts")
         return False
-    #context = json.dumps(from_context(row["context"]), indent=2)
-    #missing = [fact for fact in facts if fact not in context]
+    # context = json.dumps(from_context(row["context"]), indent=2)
+    # missing = [fact for fact in facts if fact not in context]
     context = "\n".join(from_context(row["context"]))
     context = canonize(context)
     facts = [canonize(fact) for fact in facts]
@@ -69,6 +70,7 @@ def validate_facts(row, debug=True):
 
     return not missing
 
+
 def classify_validation_result(row):
     if row["facts_is_valid"]:
         return "valid"
@@ -80,7 +82,7 @@ def classify_validation_result(row):
 
 
 EXTRACT_FACTS_PROMPT = ChatPromptTemplate.from_template(
-"""
+    """
 You are an citation extraction system. Your task is to extract the citations from the source documents which were used in the answer.
 
 You are given the following text from the source documents:
@@ -112,28 +114,28 @@ Example of the response format:
     ]
 }}
 ```
-""")
+"""  # noqa: B950
+)
+
 
 def extract_facts_raw_mixtral_iteration(row, temperature=0, answer_column="answer"):
     model = AzureChatOpenAI(
-        #deployment_name='Mixtral-8x7B-Instruct-v0.1',
-        deployment_name='gpt-4-32k',
-        azure_endpoint='https://dev-dial-core.staging.deltixhub.io',
-        openai_api_version='2023-03-15-preview',
+        deployment_name='Mixtral-8x7B-Instruct-v0.1',
+        #deployment_name="gpt-4-32k",
+        azure_endpoint="https://dev-dial-core.staging.deltixhub.io",
+        openai_api_version="2023-03-15-preview",
         verbose=True,
         streaming=True,
         temperature=temperature,
         max_tokens=1000,
     )
 
-
     chain = EXTRACT_FACTS_PROMPT | model | StrOutputParser()
-
 
     result = chain.invoke(
         {
             "question": row["question"],
-            #"context": row["context"],
+            # "context": row["context"],
             "context": json.dumps(from_context(row["context"]), indent=2),
             "text": row[answer_column],
         },
@@ -147,8 +149,12 @@ def extract_facts_raw_mixtral(row, answer_column="answer"):
         temperature = max(i, 1)
         result = extract_facts_raw_mixtral_iteration(row, temperature, answer_column)
         facts = parse_facts(result)
-        facts_is_valid = validate_facts({"facts": facts, "context": row["context"]}, False)
-        validation_result = classify_validation_result({"facts": facts, "facts_is_valid": facts_is_valid})
+        facts_is_valid = validate_facts(
+            {"facts": facts, "context": row["context"]}, False
+        )
+        validation_result = classify_validation_result(
+            {"facts": facts, "facts_is_valid": facts_is_valid}
+        )
         if validation_result != "bad_json":
             pd.Series({"facts": facts, "validation_result": validation_result})
             return facts, validation_result

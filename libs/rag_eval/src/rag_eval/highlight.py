@@ -1,7 +1,9 @@
-from match_facts import canonize
+from rag_eval_metrics.facts.citation import CitationMatcher
 
 
-def highlight_context_by_facts(row=None, facts_column="ground_truth_facts", context_column="context"):
+def highlight_context_by_facts(
+    row=None, facts_column="facts", context_column="context"
+):
     facts = row[facts_column]
     contexts = row[context_column]
 
@@ -18,8 +20,8 @@ def highlight_context_by_facts(row=None, facts_column="ground_truth_facts", cont
     return final_html_list
 
 
-def highlight_facts_by_context(row):
-    facts = row["ground_truth_facts"]
+def highlight_facts_by_context(row, facts_column="facts"):
+    facts = row[facts_column]
     contexts = row["context"]
 
     highlighted_facts = []
@@ -38,22 +40,22 @@ def highlight_details(eval_data, canonize_strings=False):
     eval_data_canonized = eval_data.copy()
     if canonize_strings:
         eval_data_canonized["context"] = eval_data["context"].apply(
-            lambda x: [canonize(s) for s in x]
+            lambda x: [CitationMatcher._canonize(s) for s in x]
         )
-        eval_data_canonized["ground_truth_facts"] = eval_data[
-            "ground_truth_facts"
-        ].apply(lambda x: [canonize(s) for s in x])
+        eval_data_canonized["facts"] = eval_data[
+            "facts"
+        ].apply(lambda x: [CitationMatcher._canonize(s) for s in x])
 
     eval_data_highlighted["context"] = eval_data_canonized.apply(
         highlight_context_by_facts, axis=1
     )
-    eval_data_highlighted["ground_truth_facts"] = eval_data_canonized.apply(
+    eval_data_highlighted["facts"] = eval_data_canonized.apply(
         highlight_facts_by_context, axis=1
     )
     return (
-        eval_data_highlighted[["question", "ground_truth_facts", "context"]]
+        eval_data_highlighted[["question", "facts", "context"]]
         .style.set_properties(width="5%", **{"text-align": "left", "escape": False})
         .set_properties(subset=["question"], width="10%")
-        .set_properties(subset=["ground_truth_facts"], width="25%")
+        .set_properties(subset=["facts"], width="25%")
         .set_properties(subset=["context"], width="65%")
     )

@@ -1,13 +1,14 @@
 import streamlit as st
-from data import (
+
+from rag_eval.data import (
     get_answers_datasets_list,
     get_ground_truth_datasets_list,
     read_answers,
     read_ground_truth,
     write_evaluation_results,
 )
-from evaluate import evaluation_report
-from highlight import highlight_details
+from rag_eval.evaluate import evaluation_report
+from rag_eval.highlight import highlight_details
 
 st.set_page_config(
     page_title="Evaluation",
@@ -23,11 +24,15 @@ answers_path = st.sidebar.selectbox("Answers", get_answers_datasets_list())
 
 
 ground_truth_data = read_ground_truth(ground_truth_path)
+if not "documents" in ground_truth_data.columns:
+    ground_truth_data["documents"] = [""] * len(ground_truth_data)
 with st.expander(f"Ground truth: {ground_truth_path}"):
     st.dataframe(ground_truth_data)
 
 
 answers_data = read_answers(answers_path)
+if not "documents" in answers_data.columns:
+    answers_data["documents"] = [""] * len(answers_data)
 with st.expander(f"Answers: {answers_path}"):
     st.dataframe(answers_data)
 

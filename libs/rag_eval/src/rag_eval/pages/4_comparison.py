@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from data import get_evaluation_results_datasets_list, read_dataset
+
+from rag_eval.data import get_evaluation_results_datasets_list, read_dataset
 
 st.set_page_config(
     page_title="Comparison",
@@ -24,11 +25,11 @@ with st.spinner("Loading evaluation results..."):
         row = pd.DataFrame(
             {
                 "Dataset": [dataset.display_name],
-                "Recall": [data["Recall"].mean()],
-                "Recall details": [data["Recall"].tolist()],
+                "Recall": [data["recall"].mean()],
+                "Recall details": [data["recall"].tolist()],
             }
         )
-        print(data["Recall"].tolist())
+        print(data["recall"].tolist())
         print()
 
         all_results = pd.concat([all_results, row], ignore_index=True)

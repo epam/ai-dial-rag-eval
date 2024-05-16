@@ -1,0 +1,16 @@
+test:
+  image: python:3.11-slim
+  stage: test
+  before_script:
+    - pip install poetry==1.8.2 nox==2023.4.22
+  script:
+    - cd libs/rag_eval_metrics && nox -p 3.11
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_COMMIT_BRANCH  == "development"
+  tags:
+    - kubernetes
+  artifacts:
+    when: always
+    reports:
+      junit: libs/rag_eval_metrics/junit.xml

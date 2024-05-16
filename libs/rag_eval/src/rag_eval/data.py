@@ -1,3 +1,4 @@
+import os
 import posixpath
 from dataclasses import dataclass
 
@@ -8,7 +9,11 @@ import streamlit as st
 # TODO : Make fs and dir paths configurable
 fs = fsspec.filesystem("file")
 
-data_dir = fs.info("data", detail=False)["name"]
+
+data_root_path = os.environ.get("DATA_ROOT_PATH", "./data")
+# data_root_path = os.environ.get("DATA_ROOT_PATH", "../../data")
+
+data_dir = fs.info(data_root_path, detail=False)["name"]
 ground_truth_dir = posixpath.join(data_dir, "ground_truth")
 answers_dir = posixpath.join(data_dir, "answers")
 evaluation_results_dir = posixpath.join(data_dir, "evaluation_results")
@@ -52,8 +57,10 @@ def get_answers_datasets_list() -> list[DatasetPath]:
 def get_evaluation_results_datasets_list() -> list[DatasetPath]:
     return list_data_files(evaluation_results_dir)
 
+
 def get_questions_datasets_list() -> list[DatasetPath]:
     return list_data_files(questions_dir)
+
 
 @st.cache_data
 def read_dataset(dataset_path: DatasetPath):
@@ -69,12 +76,15 @@ def read_ground_truth(dataset_path: DatasetPath):
 def read_answers(dataset_path: DatasetPath):
     return read_dataset(dataset_path)
 
+
 @st.cache_data
 def read_questions(dataset_path: DatasetPath):
     return read_dataset(dataset_path)
 
 
-def write_dataset(parent_dir: str, name: str, data: pd.DataFrame, rewrite: bool = False) -> DatasetPath:
+def write_dataset(
+    parent_dir: str, name: str, data: pd.DataFrame, rewrite: bool = False
+) -> DatasetPath:
     fs.makedirs(parent_dir, exist_ok=True)
     if not name.endswith(".parquet"):
         name = f"{name}.parquet"
@@ -92,11 +102,17 @@ def write_evaluation_results(name: str, data: pd.DataFrame) -> DatasetPath:
     return write_dataset(evaluation_results_dir, name, data, rewrite=True)
 
 
-def write_questions(name: str, data: pd.DataFrame, rewrite: bool=False) -> DatasetPath:
+def write_questions(
+    name: str, data: pd.DataFrame, rewrite: bool = False
+) -> DatasetPath:
     return write_dataset(questions_dir, name, data, rewrite)
 
-def write_answers(name: str, data: pd.DataFrame, rewrite: bool=False) -> DatasetPath:
+
+def write_answers(name: str, data: pd.DataFrame, rewrite: bool = False) -> DatasetPath:
     return write_dataset(answers_dir, name, data, rewrite)
 
-def write_ground_truth(name: str, data: pd.DataFrame, rewrite: bool=False) -> DatasetPath:
+
+def write_ground_truth(
+    name: str, data: pd.DataFrame, rewrite: bool = False
+) -> DatasetPath:
     return write_dataset(ground_truth_dir, name, data, rewrite)
