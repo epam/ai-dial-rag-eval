@@ -1,5 +1,7 @@
 from typing import Union
 
+import pandas as pd
+
 from rag_eval_metrics.dataframe.match_facts import (
     ANSWERS_COLUMNS,
     GROUND_TRUTH_COLUMNS,
@@ -21,10 +23,19 @@ def evaluate(
 
     matched_result_df = match_facts_dataframe(ground_truth_df, answers_df)
     metrics_df = calculate_metrics(matched_result_df)
+    aggregated_metrics = metrics_df.mean(numeric_only=True)
+    assert isinstance(aggregated_metrics, pd.Series)
+
     metrics = Dataset.write_dataframe(
         metrics_df,
         dest,
         sources=[ground_truth_dataset, answers_dataset],
         tools=get_tools_versions(),
+        metrics=aggregated_metrics.to_dict(),
+        statistics={
+            "Ground truth size": len(ground_truth_df),
+            "Answers size": len(answers_df),
+            "Evaluation data size": len(matched_result_df),
+        },
     )
     return metrics

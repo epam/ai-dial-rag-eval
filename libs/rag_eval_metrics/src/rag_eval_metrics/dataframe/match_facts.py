@@ -20,11 +20,19 @@ def match_facts_dataframe(
     answers: pd.DataFrame,
     matcher: Matcher = DEFAULT_MATCHER,
 ) -> pd.DataFrame:
+    ground_truth_copy = ground_truth.copy()
+    ground_truth_copy["documents"] = ground_truth_copy["documents"].apply(
+        lambda x: frozenset(x)
+    )
+    answers_copy = answers.copy()
+    answers_copy["documents"] = answers_copy["documents"].apply(lambda x: frozenset(x))
+
     data = pd.merge(
-        ground_truth,
-        answers,
+        ground_truth_copy,
+        answers_copy,
         on=KEY_COLUMNS,
     )
+    data["documents"] = ground_truth.loc[data.index, "documents"]
 
     result = data.apply(
         match_facts,
