@@ -1,10 +1,13 @@
 test:
-  image: python:3.11-slim
+  image: python:${PYTHON_VERSION}-slim
   stage: test
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.9", "3.10", "3.11", "3.12"]
   before_script:
     - pip install poetry==1.8.2 nox==2023.4.22
   script:
-    - cd libs/rag_eval_metrics && nox -p 3.11
+    - cd libs/rag_eval_metrics && nox -p ${PYTHON_VERSION}
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
     - if: $CI_COMMIT_BRANCH  == "development"
@@ -14,3 +17,23 @@ test:
     when: always
     reports:
       junit: libs/rag_eval_metrics/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: libs/rag_eval_metrics/coverage.xml
+
+build:
+  image: python:3.11-slim
+  stage: build
+  before_script:
+    - pip install poetry==1.8.2 nox==2023.4.22
+  script:
+    - cd libs/rag_eval_metrics && poetry build
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_COMMIT_BRANCH  == "development"
+  tags:
+    - kubernetes
+  artifacts:
+    paths:
+      - libs/rag_eval_metrics/dist
+    
