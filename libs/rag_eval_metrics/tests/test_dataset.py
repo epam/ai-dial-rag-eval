@@ -46,6 +46,7 @@ def test_dataset(tmp_path):
         "context",
         "facts_ranks",
         "context_relevance",
+        "context_highlight",
         "recall",
         "precision",
         "mrr",
