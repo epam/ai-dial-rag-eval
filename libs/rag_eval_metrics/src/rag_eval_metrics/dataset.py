@@ -13,6 +13,8 @@ class DatasetMetadata:
     sources: list["Dataset"]
     tools: dict[str, str]
     file_info: dict = Field(default_factory=dict)
+    metrics: dict = Field(default_factory=dict)
+    statistics: dict = Field(default_factory=dict)
 
     @staticmethod
     def read_metadata(metadata_path: str) -> "DatasetMetadata":
@@ -23,7 +25,7 @@ class DatasetMetadata:
     def create_missing_metadata(data_path: str) -> "DatasetMetadata":
         fs, _ = fsspec.url_to_fs(data_path)
         file_info = fs.info(data_path)
-        return DatasetMetadata(None, [], {}, file_info)
+        return DatasetMetadata(None, [], {}, file_info, {}, {})
 
 
 @dataclass
@@ -61,18 +63,29 @@ class Dataset:
         path: str,
         sources: Optional[list["Dataset"]] = None,
         tools: Optional[dict[str, str]] = None,
+        metrics: Optional[dict[str, float]] = None,
+        statistics: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ):
         sources = sources or []
         tools = tools or {}
+        metrics = metrics or {}
+        statistics = statistics or {}
         metadata_path, data_path = Dataset.handle_path(path)
 
         fs, _ = fsspec.url_to_fs(data_path)
         df.to_parquet(data_path, *args, **kwargs)
         file_info: dict = fs.info(data_path)
 
-        metadata = DatasetMetadata(datetime.now(), sources, tools, file_info=file_info)
+        metadata = DatasetMetadata(
+            datetime.now(),
+            sources,
+            tools,
+            file_info,
+            metrics,
+            statistics,
+        )
         fs.write_bytes(
             metadata_path, TypeAdapter(DatasetMetadata).dump_json(metadata, indent=2)
         )
