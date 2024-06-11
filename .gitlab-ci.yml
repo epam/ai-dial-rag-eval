@@ -25,8 +25,11 @@ build:
   image: python:3.11-slim
   stage: build
   before_script:
+    - apt-get -qq update
+    - apt-get install -y --no-install-recommends git
     - pip install poetry==1.8.2 nox==2023.4.22
   script:
+    - poetry self add poetry-git-version-plugin
     - poetry build
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
