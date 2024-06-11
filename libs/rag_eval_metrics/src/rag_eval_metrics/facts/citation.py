@@ -107,5 +107,5 @@ class CitationMatcher:
         return FactMatchResult(
             facts_ranks=facts_ranks,
             context_relevance=context_relevance,
-            context_highlight=np.array(context_highlight),
+            context_highlight=np.array(context_highlight, dtype=object),
         )
