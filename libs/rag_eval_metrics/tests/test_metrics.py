@@ -41,6 +41,7 @@ def test_metrics():
     match_result = FactMatchResult(
         facts_ranks=np.array([1, 2, 3, -1]),
         context_relevance=np.array([1, 0, 1, 0, 1]),
+        context_highlight=np.array(["", "", "", "", ""]),
     )
     metrics = calculate_metrics(match_result)
     assert metrics == {

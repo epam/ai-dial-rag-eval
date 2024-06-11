@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import NamedTuple, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
+import numpy.typing as npt
 
 FactType = TypeVar("FactType")
 ContextChunk = str
@@ -12,11 +13,13 @@ Facts = list[FactType]
 
 FactsRanks = np.ndarray
 ContextRelevance = np.ndarray
+ContextHighlight = npt.NDArray[np.str_]
 
 
 class FactMatchResult(NamedTuple):
     facts_ranks: FactsRanks
     context_relevance: ContextRelevance
+    context_highlight: ContextHighlight
 
 
 @runtime_checkable
