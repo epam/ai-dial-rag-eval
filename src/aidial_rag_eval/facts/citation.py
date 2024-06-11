@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from rag_eval_metrics.types import (
+from aidial_rag_eval.types import (
     Context,
     ContextChunk,
     ContextRelevance,

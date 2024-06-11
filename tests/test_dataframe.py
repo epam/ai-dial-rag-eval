@@ -3,8 +3,8 @@ from pathlib import Path
 import fsspec
 import pandas as pd
 
-from rag_eval_metrics.dataframe.match_facts import match_facts_dataframe
-from rag_eval_metrics.dataframe.metrics import calculate_metrics
+from aidial_rag_eval.dataframe.match_facts import match_facts_dataframe
+from aidial_rag_eval.dataframe.metrics import calculate_metrics
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
 

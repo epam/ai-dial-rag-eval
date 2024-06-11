@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rag_eval_metrics.dataframe.match_facts import match_facts
-from rag_eval_metrics.facts.citation import CitationMatcher
+from aidial_rag_eval.dataframe.match_facts import match_facts
+from aidial_rag_eval.facts.citation import CitationMatcher
 
 
 def test_match_facts():

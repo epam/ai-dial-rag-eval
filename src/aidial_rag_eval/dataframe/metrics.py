@@ -1,6 +1,6 @@
 import pandas as pd
 
-from rag_eval_metrics.metrics import calculate_metrics as calculate_metrics_by_row
+from aidial_rag_eval.metrics import calculate_metrics as calculate_metrics_by_row
 
 
 def calculate_metrics(match_result_data: pd.DataFrame) -> pd.DataFrame:

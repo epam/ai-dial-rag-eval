@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rag-eval-metrics"
+name = "aidial-rag-eval"
 version = "0.1.0"
 description = ""
 authors = ["Aliaksei Labanau <aliaksei_labanau@epam.com>"]

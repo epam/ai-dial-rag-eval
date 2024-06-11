@@ -2,7 +2,7 @@ import functools
 
 import numpy as np
 
-from rag_eval_metrics.types import ContextRelevance, FactMatchResult, FactsRanks
+from aidial_rag_eval.types import ContextRelevance, FactMatchResult, FactsRanks
 
 
 def calculate_recall(facts_ranks: FactsRanks) -> np.float64:
