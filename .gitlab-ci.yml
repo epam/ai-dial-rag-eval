@@ -1,3 +1,9 @@
+stages:
+  - tag
+  - test
+  - build
+
+
 test:
   image: python:${PYTHON_VERSION}-slim
   stage: test
@@ -21,6 +27,7 @@ test:
         coverage_format: cobertura
         path: coverage.xml
 
+
 build:
   image: python:3.11-slim
   stage: build
@@ -39,3 +46,23 @@ build:
   artifacts:
     paths:
       - dist
+
+
+"Tag branch":
+  image: alpine/git:v2.32.0
+  stage: tag
+  script:
+    - ver=$(echo -n $CI_COMMIT_REF_NAME | cut -f 2 -d '-') || ver=0.0
+    - minor_tag=$(git describe --abbrev=0 --tags | grep ^${ver} | cut -f 3 -d '.') || minor_tag=0
+    - release_tag=${ver}.$(( minor_tag+1 ))
+    - git remote set-url origin https://$GITLAB_ROBOT_NAME:$GITLAB_ROBOT_PUSH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
+    - git config user.name $GITLAB_ROBOT_NAME
+    - git config user.email ${GITLAB_ROBOT_EMAIL}
+    - git diff --quiet && git diff --staged --quiet || git commit -am "RobotBuild ${release_tag}"
+    - git tag ${release_tag}
+    - git push origin HEAD:${CI_COMMIT_REF_NAME} --tags
+  dependencies: []
+  rules:
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+  tags:
+    - kubernetes
