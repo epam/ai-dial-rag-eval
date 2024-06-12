@@ -54,7 +54,7 @@ build:
   stage: tag
   script:
     - ver=$(echo -n $CI_COMMIT_REF_NAME | cut -f 2 -d '-') || ver=0.0
-    - minor_tag=$(git describe --abbrev=0 --tags --match ${ver}.* | cut -f 3 -d '.')
+    - minor_tag=$(git describe --abbrev=0 --tags --match ${ver}.* | cut -f 3 -d '.' || echo "")
     - '[ -n "$minor_tag" ] && release_tag=${ver}.$(( minor_tag+1 )) || release_tag=${ver}.0'
     - git remote set-url origin https://$GITLAB_ROBOT_NAME:$GITLAB_ROBOT_PUSH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
     - git config user.name $GITLAB_ROBOT_NAME
