@@ -2,14 +2,14 @@ from typing import Union
 
 import pandas as pd
 
-from rag_eval_metrics.dataframe.match_facts import (
+from aidial_rag_eval.dataframe.match_facts import (
     ANSWERS_COLUMNS,
     GROUND_TRUTH_COLUMNS,
     match_facts_dataframe,
 )
-from rag_eval_metrics.dataframe.metrics import calculate_metrics
-from rag_eval_metrics.dataset import Dataset, source_dataset
-from rag_eval_metrics.utils import get_tools_versions
+from aidial_rag_eval.dataframe.metrics import calculate_metrics
+from aidial_rag_eval.dataset import Dataset, source_dataset
+from aidial_rag_eval.utils import get_tools_versions
 
 
 def evaluate(

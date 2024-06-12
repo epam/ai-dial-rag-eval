@@ -1,7 +1,7 @@
 import pandas as pd
 
-from rag_eval_metrics.facts.citation import CitationMatcher
-from rag_eval_metrics.types import Matcher
+from aidial_rag_eval.facts.citation import CitationMatcher
+from aidial_rag_eval.types import Matcher
 
 DEFAULT_MATCHER = CitationMatcher
 

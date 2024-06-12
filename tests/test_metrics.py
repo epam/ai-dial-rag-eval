@@ -2,14 +2,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rag_eval_metrics.metrics import (
+from aidial_rag_eval.metrics import (
     calculate_f1,
     calculate_metrics,
     calculate_mrr,
     calculate_precision,
     calculate_recall,
 )
-from rag_eval_metrics.types import FactMatchResult
+from aidial_rag_eval.types import FactMatchResult
 
 
 def test_precision():

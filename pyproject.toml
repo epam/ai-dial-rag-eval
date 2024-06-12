@@ -1,9 +1,12 @@
 [tool.poetry]
-name = "rag-eval-metrics"
-version = "0.1.0"
+name = "aidial-rag-eval"
+version = "0.0.0"
 description = ""
 authors = ["Aliaksei Labanau <aliaksei_labanau@epam.com>"]
 readme = "README.md"
+
+[tool.poetry-git-version-plugin]
+alpha_version_format = '{version}rc{distance}+{commit_hash}'
 
 [tool.poetry.dependencies]
 python = "^3.9"

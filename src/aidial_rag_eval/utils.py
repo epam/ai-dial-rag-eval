@@ -1,7 +1,7 @@
 from importlib.metadata import version
 from typing import Optional
 
-PKG_NAME = "rag-eval-metrics"
+PKG_NAME = "aidial-rag-eval"
 
 
 def get_tools_versions(tools: Optional[list[str]] = None) -> dict[str, str]:

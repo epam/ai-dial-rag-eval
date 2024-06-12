@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from rag_eval_metrics.evaluate import evaluate
+from aidial_rag_eval.evaluate import evaluate
 
 TEST_DATA_PATH = f"{Path(__file__).parent}/data"
 
@@ -21,7 +21,7 @@ def test_dataset(tmp_path):
     assert str(ground_truth) in sources_metadata_paths
     assert str(answers) in sources_metadata_paths
 
-    assert "rag-eval-metrics" in metrics.metadata.tools
+    assert "aidial-rag-eval" in metrics.metadata.tools
 
     print(metrics.metadata.metrics)
     assert metrics.metadata.metrics == {

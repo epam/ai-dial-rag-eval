@@ -7,7 +7,7 @@ test:
   before_script:
     - pip install poetry==1.8.2 nox==2023.4.22
   script:
-    - cd libs/rag_eval_metrics && nox -p ${PYTHON_VERSION}
+    - nox -p ${PYTHON_VERSION}
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
     - if: $CI_COMMIT_BRANCH  == "development"
@@ -16,18 +16,21 @@ test:
   artifacts:
     when: always
     reports:
-      junit: libs/rag_eval_metrics/junit.xml
+      junit: junit.xml
       coverage_report:
         coverage_format: cobertura
-        path: libs/rag_eval_metrics/coverage.xml
+        path: coverage.xml
 
 build:
   image: python:3.11-slim
   stage: build
   before_script:
+    - apt-get -qq update
+    - apt-get install -y --no-install-recommends git
     - pip install poetry==1.8.2 nox==2023.4.22
   script:
-    - cd libs/rag_eval_metrics && poetry build
+    - poetry self add poetry-git-version-plugin
+    - poetry build
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
     - if: $CI_COMMIT_BRANCH  == "development"
@@ -35,5 +38,4 @@ build:
     - kubernetes
   artifacts:
     paths:
-      - libs/rag_eval_metrics/dist
-    
+      - dist
