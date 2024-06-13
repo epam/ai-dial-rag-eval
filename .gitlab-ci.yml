@@ -2,6 +2,7 @@ stages:
   - tag
   - test
   - build
+  - publish
 
 
 test:
@@ -34,7 +35,7 @@ build:
   before_script:
     - apt-get -qq update
     - apt-get install -y --no-install-recommends git
-    - pip install poetry==1.8.2 nox==2023.4.22
+    - pip install poetry==1.8.2
   script:
     - poetry self add poetry-git-version-plugin
     - poetry build
@@ -65,5 +66,27 @@ build:
   dependencies: []
   rules:
     - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+  tags:
+    - kubernetes
+
+
+publish:
+  image: python:3.11-slim
+  stage: publish
+  variables:
+    POETRY_REPOSITORIES_ARTIFACTORY_DEV_URL: ${ARTIFACTORY_URL}/api/pypi/${ARTIFACTORY_PYTHON_DEV_REPOSITORY}
+    POETRY_HTTP_BASIC_ARTIFACTORY_DEV_USERNAME: ${ARTIFACTORY_USER}
+    POETRY_HTTP_BASIC_ARTIFACTORY_DEV_PASSWORD: ${ARTIFACTORY_PASS}
+  before_script:
+    - apt-get -qq update
+    - apt-get install -y --no-install-recommends git
+    - pip install poetry==1.8.2
+  script:
+    - poetry self add poetry-git-version-plugin
+    - poetry publish --repository artifactory-dev --dry-run
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_TAG
   tags:
     - kubernetes
