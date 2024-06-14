@@ -65,7 +65,7 @@ build:
     - git push origin HEAD:${CI_COMMIT_REF_NAME} --tags
   dependencies: []
   rules:
-    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/"
+    - if: "$CI_COMMIT_REF_SLUG =~ /^release-/ && $CI_COMMIT_MESSAGE !~ /^RobotBuild/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != 'development'"
   tags:
     - kubernetes
 
