@@ -83,7 +83,7 @@ publish:
     - pip install poetry==1.8.2
   script:
     - poetry self add poetry-git-version-plugin
-    - poetry publish --repository artifactory-dev --dry-run
+    - poetry publish --repository artifactory-dev
   dependencies:
     - build
   rules:
