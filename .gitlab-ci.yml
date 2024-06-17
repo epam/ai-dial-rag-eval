@@ -3,6 +3,7 @@ stages:
   - test
   - build
   - publish
+  - promote
 
 
 test:
@@ -91,3 +92,16 @@ publish:
   tags:
     - AWS
     - DockerExecutor
+
+
+promote:
+  stage: promote
+  script:
+    - curl -XPOST -u $ARTIFACTORY_USER:$ARTIFACTORY_PASS ${ARTIFACTORY_URL}/api/copy/${ARTIFACTORY_PYTHON_DEV_REPOSITORY}/aidial-rag-eval/${CI_COMMIT_TAG}?to=${ARTIFACTORY_PYTHON_REPOSITORY}/aidial-rag-eval/${CI_COMMIT_TAG}
+  rules:
+    - if: "$CI_COMMIT_TAG"
+      when: manual
+  tags:
+    - Linux
+    - AWS
+    - ShellExecutor
