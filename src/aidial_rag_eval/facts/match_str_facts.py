@@ -3,14 +3,13 @@ from typing import Tuple
 
 import numpy as np
 
-from aidial_rag_eval.types import (
-    Context,
+from aidial_rag_eval.retrieval.types import (
     ContextChunk,
     ContextRelevance,
     FactMatchResult,
-    Facts,
     FactsRanks,
 )
+from aidial_rag_eval.types import Context, Facts
 
 
 def highlight_chunk(

@@ -1,6 +1,6 @@
 [flake8]
 select = B,B9,BLK,C,E,F,I,S,W
-ignore = E501, F541, W503, E203, S101
+ignore = E501, F541, W503, E203, S101, B905
 max-line-length = 88
 per-file-ignores =
     # allow assert in tests

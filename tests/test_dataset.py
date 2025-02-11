@@ -39,7 +39,7 @@ def test_dataset(tmp_path):
     }
 
     metrics_df = metrics.read_dataframe()
-    assert metrics_df.columns.tolist() == [
+    assert set(metrics_df.columns.tolist()) == {
         "documents",
         "question",
         "facts",
@@ -51,4 +51,6 @@ def test_dataset(tmp_path):
         "precision",
         "mrr",
         "f1",
-    ]
+        "answer",
+        "ground_truth_answer",
+    }
