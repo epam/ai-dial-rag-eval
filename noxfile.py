@@ -9,14 +9,19 @@ PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12"]
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
-    args = session.posargs or [
-        "--cov=src",
-        "--cov-report",
-        "xml:coverage.xml",
-        "--cov-report",
-        "term",
-        "--junitxml=junit.xml",
-    ]
+    session_args = [arg.split("=")[0] for arg in session.posargs]
+    mode_args = ["--llm-mode"]
+    if set(session_args).issubset(mode_args):
+        args = session.posargs + [
+            "--cov=src",
+            "--cov-report",
+            "xml:coverage.xml",
+            "--cov-report",
+            "term",
+            "--junitxml=junit.xml",
+        ]
+    else:
+        args = session.posargs
     session.run("poetry", "install", external=True)
     session.run("pytest", *args)
 

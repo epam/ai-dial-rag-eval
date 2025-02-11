@@ -1,7 +1,8 @@
 from typing import Optional, Tuple
 
 from aidial_rag_eval.facts.match_str_facts import match_str_facts
-from aidial_rag_eval.types import Context, ContextChunk, FactMatchResult, Facts
+from aidial_rag_eval.retrieval.types import ContextChunk, FactMatchResult
+from aidial_rag_eval.types import Context, Facts
 
 
 class ExactStringMatcher:

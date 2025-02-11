@@ -9,7 +9,7 @@ from aidial_rag_eval.metrics import (
     calculate_precision,
     calculate_recall,
 )
-from aidial_rag_eval.types import FactMatchResult
+from aidial_rag_eval.retrieval.types import FactMatchResult
 
 
 def test_precision():

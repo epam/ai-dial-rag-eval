@@ -24,7 +24,6 @@ def test_data_from_fsspec():
         filesystem=test_fs,
         columns=["documents", "question", "context"],
     )
-
     matched_result = match_facts_dataframe(ground_truth, answers)
 
     expected_matched = pd.DataFrame(

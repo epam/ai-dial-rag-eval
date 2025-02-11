@@ -1,37 +1,18 @@
 from dataclasses import dataclass
-from typing import NamedTuple, Protocol, TypeVar, runtime_checkable
-
-import numpy as np
-import numpy.typing as npt
+from enum import Enum
+from typing import List, TypeVar
 
 FactType = TypeVar("FactType")
 ContextChunk = str
+Document = str
+Text = str
 
-Context = list[ContextChunk]
-Facts = list[FactType]
-
-
-FactsRanks = np.ndarray
-ContextRelevance = np.ndarray
-ContextHighlight = npt.NDArray[np.str_]
-
-
-class FactMatchResult(NamedTuple):
-    facts_ranks: FactsRanks
-    context_relevance: ContextRelevance
-    context_highlight: ContextHighlight
-
-
-@runtime_checkable
-class Matcher(Protocol[FactType]):
-    @staticmethod
-    def match_facts(  # noqa: E704
-        facts: list[FactType], context: list[ContextChunk]
-    ) -> FactMatchResult: ...
-
-
-Documents = list[str]
-Question = str
+Context = List[ContextChunk]
+Facts = List[FactType]
+Documents = List[Document]
+Question = Text
+Answer = Text
+GroundTruthAnswer = Text
 
 
 @dataclass
@@ -39,6 +20,7 @@ class GroundTruth:
     question: Question
     documents: Documents
     facts: Facts
+    answer: GroundTruthAnswer
 
 
 @dataclass
@@ -46,4 +28,27 @@ class CollectedAnswers:
     question: Question
     documents: Documents
     context: Context
-    answer: str
+    answer: Answer
+
+
+class GroundTruthColumns(str, Enum):
+    QUESTION = "question"
+    DOCUMENTS = "documents"
+    FACTS = "facts"
+    ANSWER = "answer"
+
+
+class AnswerColumns(str, Enum):
+    QUESTION = "question"
+    DOCUMENTS = "documents"
+    CONTEXT = "context"
+    ANSWER = "answer"
+
+
+class MergedColumns(str, Enum):
+    QUESTION = GroundTruthColumns.QUESTION.value
+    CONTEXT = AnswerColumns.CONTEXT.value
+    ANSWER = AnswerColumns.ANSWER.value
+    GROUND_TRUTH_ANSWER = "ground_truth_answer"
+    DOCUMENTS = GroundTruthColumns.DOCUMENTS.value
+    FACTS = GroundTruthColumns.FACTS.value
