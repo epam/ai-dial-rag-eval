@@ -13,6 +13,8 @@ def test_segment_text():
     ]
     assert segmented_text.delimiters == ["\n\t", " "]
 
+
+def test_segment_text_short():
     segmented_text = SegmentedText.from_text("A short sentence at the end. Short.")
     assert segmented_text.segments == ["A short sentence at the end. Short."]
     assert segmented_text.delimiters == []

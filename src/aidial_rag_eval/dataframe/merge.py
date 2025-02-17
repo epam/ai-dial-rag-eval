@@ -1,10 +1,13 @@
 import pandas as pd
 
-from aidial_rag_eval.types import AnswerColumns, GroundTruthColumns, MergedColumns
-
-GT_KEY_COLUMNS = [GroundTruthColumns.DOCUMENTS, GroundTruthColumns.QUESTION]
-A_KEY_COLUMNS = [AnswerColumns.DOCUMENTS, AnswerColumns.QUESTION]
-MERGED_KEY_COLUMNS = [MergedColumns.DOCUMENTS, MergedColumns.QUESTION]
+from aidial_rag_eval.types import (
+    ANSWERS_COLUMNS,
+    GROUND_TRUTH_COLUMNS,
+    MERGED_KEY_COLUMNS,
+    AnswerColumns,
+    GroundTruthColumns,
+    MergedColumns,
+)
 
 
 def merge_ground_truth_and_answers(
@@ -32,23 +35,23 @@ def merge_ground_truth_and_answers(
         The structure of the df_merged
         is described in `aidial_rag_eval.types.MergedColumns`.
     """
-    ground_truth_copy = ground_truth.copy()
+    ground_truth_copy = ground_truth[
+        ground_truth.columns.intersection(GROUND_TRUTH_COLUMNS)
+    ].copy()
+    assert isinstance(ground_truth_copy, pd.DataFrame)
+    answers_copy = answers[answers.columns.intersection(ANSWERS_COLUMNS)].copy()
+    assert isinstance(answers_copy, pd.DataFrame)
     if GroundTruthColumns.ANSWER in ground_truth_copy.columns:
         ground_truth_copy = ground_truth_copy.rename(
-            columns={GroundTruthColumns.ANSWER: MergedColumns.GROUND_TRUTH_ANSWER}
+            columns={
+                GroundTruthColumns.ANSWER.value: MergedColumns.GROUND_TRUTH_ANSWER.value
+            }
         )
     ground_truth_copy[GroundTruthColumns.DOCUMENTS] = ground_truth_copy[
         GroundTruthColumns.DOCUMENTS
     ].apply(frozenset)
-    answers_copy = answers.copy()
     answers_copy[AnswerColumns.DOCUMENTS] = answers_copy[AnswerColumns.DOCUMENTS].apply(
         frozenset
-    )
-    ground_truth_copy = ground_truth_copy.rename(
-        columns=dict(zip(GT_KEY_COLUMNS, MERGED_KEY_COLUMNS))
-    )
-    answers_copy = answers_copy.rename(
-        columns=dict(zip(A_KEY_COLUMNS, MERGED_KEY_COLUMNS))
     )
     data = pd.merge(
         ground_truth_copy,
@@ -58,4 +61,5 @@ def merge_ground_truth_and_answers(
     data[MergedColumns.DOCUMENTS] = answers_copy.loc[
         data.index, MergedColumns.DOCUMENTS
     ]
+    data[MergedColumns.DOCUMENTS] = data[MergedColumns.DOCUMENTS].apply(list)
     return data

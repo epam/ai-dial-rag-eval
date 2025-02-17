@@ -8,7 +8,6 @@ from aidial_rag_eval.dataframe.match_facts import DEFAULT_MATCHER
 from aidial_rag_eval.dataset import Dataset, source_dataset
 from aidial_rag_eval.generation.types import MetricBind
 from aidial_rag_eval.retrieval.types import Matcher
-from aidial_rag_eval.types import MergedColumns
 from aidial_rag_eval.utils import get_tools_versions
 
 
@@ -92,7 +91,6 @@ def evaluate(
     aggregated_metrics = df_final.mean(numeric_only=True)
     assert isinstance(aggregated_metrics, pd.Series)
 
-    df_final[MergedColumns.DOCUMENTS] = df_final[MergedColumns.DOCUMENTS].apply(list)
     metrics = Dataset.write_dataframe(
         df_final,
         dest,

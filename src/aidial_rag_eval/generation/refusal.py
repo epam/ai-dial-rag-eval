@@ -43,6 +43,11 @@ def calculate_batch_refusal(
     """
     detector = LLMRefusalDetector(llm, batch_size, max_concurrency)
     answers_split = [SegmentedText.from_text(text=answer) for answer in answers]
+    # As a heuristic, we send only the first 3 segments in the prompt.
+    # We believe that if there are 3 whole segments with information
+    # that is not related to refusal to answer,
+    # we will not consider such a response as a refusal to answer
+    # in any case.
     first_answers_sentences = [
         answers_split[i].get_joined_segments_by_range(0, 3)
         for i in range(len(answers_split))
@@ -86,6 +91,10 @@ def calculate_refusal(
         Returns the answer refusal.
     """
     refusal_returns = calculate_batch_refusal(
-        [answer], llm, max_concurrency, batch_size, show_progress_bar
+        answers=[answer],
+        llm=llm,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
     return refusal_returns[0]
