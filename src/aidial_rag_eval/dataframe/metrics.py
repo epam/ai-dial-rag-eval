@@ -148,14 +148,14 @@ def calculate_generation_metrics(
         Returns generation metrics dataframe.
     """
     df_merged_copy = df_merged.copy()
-    df_merged_copy[MergedColumns.CONTEXT] = df_merged_copy[MergedColumns.CONTEXT].apply(
-        lambda x: "\n".join(x)
-    )
+    df_merged_copy[MergedColumns.JOINED_CONTEXT] = df_merged_copy[
+        MergedColumns.CONTEXT
+    ].apply(lambda x: "\n".join(x))
     metric_results = dict()
     for metric_bind in metric_binds:
         metric_results.update(
             metric_binds_dict[metric_bind](
-                data=df_merged_copy,
+                df_merged=df_merged_copy,
                 llm=llm,
                 max_concurrency=max_concurrency,
                 batch_size=batch_size,

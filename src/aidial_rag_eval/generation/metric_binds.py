@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 from langchain_core.language_models import BaseChatModel
@@ -16,22 +16,14 @@ ANSWER_REFUSAL_PREFIX = "answer_"
 GT_ANSWER_REFUSAL_PREFIX = "ground_truth_"
 
 
-def _get_column_as_list_str(dataframe: pd.DataFrame, column: str) -> List[str]:
-    list_str = dataframe[column].to_list()
-    assert isinstance(list_str, list)
-    return list_str
-
-
-def _get_column_as_list_list_str(
-    dataframe: pd.DataFrame, column: str
-) -> List[List[str]]:
+def _get_column_as_list_str(dataframe: pd.DataFrame, column: str) -> List[Any]:
     list_str = dataframe[column].to_list()
     assert isinstance(list_str, list)
     return list_str
 
 
 def _wrapped_dataframe_inference(
-    data: pd.DataFrame,
+    df_merged: pd.DataFrame,
     premise_column: str,
     hypothesis_column: str,
     llm: BaseChatModel,
@@ -43,16 +35,16 @@ def _wrapped_dataframe_inference(
     show_progress_bar: bool = True,
 ) -> pd.DataFrame:
     inference_returns = calculate_batch_inference(
-        _get_column_as_list_str(data, premise_column),
-        _get_column_as_list_str(data, hypothesis_column),
-        llm,
-        (
-            _get_column_as_list_str(data, question_column)
+        premises=_get_column_as_list_str(df_merged, premise_column),
+        hypotheses=_get_column_as_list_str(df_merged, hypothesis_column),
+        llm=llm,
+        questions=(
+            _get_column_as_list_str(df_merged, question_column)
             if question_column is not None
             else None
         ),
-        (
-            _get_column_as_list_list_str(data, document_column)
+        list_documents=(
+            _get_column_as_list_str(df_merged, document_column)
             if document_column is not None
             else None
         ),
@@ -66,7 +58,7 @@ def _wrapped_dataframe_inference(
 
 
 def _wrapped_dataframe_refusal(
-    data: pd.DataFrame,
+    df_merged: pd.DataFrame,
     answer_column: str,
     llm: BaseChatModel,
     prefix: str,
@@ -75,8 +67,8 @@ def _wrapped_dataframe_refusal(
     show_progress_bar: bool = True,
 ) -> pd.DataFrame:
     refusal_returns = calculate_batch_refusal(
-        _get_column_as_list_str(data, answer_column),
-        llm,
+        answers=_get_column_as_list_str(df_merged, answer_column),
+        llm=llm,
         max_concurrency=max_concurrency,
         batch_size=batch_size,
         show_progress_bar=show_progress_bar,
@@ -87,81 +79,87 @@ def _wrapped_dataframe_refusal(
 
 
 def context_to_answer_inference(
-    data, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
-        data,
-        MergedColumns.CONTEXT,
-        MergedColumns.ANSWER,
-        llm,
-        C2A_INFERENCE_PREFIX,
-        None,
-        MergedColumns.DOCUMENTS,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        df_merged=df_merged,
+        premise_column=MergedColumns.JOINED_CONTEXT,
+        hypothesis_column=MergedColumns.ANSWER,
+        llm=llm,
+        prefix=C2A_INFERENCE_PREFIX,
+        # The last segment(sentence) of the question is attached to the premise.
+        # This can be helpful when the premise is the answer or ground truth
+        # and it is simple. Example:
+        # question: how many boxes are in the cupboard?
+        # answer (premise): 3.
+        # When the premise is the context, the question is not needed.
+        question_column=None,
+        document_column=MergedColumns.DOCUMENTS,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
 
 
 def answer_to_ground_truth_inference(
-    data, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
-        data,
-        MergedColumns.ANSWER,
-        MergedColumns.GROUND_TRUTH_ANSWER,
-        llm,
-        A2GT_INFERENCE_PREFIX,
-        MergedColumns.QUESTION,
-        MergedColumns.DOCUMENTS,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        df_merged=df_merged,
+        premise_column=MergedColumns.ANSWER,
+        hypothesis_column=MergedColumns.GROUND_TRUTH_ANSWER,
+        llm=llm,
+        prefix=A2GT_INFERENCE_PREFIX,
+        question_column=MergedColumns.QUESTION,
+        document_column=MergedColumns.DOCUMENTS,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
 
 
 def ground_truth_to_answer_inference(
-    data, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
-        data,
-        MergedColumns.GROUND_TRUTH_ANSWER,
-        MergedColumns.ANSWER,
-        llm,
-        GT2A_INFERENCE_PREFIX,
-        MergedColumns.QUESTION,
-        MergedColumns.DOCUMENTS,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        df_merged=df_merged,
+        premise_column=MergedColumns.GROUND_TRUTH_ANSWER,
+        hypothesis_column=MergedColumns.ANSWER,
+        llm=llm,
+        prefix=GT2A_INFERENCE_PREFIX,
+        question_column=MergedColumns.QUESTION,
+        document_column=MergedColumns.DOCUMENTS,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
 
 
 def answer_refusal(
-    data, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_refusal(
-        data,
-        MergedColumns.ANSWER,
-        llm,
-        ANSWER_REFUSAL_PREFIX,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        df_merged=df_merged,
+        answer_column=MergedColumns.ANSWER,
+        llm=llm,
+        prefix=ANSWER_REFUSAL_PREFIX,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
 
 
 def ground_truth_refusal(
-    data, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, batch_size, show_progress_bar, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_refusal(
-        data,
-        MergedColumns.GROUND_TRUTH_ANSWER,
-        llm,
-        GT_ANSWER_REFUSAL_PREFIX,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        df_merged=df_merged,
+        answer_column=MergedColumns.GROUND_TRUTH_ANSWER,
+        llm=llm,
+        prefix=GT_ANSWER_REFUSAL_PREFIX,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
 
 

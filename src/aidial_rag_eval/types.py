@@ -52,3 +52,11 @@ class MergedColumns(str, Enum):
     GROUND_TRUTH_ANSWER = "ground_truth_answer"
     DOCUMENTS = GroundTruthColumns.DOCUMENTS.value
     FACTS = GroundTruthColumns.FACTS.value
+    JOINED_CONTEXT = "joined_context"
+
+
+MERGED_KEY_COLUMNS = [MergedColumns.DOCUMENTS, MergedColumns.QUESTION]
+ANSWERS_COLUMNS = [col.value for col in AnswerColumns if isinstance(col, AnswerColumns)]
+GROUND_TRUTH_COLUMNS = [
+    col.value for col in GroundTruthColumns if isinstance(col, GroundTruthColumns)
+] + [MergedColumns.GROUND_TRUTH_ANSWER]

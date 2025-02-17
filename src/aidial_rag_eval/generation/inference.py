@@ -1,18 +1,18 @@
 import itertools
 import json
-from enum import Enum
 from itertools import chain
-from typing import List, Optional
+from typing import Iterable, List, Optional, Tuple, TypeVar
 
-import pandas as pd
+import numpy as np
 from langchain_core.language_models import BaseChatModel
 
 from aidial_rag_eval.generation.llm_models.converter import LLMNoPronounsBatchConverter
 from aidial_rag_eval.generation.llm_models.inference_scorer import LLMInferenceScorer
 from aidial_rag_eval.generation.types import (
     Hypothesis,
-    InferenceBatchItem,
+    InferenceInputs,
     InferenceReturn,
+    InferenceScore,
     JoinedDocumentsName,
     Premise,
 )
@@ -20,74 +20,146 @@ from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from aidial_rag_eval.types import Documents, Question
 
 
-class _InternalColumns(str, Enum):
-    hypothesis_id = "q_num"
-    hypothesis_split = "hypothesis_split"
-    hypothesis = "hypothesis"
-    premise = "premise"
-    json = "json"
-    nli = "inference"
-    explanation = "explanation"
-
-
-def _row_to_json(row: dict) -> str:
-    return json.dumps(
-        {k: (v if k != _InternalColumns.premise else [v]) for k, v in row.items()},
-    )
-
-
-def _json_to_highlight(row: dict) -> str:
-    inference_json = row[_InternalColumns.json]
-    segmented_text = row[_InternalColumns.hypothesis_split]
-    highlight = dict()
-    delimiter_highlight = dict()
-    highlight["corpus"] = []
-    delimiter_highlight["corpus"] = []
-    delimiters = segmented_text.delimiters
-    json_answer_list = json.loads(inference_json)
-    for ans, delimiter in zip(json_answer_list, delimiters + [""]):
-        highlight["corpus"].append(
-            {
-                "text": ans[_InternalColumns.hypothesis],
-                "score": ans[_InternalColumns.nli] - 1,
-                "title": ans[_InternalColumns.nli],
-            }
-        )
-        delimiter_highlight["corpus"].append({"text": delimiter, "score": 0.0})
-    highlight["corpus"] = list(
-        itertools.chain.from_iterable(
-            zip(highlight["corpus"], delimiter_highlight["corpus"])
-        )
-    )
-    return json.dumps(highlight)
-
-
 def _join_documents(documents: Documents) -> JoinedDocumentsName:
     return " ; ".join(documents)
 
 
-def _make_input_batch(
+def _make_inference_task_inputs(
     premises: List[Premise],
-    segmented_hypothesis: List[SegmentedText],
+    segmented_hypotheses: List[SegmentedText],
     document_names: List[JoinedDocumentsName],
-) -> List[InferenceBatchItem]:
-    input_batch = list(
+) -> List[InferenceInputs]:
+    """
+    The function collects input data for the inference task.
+
+    Parameters
+    -----------
+    premises : List[str]
+        A list of premises from which we want to derive hypotheses in pairs.
+
+    segmented_hypotheses : List[SegmentedText]
+        A list of segmented hypotheses, where each segment is matched with its
+        corresponding premise and a list of documents that correspond to the entire hypothesis.
+
+    document_names: List[str]
+        A list of document names used as additional information for the inference task.
+
+    Returns
+    ------------
+    List[InferenceInputs]
+        A list with a length equal to the total number of all segments from all hypotheses,
+        where each hypothesis segment is matched with its corresponding premise document names,
+        and the ID of the hypothesis from which it was taken.
+    """
+    inference_inputs = list(
         chain.from_iterable(
             [
                 [
-                    InferenceBatchItem(
+                    InferenceInputs(
                         hypothesis_id=i,
                         premise=premises[i],
                         hypothesis_segment=hypothesis,
                         document_name=document_names[i],
                     )
-                    for hypothesis in segmented_hypothesis[i].segments
+                    for hypothesis in segmented_hypotheses[i].segments
                 ]
-                for i in range(len(segmented_hypothesis))
+                for i in range(len(segmented_hypotheses))
             ]
         )
     )
-    return input_batch
+    return inference_inputs
+
+
+T = TypeVar("T")
+
+
+def _iterable_group_with_key_to_list_group(
+    iterable_group_with_key: Tuple[int, Iterable[T]],
+) -> List[T]:
+    """
+    Function that transforms one of the groups obtained from itertools.groupby
+    into a more convenient format:
+    1) Removes the key used for groupby
+    2) Converts the Iterable iterator into a List, preserving the internal objects.
+
+    Parameters
+    -----------
+    iterable_group_with_key : Tuple[int, Iterable[Any]]
+        A group from the results of itertools.groupby.
+
+    Returns
+    ------------
+    List[Any]
+        The same input group, but without the key and in List format.
+    """
+    return [pair for pair in iterable_group_with_key[1]]
+
+
+def _grouped_data_item_to_json(
+    grouped_data_item: List[Tuple[InferenceInputs, InferenceScore]],
+) -> str:
+    """
+    Function that aggregates the inference results of segments
+    for the same hypothesis in JSON format.
+
+    Parameters
+    -----------
+    grouped_data_item : List[Tuple[InferenceInputs, InferenceScore]]
+        Inference results of segments for the same hypothesis.
+
+    Returns
+    ------------
+    str
+        JSON string of the inference for the hypothesis.
+    """
+    return json.dumps(
+        [
+            {
+                "inference": inference_score.inference,
+                "hypothesis": inference_input.hypothesis_segment,
+                "premise": [inference_input.premise],
+                "explanation": inference_score.explanation,
+            }
+            for inference_input, inference_score in grouped_data_item
+        ]
+    )
+
+
+def _grouped_data_item_to_highlight(
+    grouped_data_item: List[Tuple[InferenceInputs, InferenceScore]],
+    segmented_text: SegmentedText,
+) -> str:
+    """
+    Function that converts inference results of segments from the same
+    hypothesis into a JSON format for text highlighting.
+
+    Parameters
+    -----------
+    grouped_data_item : List[Tuple[InferenceInputs, InferenceScore]]
+        Inference results of segments for the same hypothesis.
+
+    segmented_text : SegmentedText
+        Segmented hypothesis containing both segments and delimiters
+        for reconstructing the original text.
+
+    Returns
+    ------------
+    str
+        JSON string of highlights intended for coloring segments of the hypothesis.
+    """
+    highlight = {"corpus": []}
+    for (inference_input, inference_score), delimiter in zip(
+        grouped_data_item, segmented_text.delimiters + [""]
+    ):
+        highlight["corpus"].append(
+            {
+                "text": inference_input.hypothesis_segment,
+                "score": inference_score.inference - 1,
+                "title": inference_score.inference,
+            }
+        )
+        highlight["corpus"].append({"text": delimiter, "score": 0.0})
+    return json.dumps(highlight)
 
 
 def calculate_batch_inference(
@@ -136,7 +208,7 @@ def calculate_batch_inference(
     List[InferenceReturn]
         Returns the list of inference,
         along with a JSON strings that explains how the inference was derived and
-        highlights strings used for highlighting each segment of the each hypothesis.
+        highlights strings used for highlighting each segment of each hypothesis.
     """
 
     converter = LLMNoPronounsBatchConverter(
@@ -164,7 +236,7 @@ def calculate_batch_inference(
             question_split.segments[-1] + "\n" + premise
             for question_split, premise in zip(segmented_questions, premises)
         ]
-    input_batch = _make_input_batch(
+    inference_inputs = _make_inference_task_inputs(
         premises,
         segmented_hypotheses,
         document_names,
@@ -172,51 +244,33 @@ def calculate_batch_inference(
     if show_progress_bar:
         print("Getting inference...")
     inference_scores = scorer.get_inference(
-        input_batch,
+        inference_inputs,
         show_progress_bar,
     )
 
-    df_pre_aggregation_scores = pd.DataFrame(
-        data=[
-            [
-                input_item.hypothesis_id,
-                input_item.premise,
-                input_item.hypothesis_segment,
-                inference_score.inference,
-                inference_score.explanation,
-            ]
-            for input_item, inference_score in zip(input_batch, inference_scores)
-        ],
-        columns=pd.Series(
-            [
-                _InternalColumns.hypothesis_id,
-                _InternalColumns.premise,
-                _InternalColumns.hypothesis,
-                _InternalColumns.nli,
-                _InternalColumns.explanation,
-            ]
-        ),
+    iterable_groups_with_id = itertools.groupby(
+        zip(inference_inputs, inference_scores), lambda x: x[0].hypothesis_id
     )
-    df_pre_aggregation_scores[_InternalColumns.json] = df_pre_aggregation_scores.apply(
-        lambda row: _row_to_json(row), axis=1
+    grouped_data_list: List[List[Tuple[InferenceInputs, InferenceScore]]] = list(
+        map(_iterable_group_with_key_to_list_group, iterable_groups_with_id)
     )
 
-    aggregated_inferences = df_pre_aggregation_scores.groupby(
-        _InternalColumns.hypothesis_id
-    )[_InternalColumns.nli].mean()
-    aggregated_jsons = (
-        df_pre_aggregation_scores.groupby(_InternalColumns.hypothesis_id)[
-            _InternalColumns.json
-        ]
-        .apply(list)
-        .apply(lambda x: json.dumps([json.loads(js) for js in x]))
+    aggregated_inferences = map(
+        lambda grouped_data_item: float(
+            np.mean(
+                [inference_score.inference for _, inference_score in grouped_data_item]
+            )
+        ),
+        grouped_data_list,
     )
-    highlights = pd.DataFrame(
-        {
-            _InternalColumns.json: aggregated_jsons,
-            _InternalColumns.hypothesis_split: segmented_hypotheses,
-        }
-    ).apply(_json_to_highlight, axis=1)
+
+    aggregated_jsons = map(
+        _grouped_data_item_to_json,
+        grouped_data_list,
+    )
+    highlights = itertools.starmap(
+        _grouped_data_item_to_highlight, zip(grouped_data_list, segmented_hypotheses)
+    )
     inference_returns = [
         InferenceReturn(inference=inference, json=js, highlight=highlight)
         for inference, js, highlight in zip(
@@ -276,13 +330,13 @@ def calculate_inference(
     questions = None if question is None else [question]
     list_documents = None if documents is None else [documents]
     inference_returns = calculate_batch_inference(
-        [premise],
-        [hypothesis],
-        llm,
-        questions,
-        list_documents,
-        max_concurrency,
-        batch_size,
-        show_progress_bar,
+        premises=[premise],
+        hypotheses=[hypothesis],
+        llm=llm,
+        questions=questions,
+        list_documents=list_documents,
+        max_concurrency=max_concurrency,
+        batch_size=batch_size,
+        show_progress_bar=show_progress_bar,
     )
     return inference_returns[0]

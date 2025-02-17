@@ -15,7 +15,9 @@ MetricBind = str
 
 
 @dataclass
-class InferenceBatchItem:
+class InferenceInputs:
+    """Input data used for calculating inference"""
+
     hypothesis_id: int
     premise: Premise
     hypothesis_segment: HypothesisSegment
@@ -23,15 +25,28 @@ class InferenceBatchItem:
 
 
 @dataclass
+class InferenceScore:
+    """Inference score for a hypothesis segment, calculated based on InferenceInputs"""
+
+    inference: float
+    explanation: str
+
+
+@dataclass
 class InferenceReturn:
+    """Inference for a hypothesis, aggregated results for hypothesis segments"""
+
     inference: float
     json: str
     highlight: str
 
 
+# Used for calculating mean and median inferences
 inference_column = fields(InferenceReturn)[0].name
 
 
 @dataclass
 class RefusalReturn:
+    """Answer refusal calculated for the answer"""
+
     refusal: float
