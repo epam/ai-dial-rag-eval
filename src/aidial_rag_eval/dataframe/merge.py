@@ -41,12 +41,11 @@ def merge_ground_truth_and_answers(
     assert isinstance(ground_truth_copy, pd.DataFrame)
     answers_copy = answers[answers.columns.intersection(ANSWERS_COLUMNS)].copy()
     assert isinstance(answers_copy, pd.DataFrame)
-    if GroundTruthColumns.ANSWER in ground_truth_copy.columns:
-        ground_truth_copy = ground_truth_copy.rename(
-            columns={
-                GroundTruthColumns.ANSWER.value: MergedColumns.GROUND_TRUTH_ANSWER.value
-            }
-        )
+    ground_truth_copy = ground_truth_copy.rename(
+        columns={
+            GroundTruthColumns.ANSWER.value: MergedColumns.GROUND_TRUTH_ANSWER.value
+        }
+    )
     ground_truth_copy[GroundTruthColumns.DOCUMENTS] = ground_truth_copy[
         GroundTruthColumns.DOCUMENTS
     ].apply(frozenset)

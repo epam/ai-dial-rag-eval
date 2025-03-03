@@ -59,4 +59,4 @@ MERGED_KEY_COLUMNS = [MergedColumns.DOCUMENTS, MergedColumns.QUESTION]
 ANSWERS_COLUMNS = [col.value for col in AnswerColumns if isinstance(col, AnswerColumns)]
 GROUND_TRUTH_COLUMNS = [
     col.value for col in GroundTruthColumns if isinstance(col, GroundTruthColumns)
-] + [MergedColumns.GROUND_TRUTH_ANSWER]
+]
