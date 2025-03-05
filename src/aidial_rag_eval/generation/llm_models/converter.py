@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import namedtuple
+from json import JSONDecodeError
 from typing import List, Tuple
 
 from langchain_core.exceptions import OutputParserException
@@ -48,7 +49,13 @@ def json_to_dict_segments(input_: AIMessage) -> List[str]:
         return_dict = parse_json_markdown(str(input_.content))
         assert isinstance(return_dict, dict)
         return return_dict["sentences"]
-    except (TypeError, KeyError, OutputParserException):
+    except (
+        TypeError,
+        KeyError,
+        OutputParserException,
+        JSONDecodeError,
+        AssertionError,
+    ):
         return []
 
 
