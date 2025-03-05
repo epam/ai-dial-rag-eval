@@ -1,3 +1,4 @@
+from json import JSONDecodeError
 from typing import List
 
 from langchain_core.exceptions import OutputParserException
@@ -26,5 +27,5 @@ def json_to_returns(input_: AIMessage) -> List:
         return_list = parse_json_markdown(str(input_.content))
         assert isinstance(return_list, list)
         return return_list
-    except OutputParserException:
+    except (OutputParserException, JSONDecodeError, AssertionError):
         return []
