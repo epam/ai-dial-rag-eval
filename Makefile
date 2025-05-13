@@ -1,13 +1,13 @@
 ARGS ?=
-VENV_DIR ?= .venv
-POETRY ?= $(VENV_DIR)/bin/poetry
+POETRY ?= poetry
 POETRY_VERSION ?= 1.8.5
+
+
+.PHONY: all install build clean lint format test help
+
 
 all: build
 
-init_env:
-	python -m venv $(VENV_DIR)
-	$(VENV_DIR)/bin/pip install poetry==$(POETRY_VERSION) --quiet
 
 install:
 	$(POETRY) install --all-extras
