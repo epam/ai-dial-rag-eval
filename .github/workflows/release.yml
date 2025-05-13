@@ -1,0 +1,13 @@
+name: Release Workflow
+
+on:
+  push:
+    branches: [development, release-*]
+
+jobs:
+  release:
+    uses: epam/ai-dial-ci/.github/workflows/python_package_release.yml@2.0.1
+    secrets: inherit
+    with:
+      python-version: 3.9
+      code-checks-python-versions: '["3.9", "3.10", "3.11", "3.12"]'
