@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "aidial-rag-eval"
+version = "0.3.0rc"
+description = "Library for RAG evaluation"
+authors = ["EPAM RAIL <SpecialEPM-DIALDevTeam@epam.com>"]
+homepage = "https://github.com/epam/ai-dial-rag-eval"
+documentation = "https://github.com/epam/ai-dial-rag-eval"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["ai"]
+classifiers = ["Topic :: Software Development :: Libraries :: Python Modules"]
+repository = "https://github.com/epam/ai-dial-rag-eval"
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.26.4"
+pyright = "^1.1.360"
+pandas = "^2.2.2"
+fsspec = "^2024.3.1"
+pyarrow = "^16.0.0"
+s3fs = {version = "^2024.3.1", optional = true}
+pydantic = "^2.7.1"
+nltk = "^3.8.1"
+tqdm = "^4.66.4"
+langchain = "^0.3.0"
+more-itertools = "^10.5.0"
+
+[tool.poetry.extras]
+s3fs = ["s3fs"]
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.1.1"
+coverage = {extras = ["toml"], version = "^7.4.4"}
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.14.0"
+langchain-community = "^0.3.14"
+langchain-openai = "^0.2.1"
+
+[tool.poetry.group.lint.dependencies]
+black = "^24.3.0"
+flake8 = "^7.0.0"
+flake8-bandit = "^4.1.1"
+flake8-black = "^0.3.6"
+flake8-bugbear = "^24.2.6"
+isort = "^5.13.2"
+flake8-isort = "^6.1.1"
+
+[tool.poetry.group.dev.dependencies]
+nox = "^2024.3.2"
+notebook = "^7.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+typeCheckingMode = "basic"
+reportUnusedVariable = "error"
+reportIncompatibleMethodOverride = "error"
+exclude = [
+    ".git",
+    ".venv",
+    ".nox",
+    "**/__pycache__"
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib"
+]
