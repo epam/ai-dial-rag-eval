@@ -15,7 +15,6 @@ repository = "https://github.com/epam/ai-dial-rag-eval"
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.26.4"
-pyright = "^1.1.360"
 pandas = "^2.2.2"
 fsspec = "^2024.3.1"
 pyarrow = "^16.0.0"
@@ -45,6 +44,7 @@ flake8-black = "^0.3.6"
 flake8-bugbear = "^24.2.6"
 isort = "^5.13.2"
 flake8-isort = "^6.1.1"
+pyright = "^1.1.360"
 
 [tool.poetry.group.dev.dependencies]
 nox = "^2024.3.2"
