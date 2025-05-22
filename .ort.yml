@@ -34,3 +34,6 @@ resolutions:
     - message: ".*PyPI::aiohappyeyeballs:2\\.4\\.0.*"
       reason: "CANT_FIX_EXCEPTION"
       comment: "PSF-2.0 license: https://github.com/aio-libs/aiohappyeyeballs/blob/main/LICENSE"
+    - message: ".*PyPI::python-dateutil:2\\.9\\.0\\.post0.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "Apache-2.0 license: https://github.com/dateutil/dateutil/blob/master/LICENSE"
