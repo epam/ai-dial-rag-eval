@@ -14,3 +14,23 @@ license_choices:
   repository_license_choices:
     - given: FTL OR GPL-2.0-or-later
       choice: FTL
+resolutions:
+  rule_violations:
+    - message: ".*PyPI::pandas:2\\.2\\.2.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/pandas-dev/pandas/blob/main/LICENSE"
+    - message: ".*PyPI::httpx:0\\.27\\.2.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/encode/httpx/blob/master/LICENSE.md"
+    - message: ".*PyPI::numpy:1\\.26\\.4.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/numpy/numpy/blob/main/LICENSE.txt"
+    - message: ".*PyPI::httpcore:1\\.0\\.9.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/encode/httpcore/blob/master/LICENSE.md"
+    - message: ".*PyPI::fsspec:2024\\.9\\.0.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/fsspec/filesystem_spec/blob/master/LICENSE"
+    - message: ".*PyPI::aiohappyeyeballs:2\\.4\\.0.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "PSF-2.0 license: https://github.com/aio-libs/aiohappyeyeballs/blob/main/LICENSE"
