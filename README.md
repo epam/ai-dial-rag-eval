@@ -58,20 +58,21 @@ df_metrics = create_rag_eval_metrics_report(
 )
 print(df_metrics[["facts_ranks", "recall", 'precision', 'mrr', 'f1', 'ctx_ans_inference', 'ans_gt_inference', 'gt_ans_inference']])
 ```
+
 It is expected to see the following results:
 
-| recall | precision | mrr | f1 | ctx_ans_inference | ans_gt_inference | gt_ans_inference |
-|--------|-----------|-----|----|-------------------|------------------|------------------|
-| 0.5    | 0.5       | 0.5 | 0.5| 1.0               | 0.5              | 1.0              |
+| recall | precision | mrr | f1  | ctx_ans_inference | ans_gt_inference | gt_ans_inference |
+| ------ | --------- | --- | --- | ----------------- | ---------------- | ---------------- |
+| 0.5    | 0.5       | 0.5 | 0.5 | 1.0               | 0.5              | 1.0              |
 
 In this table:
 
 - "recall" of 0.5 indicates that only 1 out of 2 ground truth facts were found in the context.
 - "precision" of 0.5 reflects that just 1 context chunk out of 2 includes any ground truth facts.
 - The prefix of the inference metrics signifies the premise and hypothesis in the following format: *premise*_*hypothesis*_inference.
-     - "ctx" refers to 'context'
-     - "ans" refers to 'answer'
-     - "gt" refers to 'ground truth answer'
+  - "ctx" refers to 'context'
+  - "ans" refers to 'answer'
+  - "gt" refers to 'ground truth answer'
 - "ctx_ans_inference" and "ans_gt_inference" values of 1.0 mean our answer can be derived directly from the context and the ground truth answer, respectively.
 - "gt_ans_inference" of 0.5, denotes that the ground truth answer can only be partially inferred from our answer.
 
@@ -125,10 +126,10 @@ make test PYTHON=3.11 ARGS="--llm-mode=real"
 
 The test run with real LLM responses requires the following environment variables to be set:
 
-|Variable|Description|
-|---|---|
-|DIAL_URL| The URL of the DIAL server.|
-|DIAL_API_KEY|The API key for the DIAL server.|
+| Variable     | Description                      |
+| ------------ | -------------------------------- |
+| DIAL_URL     | The URL of the DIAL server.      |
+| DIAL_API_KEY | The API key for the DIAL server. |
 
 Copy `.env.example` to `.env` and customize it for your environment.
 
