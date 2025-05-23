@@ -1,13 +1,10 @@
 ARGS ?=
-VENV_DIR ?= .venv
-POETRY ?= $(VENV_DIR)/bin/poetry
-POETRY_VERSION ?= 1.8.5
+POETRY ?= poetry
+
+.PHONY: all install build clean lint format test help
 
 all: build
 
-init_env:
-	python -m venv $(VENV_DIR)
-	$(VENV_DIR)/bin/pip install poetry==$(POETRY_VERSION) --quiet
 
 install:
 	$(POETRY) install --all-extras
@@ -22,6 +19,9 @@ clean:
 	rm -rf dist
 	find . -type d -name __pycache__ | xargs -r rm -r
 
+publish: build
+	$(POETRY) publish -u __token__ -p $(PYPI_TOKEN) --skip-existing
+
 lint: install
 	$(POETRY) run nox -s lint
 
@@ -35,6 +35,7 @@ help:
 	@echo '===================='
 	@echo 'build                        - build the library'
 	@echo 'clean                        - clean virtual env and build artifacts'
+	@echo 'publish                      - publish the library to Pypi'
 	@echo '-- LINTING --'
 	@echo 'format                       - run code formatters'
 	@echo 'lint                         - run linters'
