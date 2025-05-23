@@ -1,10 +1,7 @@
 ARGS ?=
 POETRY ?= poetry
-POETRY_VERSION ?= 1.8.5
-
 
 .PHONY: all install build clean lint format test help
-
 
 all: build
 
@@ -22,6 +19,9 @@ clean:
 	rm -rf dist
 	find . -type d -name __pycache__ | xargs -r rm -r
 
+publish: build
+	$(POETRY) publish -u __token__ -p $(PYPI_TOKEN) --skip-existing
+
 lint: install
 	$(POETRY) run nox -s lint
 
@@ -35,6 +35,7 @@ help:
 	@echo '===================='
 	@echo 'build                        - build the library'
 	@echo 'clean                        - clean virtual env and build artifacts'
+	@echo 'publish                      - publish the library to Pypi'
 	@echo '-- LINTING --'
 	@echo 'format                       - run code formatters'
 	@echo 'lint                         - run linters'
