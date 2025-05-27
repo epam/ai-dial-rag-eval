@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields
-from typing import Union
+from typing import List, Union
 
 from aidial_rag_eval.types import Answer, GroundTruthAnswer, Text
 
@@ -9,6 +9,7 @@ JoinedContext = Text
 Premise = Union[JoinedContext, Answer, GroundTruthAnswer]
 Hypothesis = Union[Answer, GroundTruthAnswer]
 HypothesisSegment = TextSegment
+Statement = str
 JoinedDocumentsName = str
 
 MetricBind = str
@@ -20,7 +21,7 @@ class InferenceInputs:
 
     hypothesis_id: int
     premise: Premise
-    hypothesis_segment: HypothesisSegment
+    statements: List[Statement]
     document_name: JoinedDocumentsName
 
 
