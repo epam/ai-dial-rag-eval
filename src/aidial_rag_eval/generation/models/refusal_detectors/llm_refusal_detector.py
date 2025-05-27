@@ -5,7 +5,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableSerializable, chain
 from more_itertools import chunked
 
-from aidial_rag_eval.generation.models.lambdas import json_to_returns
+from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.refusal_detectors.base_refusal_detector import (
     RefusalDetector,
 )
@@ -40,6 +40,7 @@ def returns_to_refusal_return(input_: List) -> List[RefusalReturn]:
 
 class LLMRefusalDetector(RefusalDetector):
     """
+    Experimental:
     The LLMRefusalDetector is designed to calculate
     answer refusal using a LLM.
     """
@@ -49,9 +50,6 @@ class LLMRefusalDetector(RefusalDetector):
     the prompt, model, conversion of output content to JSON,
     and  and transformation of JSON into RefusalReturn."""
 
-    batch_size: int
-    """The number of answers that will be processed simultaneously in the _chain."""
-
     max_concurrency: int
     """Configuration attribute for _chain.batch,
     indicating how many prompts will be sent in parallel."""
@@ -59,21 +57,17 @@ class LLMRefusalDetector(RefusalDetector):
     def __init__(
         self,
         model: BaseChatModel,
-        batch_size: int,
         max_concurrency: int,
     ):
 
-        self._chain = (
-            refusal_prompt | model | json_to_returns | returns_to_refusal_return
-        )
-        self.batch_size = batch_size
+        self._chain = refusal_prompt | model | json_to_list | returns_to_refusal_return
         self.max_concurrency = max_concurrency
 
     def get_refusal(
         self, answers: List[Answer], show_progress_bar: bool
     ) -> List[RefusalReturn]:
         """
-        Function that calls a chain to calculate answer refusals
+        Method that calls a chain to calculate answer refusals
         for each answer.
 
         Parameters
@@ -89,7 +83,7 @@ class LLMRefusalDetector(RefusalDetector):
         List[RefusalReturn]
             Returns the answer refusal for each answer.
         """
-        batches = list(chunked(answers, self.batch_size))
+        batches = list(chunked(answers, 10))
 
         with ProgressBarCallback(len(batches), show_progress_bar) as cb:
             refusal_returns = self._chain.batch(

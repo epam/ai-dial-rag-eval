@@ -1,24 +1,28 @@
 import itertools
 import json
-from itertools import chain
 from typing import Iterable, List, Optional, Tuple, TypeVar
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
 
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
-    LLMNoPronounsBatchConverter,
+    LLMNoPronounsConverter,
 )
 from aidial_rag_eval.generation.models.inference_scorers.llm_inference_scorer import (
     LLMInferenceScorer,
 )
+from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
+    LLMStatementExtractor,
+)
 from aidial_rag_eval.generation.types import (
     Hypothesis,
+    HypothesisSegment,
     InferenceInputs,
     InferenceReturn,
     InferenceScore,
     JoinedDocumentsName,
     Premise,
+    Statement,
 )
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from aidial_rag_eval.types import Documents, Question
@@ -30,7 +34,7 @@ def _join_documents(documents: Documents) -> JoinedDocumentsName:
 
 def _make_inference_task_inputs(
     premises: List[Premise],
-    segmented_hypotheses: List[SegmentedText],
+    statements: List[List[List[Statement]]],
     document_names: List[JoinedDocumentsName],
 ) -> List[InferenceInputs]:
     """
@@ -41,9 +45,11 @@ def _make_inference_task_inputs(
     premises : List[str]
         A list of premises from which we want to derive hypotheses in pairs.
 
-    segmented_hypotheses : List[SegmentedText]
-        A list of segmented hypotheses, where each segment is matched with its
-        corresponding premise and a list of documents that correspond to the entire hypothesis.
+    statements : List[List[List[Statement]]]
+        A deeply nested list of statements, where the outermost list corresponds to
+        different hypotheses, the next level represents the segmentation of each
+        hypothesis into hypothesis segments, and the innermost list breaks each
+        hypothesis segment down into individual statements.
 
     document_names: List[str]
         A list of document names used as additional information for the inference task.
@@ -51,23 +57,23 @@ def _make_inference_task_inputs(
     Returns
     ------------
     List[InferenceInputs]
-        A list with a length equal to the total number of all segments from all hypotheses,
-        where each hypothesis segment is matched with its corresponding premise document names,
-        and the ID of the hypothesis from which it was taken.
+        A list that has as many items as there are innermost lists of statements,
+        each innermost statement list is paired with the premise, document names
+        and the ID of its origin hypothesis.
     """
     inference_inputs = list(
-        chain.from_iterable(
+        itertools.chain.from_iterable(
             [
                 [
                     InferenceInputs(
                         hypothesis_id=i,
                         premise=premises[i],
-                        hypothesis_segment=hypothesis,
+                        statements=list_statements,
                         document_name=document_names[i],
                     )
-                    for hypothesis in segmented_hypotheses[i].segments
+                    for list_statements in statements[i]
                 ]
-                for i in range(len(segmented_hypotheses))
+                for i in range(len(statements))
             ]
         )
     )
@@ -101,6 +107,7 @@ def _iterable_group_with_key_to_list_group(
 
 def _grouped_data_item_to_json(
     grouped_data_item: List[Tuple[InferenceInputs, InferenceScore]],
+    segmented_text: SegmentedText,
 ) -> str:
     """
     Function that aggregates the inference results of segments
@@ -111,6 +118,10 @@ def _grouped_data_item_to_json(
     grouped_data_item : List[Tuple[InferenceInputs, InferenceScore]]
         Inference results of segments for the same hypothesis.
 
+    segmented_text : SegmentedText
+        Segmented hypothesis containing both segments and delimiters
+        for reconstructing the original text.
+
     Returns
     ------------
     str
@@ -120,11 +131,13 @@ def _grouped_data_item_to_json(
         [
             {
                 "inference": inference_score.inference,
-                "hypothesis": inference_input.hypothesis_segment,
+                "hypothesis": segment,
                 "premise": [inference_input.premise],
                 "explanation": inference_score.explanation,
             }
-            for inference_input, inference_score in grouped_data_item
+            for (inference_input, inference_score), segment in zip(
+                grouped_data_item, segmented_text.segments
+            )
         ]
     )
 
@@ -152,12 +165,12 @@ def _grouped_data_item_to_highlight(
         JSON string of highlights intended for coloring segments of the hypothesis.
     """
     highlight = {"corpus": []}
-    for (inference_input, inference_score), delimiter in zip(
-        grouped_data_item, segmented_text.delimiters + [""]
+    for (_, inference_score), segment, delimiter in zip(
+        grouped_data_item, segmented_text.segments, segmented_text.delimiters + [""]
     ):
         highlight["corpus"].append(
             {
-                "text": inference_input.hypothesis_segment,
+                "text": segment,
                 "score": inference_score.inference - 1,
                 "title": inference_score.inference,
             }
@@ -166,59 +179,40 @@ def _grouped_data_item_to_highlight(
     return json.dumps(highlight)
 
 
-def calculate_batch_inference(
-    premises: List[Premise],
+def segment_hypotheses(
     hypotheses: List[Hypothesis],
     llm: BaseChatModel,
-    questions: Optional[List[Question]] = None,
-    list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
-) -> List[InferenceReturn]:
+) -> List[SegmentedText]:
     """
-    Calculates pairwise the inference of a hypotheses from a premises.
+    Function that segments hypotheses into hypothesis segments(roughly into
+    sentences), and then removes pronouns using LLM.
 
     Parameters
     -----------
 
-        premises : List[str]
-            The text of the premise from which the hypothesis will be inferred.
+    hypotheses : List[str]
+        The text of the hypothesis.
 
-        hypotheses : List[str]
-            The text of the hypothesis.
+    llm : BaseChatModel
+        The Langchain chat model used for calculating inference.
 
-        llm : BaseChatModel
-            The Langchain chat model used for calculating inference.
+    max_concurrency : int, default=8
+        The maximum number of concurrent requests to the LLM.
 
-        questions : List[str], optional, default=None
-            A questions related to the inference process as a part of the premise.
-
-        list_documents : List[List[str]], optional, default=None
-            A list of document names that used
-            in the inference process as a part of the premises.
-
-        max_concurrency : int, default=8
-            The maximum number of concurrent requests to the LLM.
-
-        batch_size : int, default=6
-            The maximum number of objects processed in a single prompt for simple tasks.
-
-        show_progress_bar : bool, default=True
-            Whether to display a progress bar during LLM requests.
+    show_progress_bar : bool, default=True
+        Whether to display a progress bar during LLM requests.
 
     Returns
     ------------
-    List[InferenceReturn]
-        Returns the list of inference,
-        along with a JSON strings that explains how the inference was derived and
-        highlights strings used for highlighting each segment of each hypothesis.
+    List[SegmentedText]
+        List of hypothesis segments with delimiters.
     """
-
-    converter = LLMNoPronounsBatchConverter(
-        model=llm, batch_size=batch_size, max_concurrency=max_concurrency
+    converter = LLMNoPronounsConverter(
+        model=llm,
+        max_concurrency=max_concurrency,
     )
-    scorer = LLMInferenceScorer(model=llm, max_concurrency=max_concurrency)
 
     segmented_hypotheses = [
         SegmentedText.from_text(text=hypothesis) for hypothesis in hypotheses
@@ -226,8 +220,110 @@ def calculate_batch_inference(
     if show_progress_bar:
         print("Converting hypothesis...")
     converter.transform_texts(segmented_hypotheses, show_progress_bar)
+    return segmented_hypotheses
+
+
+def extract_statements(
+    hypotheses_segments: List[List[HypothesisSegment]],
+    llm: BaseChatModel,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[List[List[Statement]]]:
+    """
+    Function that extracts statements from each hypothesis segment.
+    Hypothesis segments of the inner list are grouped together and
+    fed into the prompt.
+
+    Parameters
+    -----------
+
+    hypotheses_segments : List[str]
+        List of hypothesis segments.
+
+    llm : BaseChatModel
+        The Langchain chat model used for calculating inference.
+
+    max_concurrency : int, default=8
+        The maximum number of concurrent requests to the LLM.
+
+    show_progress_bar : bool, default=True
+        Whether to display a progress bar during LLM requests.
+
+    Returns
+    ------------
+    List[List[List[Statement]]]
+        A deeply nested list of statements, where the outermost list corresponds to
+        different hypotheses, the next level corresponds to the segmentation of each
+        hypothesis into hypothesis segments, and the innermost list breaks each
+        hypothesis segment down into individual statements.
+    """
+    extractor = LLMStatementExtractor(
+        model=llm,
+        max_concurrency=max_concurrency,
+    )
+    if show_progress_bar:
+        print("Extracting statements...")
+    statements = extractor.extract(
+        hypotheses_segments,
+        show_progress_bar,
+    )
+    return statements
+
+
+def infer_statements(
+    premises: List[Premise],
+    statements: List[List[List[Statement]]],
+    llm: BaseChatModel,
+    questions: Optional[List[Question]] = None,
+    list_documents: Optional[List[Documents]] = None,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
+    """
+    Function that infers statements.
+    Statements of the innermost list are grouped together and
+    fed into the prompt.
+
+    Parameters
+    -----------
+
+    premises : List[str]
+        The text of the premise from which the hypothesis will be inferred.
+
+    statements : List[List[List[Statement]]]
+        A deeply nested list of statements, where the outermost list corresponds to
+        different hypotheses, the next level corresponds to the segmentation of each
+        hypothesis into hypothesis segments, and the innermost list breaks each
+        hypothesis segment down into individual statements.
+
+    llm : BaseChatModel
+        The Langchain chat model used for calculating inference.
+
+    questions : List[str], optional, default=None
+        A questions related to the inference process as a part of the premise.
+
+    list_documents : List[List[str]], optional, default=None
+        A list of document names that used
+        in the inference process as a part of the premises.
+
+    max_concurrency : int, default=8
+        The maximum number of concurrent requests to the LLM.
+
+    show_progress_bar : bool, default=True
+        Whether to display a progress bar during LLM requests.
+
+    Returns
+    ------------
+    List[List[Tuple[InferenceInputs, InferenceScore]]]
+        A nested list of inputs and outputs of the inference step grouped by hypothesis
+        segment.
+    """
+    scorer = LLMInferenceScorer(
+        model=llm,
+        max_concurrency=max_concurrency,
+    )
     if list_documents is None:
-        document_names: List[JoinedDocumentsName] = [""] * len(hypotheses)
+        document_names: List[JoinedDocumentsName] = [""] * len(premises)
     else:
         document_names = [_join_documents(docs) for docs in list_documents]
     if questions is not None:
@@ -240,7 +336,7 @@ def calculate_batch_inference(
         ]
     inference_inputs = _make_inference_task_inputs(
         premises,
-        segmented_hypotheses,
+        statements,
         document_names,
     )
     if show_progress_bar:
@@ -253,8 +349,79 @@ def calculate_batch_inference(
     iterable_groups_with_id = itertools.groupby(
         zip(inference_inputs, inference_scores), lambda x: x[0].hypothesis_id
     )
-    grouped_data_list: List[List[Tuple[InferenceInputs, InferenceScore]]] = list(
-        map(_iterable_group_with_key_to_list_group, iterable_groups_with_id)
+    return list(map(_iterable_group_with_key_to_list_group, iterable_groups_with_id))
+
+
+def calculate_batch_inference(
+    premises: List[Premise],
+    hypotheses: List[Hypothesis],
+    llm: BaseChatModel,
+    questions: Optional[List[Question]] = None,
+    list_documents: Optional[List[Documents]] = None,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[InferenceReturn]:
+    """
+    Calculates pairwise the inference of a hypotheses from a premises.
+
+    Parameters
+    -----------
+
+    premises : List[str]
+        The text of the premise from which the hypothesis will be inferred.
+
+    hypotheses : List[str]
+        The text of the hypothesis.
+
+    llm : BaseChatModel
+        The Langchain chat model used for calculating inference.
+
+    questions : List[str], optional, default=None
+        A questions related to the inference process as a part of the premise.
+
+    list_documents : List[List[str]], optional, default=None
+        A list of document names that used
+        in the inference process as a part of the premises.
+
+    max_concurrency : int, default=8
+        The maximum number of concurrent requests to the LLM.
+
+    show_progress_bar : bool, default=True
+        Whether to display a progress bar during LLM requests.
+
+    Returns
+    ------------
+    List[InferenceReturn]
+        Returns the list of inference,
+        along with a JSON strings that explains how the inference was derived and
+        highlights strings used for highlighting each segment of each hypothesis.
+    """
+
+    segmented_hypotheses: List[SegmentedText] = segment_hypotheses(
+        hypotheses=hypotheses,
+        llm=llm,
+        max_concurrency=max_concurrency,
+        show_progress_bar=show_progress_bar,
+    )
+    statements: List[List[List[Statement]]] = extract_statements(
+        hypotheses_segments=[
+            segmented_hypothesis.segments
+            for segmented_hypothesis in segmented_hypotheses
+        ],
+        llm=llm,
+        max_concurrency=max_concurrency,
+        show_progress_bar=show_progress_bar,
+    )
+    grouped_data_list: List[List[Tuple[InferenceInputs, InferenceScore]]] = (
+        infer_statements(
+            premises=premises,
+            statements=statements,
+            llm=llm,
+            questions=questions,
+            list_documents=list_documents,
+            max_concurrency=max_concurrency,
+            show_progress_bar=show_progress_bar,
+        )
     )
 
     aggregated_inferences = map(
@@ -266,9 +433,9 @@ def calculate_batch_inference(
         grouped_data_list,
     )
 
-    aggregated_jsons = map(
+    aggregated_jsons = itertools.starmap(
         _grouped_data_item_to_json,
-        grouped_data_list,
+        zip(grouped_data_list, segmented_hypotheses),
     )
     highlights = itertools.starmap(
         _grouped_data_item_to_highlight, zip(grouped_data_list, segmented_hypotheses)
@@ -289,7 +456,6 @@ def calculate_inference(
     question: Optional[Question] = None,
     documents: Optional[Documents] = None,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> InferenceReturn:
     """
@@ -298,29 +464,26 @@ def calculate_inference(
     Parameters
     -----------
 
-        premise : str
-            The text of the premise from which the hypothesis will be inferred.
+    premise : str
+        The text of the premise from which the hypothesis will be inferred.
 
-        hypothesis : str
-            The text of the hypothesis.
+    hypothesis : str
+        The text of the hypothesis.
 
-        llm : BaseChatModel
-            The Langchain chat model used for calculating inference.
+    llm : BaseChatModel
+        The Langchain chat model used for calculating inference.
 
-        question : str, optional, default=None
-            A question related to the inference process as a part of the premise.
+    question : str, optional, default=None
+        A question related to the inference process as a part of the premise.
 
-        documents : List[str], optional, default=None
-            A document names that used in the inference process  as a part of the premise.
+    documents : List[str], optional, default=None
+        A document names that used in the inference process  as a part of the premise.
 
-        max_concurrency : int, default=8
-            The maximum number of concurrent requests to the LLM.
+    max_concurrency : int, default=8
+        The maximum number of concurrent requests to the LLM.
 
-        batch_size : int, default=6
-            The maximum number of objects processed in a single prompt for simple tasks.
-
-        show_progress_bar : bool, default=True
-            Whether to display a progress bar during LLM requests.
+    show_progress_bar : bool, default=True
+        Whether to display a progress bar during LLM requests.
 
     Returns
     ------------
@@ -338,7 +501,6 @@ def calculate_inference(
         questions=questions,
         list_documents=list_documents,
         max_concurrency=max_concurrency,
-        batch_size=batch_size,
         show_progress_bar=show_progress_bar,
     )
     return inference_returns[0]

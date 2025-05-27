@@ -20,7 +20,6 @@ def evaluate(
     fs: Any = None,
     metric_binds: Optional[List[MetricBind]] = None,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> Dataset:
     """
@@ -61,9 +60,6 @@ def evaluate(
     max_concurrency : int, default=8
         The maximum number of concurrent requests to the LLM.
 
-    batch_size : int, default=6
-        The maximum number objects are processed in a single prompt for simple tasks.
-
     show_progress_bar : bool, default=True
         To display a progress bar during LLM requests.
 
@@ -85,7 +81,6 @@ def evaluate(
         llm,
         metric_binds=metric_binds,
         max_concurrency=max_concurrency,
-        batch_size=batch_size,
         show_progress_bar=show_progress_bar,
     )
     aggregated_metrics = df_final.mean(numeric_only=True)

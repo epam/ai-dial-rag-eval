@@ -10,6 +10,13 @@ def test_inference(llm):
         "I am smart.", "I am clever.", llm, show_progress_bar=False
     )
     assert inference_return.inference == 1.0
+    inference_return = calculate_inference(
+        "John doesn't like football.",
+        "John plays football on fridays. It's his favorite sport after all.",
+        llm=llm,
+        show_progress_bar=False,
+    )
+    assert inference_return.inference == 0.0
 
 
 def test_refusal(llm):

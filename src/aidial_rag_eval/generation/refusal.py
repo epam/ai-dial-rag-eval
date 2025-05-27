@@ -14,7 +14,6 @@ def calculate_batch_refusal(
     answers: List[Answer],
     llm: BaseChatModel,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> List[RefusalReturn]:
     """
@@ -32,9 +31,6 @@ def calculate_batch_refusal(
         max_concurrency : int, default=8
             The maximum number of concurrent requests to the LLM.
 
-        batch_size : int, default=6
-            The maximum number of objects processed in a single prompt for simple tasks.
-
         show_progress_bar : bool, default=True
             Whether to display a progress bar during LLM requests.
 
@@ -43,7 +39,7 @@ def calculate_batch_refusal(
     RefusalReturn
         Returns the list of the answer refusals.
     """
-    detector = LLMRefusalDetector(llm, batch_size, max_concurrency)
+    detector = LLMRefusalDetector(llm, max_concurrency)
     answers_split = [SegmentedText.from_text(text=answer) for answer in answers]
     # As a heuristic, we send only the first 3 segments in the prompt.
     # We believe that if there are 3 whole segments with information
@@ -63,7 +59,6 @@ def calculate_refusal(
     answer: Answer,
     llm: BaseChatModel,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> RefusalReturn:
     """
@@ -81,9 +76,6 @@ def calculate_refusal(
         max_concurrency : int, default=8
             The maximum number of concurrent requests to the LLM.
 
-        batch_size : int, default=6
-            The maximum number of objects processed in a single prompt for simple tasks.
-
         show_progress_bar : bool, default=True
             Whether to display a progress bar during LLM requests.
 
@@ -96,7 +88,6 @@ def calculate_refusal(
         answers=[answer],
         llm=llm,
         max_concurrency=max_concurrency,
-        batch_size=batch_size,
         show_progress_bar=show_progress_bar,
     )
     return refusal_returns[0]

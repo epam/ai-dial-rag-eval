@@ -113,7 +113,6 @@ def calculate_generation_metrics(
     llm: BaseChatModel,
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> pd.DataFrame:
     """
@@ -136,9 +135,6 @@ def calculate_generation_metrics(
     max_concurrency : int, default=8
         The maximum number of concurrent requests to the LLM.
 
-    batch_size : int, default=6
-        The maximum number objects are processed in a single prompt for simple tasks.
-
     show_progress_bar : bool, default=True
         To display a progress bar during LLM requests.
 
@@ -158,7 +154,6 @@ def calculate_generation_metrics(
                 df_merged=df_merged_copy,
                 llm=llm,
                 max_concurrency=max_concurrency,
-                batch_size=batch_size,
                 show_progress_bar=show_progress_bar,
             ).to_dict(orient="series")
         )
@@ -182,7 +177,6 @@ def create_generation_metrics_report(
     llm: BaseChatModel,
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> pd.DataFrame:
     """
@@ -210,9 +204,6 @@ def create_generation_metrics_report(
     max_concurrency : int, default=8
         The maximum number of concurrent requests to the LLM.
 
-    batch_size : int, default=6
-        The maximum number objects are processed in a single prompt for simple tasks.
-
     show_progress_bar : bool, default=True
         To display a progress bar during LLM requests.
 
@@ -228,7 +219,6 @@ def create_generation_metrics_report(
         llm,
         metric_binds,
         max_concurrency,
-        batch_size,
         show_progress_bar,
     )
     return pd.merge(df_merged, df_metrics, left_index=True, right_index=True)
@@ -241,7 +231,6 @@ def create_rag_eval_metrics_report(
     llm: Optional[BaseChatModel] = None,
     metric_binds: Optional[List[MetricBind]] = None,
     max_concurrency: int = 8,
-    batch_size: int = 6,
     show_progress_bar: bool = True,
 ) -> pd.DataFrame:
     """
@@ -273,9 +262,6 @@ def create_rag_eval_metrics_report(
     max_concurrency : int, default=8
         The maximum number of concurrent requests to the LLM.
 
-    batch_size : int, default=6
-        The maximum number objects are processed in a single prompt for simple tasks.
-
     show_progress_bar : bool, default=True
         To display a progress bar during LLM requests.
 
@@ -295,7 +281,6 @@ def create_rag_eval_metrics_report(
         llm,
         metric_binds,
         max_concurrency,
-        batch_size,
         show_progress_bar,
     )
     return pd.concat([df_merged, retrieval_metrics, generation_metrics], axis=1)
