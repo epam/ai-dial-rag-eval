@@ -16,4 +16,4 @@ class InferenceScorer(ABC):
         inference_inputs: List[InferenceInputs],
         show_progress_bar: bool,
     ) -> List[InferenceScore]:
-        return [InferenceScore(inference=0.0, explanation="")] * len(inference_inputs)
+        return [InferenceScore(inference=0.0, reasoning="")] * len(inference_inputs)

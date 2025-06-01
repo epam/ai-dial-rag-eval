@@ -30,7 +30,7 @@ class InferenceScore:
     """Inference score for a hypothesis segment, calculated based on InferenceInputs"""
 
     inference: float
-    explanation: str
+    reasoning: str
 
 
 @dataclass

@@ -26,34 +26,34 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     """
     The final part of the chain for calculating inference.
     The inference is the average proportion of "ENT" tags among the possible tags:
-    "ENT", "NEUT" and "CONT".
+    "Entailed", "Neutral" and "Contradiction".
 
     Parameters
     -----------
     llm_outputs_with_inputs : Dict
-        Passed inputs with a list of tags and explanations for each input statement
+        Passed inputs with a list of tags and reasonings for each input statement
         stored in the "inference" key.
 
     Returns
     ------------
     InferenceScore
-        Returns the inference and an explanation of how the inference was obtained.
+        Returns the inference and an reasoning of how the inference was obtained.
         If the LLM output is incorrect, the inference is 0.
     """
     try:
         outputs = llm_outputs_with_inputs["inference"]
         passed_statements = llm_outputs_with_inputs["statements"]
         list_tags = [d["tag"] for d in outputs]
-        inference = float(np.mean([tag == "ENT" for tag in list_tags]))
+        inference = float(np.mean([tag == "Entailment" for tag in list_tags]))
         assert len(outputs) == len(passed_statements)
         for d, s in zip(outputs, passed_statements):
             d["statement"] = s
         assert not np.isnan(inference)
-        explanation = json.dumps(outputs)
+        reasoning = json.dumps(outputs)
     except (TypeError, KeyError, AssertionError):
         inference = 0.0
-        explanation = ""
-    return InferenceScore(inference=inference, explanation=explanation)
+        reasoning = ""
+    return InferenceScore(inference=inference, reasoning=reasoning)
 
 
 @chain
@@ -86,7 +86,7 @@ class LLMInferenceScorer(InferenceScorer):
         self._chain = RunnableBranch(
             (
                 check_if_statements_is_empty,
-                lambda _: InferenceScore(inference=0.0, explanation=""),
+                lambda _: InferenceScore(inference=0.0, reasoning=""),
             ),
             RunnablePassthrough.assign(
                 inference=inference_prompt | model | json_to_list
@@ -119,7 +119,7 @@ class LLMInferenceScorer(InferenceScorer):
         ------------
         List[InferenceScore]
             Returns the inferences and additionally
-            returns an explanation of how the inference was obtained
+            returns an reasoning of how the inference was obtained
             for each input.
         """
         with ProgressBarCallback(len(inference_inputs), show_progress_bar) as cb:

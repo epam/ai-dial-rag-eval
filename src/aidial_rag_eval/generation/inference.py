@@ -133,7 +133,7 @@ def _grouped_data_item_to_json(
                 "inference": inference_score.inference,
                 "hypothesis": segment,
                 "premise": [inference_input.premise],
-                "explanation": inference_score.explanation,
+                "reasoning": inference_score.reasoning,
             }
             for (inference_input, inference_score), segment in zip(
                 grouped_data_item, segmented_text.segments

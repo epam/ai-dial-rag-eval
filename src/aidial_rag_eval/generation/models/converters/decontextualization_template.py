@@ -7,7 +7,7 @@ You will receive segments.
 If a segment is nonsensical, a reference, link, or meaningless, return it unchanged.
 If unsure what to do with segment, return the original segment.
 Only perform the task; do not shorten, simplify, or correct errors.
-Do not provide explanations.
+Do not provide reasonings.
 
 For example: "My mom is a good person.", "She always takes care of me." you must return:
 ```json
