@@ -3,18 +3,19 @@ from typing import Dict, List
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import (
     RunnableBranch,
     RunnablePassthrough,
     RunnableSerializable,
-    chain,
+    chain, RunnableParallel,
 )
 
 from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer import (
     InferenceScorer,
 )
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
-    inference_prompt,
+    inference_prompt, neutral_contradiction_prompt, entailment_prompt
 )
 from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.types import InferenceInputs, InferenceScore
@@ -43,11 +44,20 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     try:
         outputs = llm_outputs_with_inputs["inference"]
         passed_statements = llm_outputs_with_inputs["statements"]
+        neutral_contradiction_arguments = llm_outputs_with_inputs["neutral_contradiction_arguments"]
+        entailment_arguments = llm_outputs_with_inputs["entailment_arguments"]
         list_tags = [d["tag"] for d in outputs]
         inference = float(np.mean([tag == "Entailment" for tag in list_tags]))
         assert len(outputs) == len(passed_statements)
-        for d, s in zip(outputs, passed_statements):
+        for d, s, nc_a, e_a in zip(
+                outputs,
+                passed_statements,
+                neutral_contradiction_arguments,
+                entailment_arguments
+        ):
             d["statement"] = s
+            d["neutral_contradiction_arguments"] = nc_a
+            d["entailment_arguments"] = e_a
         assert not np.isnan(inference)
         reasoning = json.dumps(outputs)
     except (TypeError, KeyError, AssertionError):
@@ -82,13 +92,18 @@ class LLMInferenceScorer(InferenceScorer):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-
         self._chain = RunnableBranch(
             (
                 check_if_statements_is_empty,
                 lambda _: InferenceScore(inference=0.0, reasoning=""),
             ),
-            RunnablePassthrough.assign(
+            RunnableParallel(
+                neutral_contradiction_arguments=neutral_contradiction_prompt | model | JsonOutputParser(),
+                entailment_arguments=entailment_prompt | model | JsonOutputParser(),
+                premise=lambda x: x["premise"],
+                statements=lambda x: x["statements"],
+                document=lambda x: x["document"]
+            ) | RunnablePassthrough.assign(
                 inference=inference_prompt | model | json_to_list
             )
             | returns_to_inference_score,
