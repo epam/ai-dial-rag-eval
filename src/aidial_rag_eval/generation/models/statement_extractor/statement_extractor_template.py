@@ -10,23 +10,25 @@ Single words, signs, numbers, links, etc. are not statements.
 
 Your response must be in JSON format:
 ```json
-[
-    {
-        "statements": [
-            <<statement1 from the first hypothesis>>,
-            <<statement2 from the first hypothesis>>,
-            ...
-        ]
-    },
-    {
-        "statements": [
-            <<statement1 from the second hypothesis>>,
-            <<statement2 from the second hypothesis>>,
-            ...
-        ]
-    },
-    ...
-]
+{
+    "hypothesis_statements": [
+        {
+            "statements": [
+                <<statement1 from the first hypothesis>>,
+                <<statement2 from the first hypothesis>>,
+                ...
+            ]
+        },
+        {
+            "statements": [
+                <<statement1 from the second hypothesis>>,
+                <<statement2 from the second hypothesis>>,
+                ...
+            ]
+        },
+        ...
+    ]
+}
 ```
 
 Request:

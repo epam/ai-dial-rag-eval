@@ -21,11 +21,13 @@ A statement that is not explicit: "The answer to this question is yes." should b
 
 Format your response in JSON:
 ```json
-[
-    <<"REJ" or "ANS">>,
-    <<"REJ" or "ANS">>,
-    ...
-]
+{
+    "tags": [
+        <<"REJ" or "ANS">>,
+        <<"REJ" or "ANS">>,
+        ...
+    ]
+}
 ```
 
 Each answer from the list of answers corresponds to a tag in your response.

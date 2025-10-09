@@ -23,27 +23,31 @@ Format your response in JSON. You must return only JSON.
 For example, if the premise is "I am a biology graduate and I work at a tech company." and the list of statements is ["I am a graduate.", "I work at a hospital."] your response should be:
 
 ```json
-[
-    {
-        "explanation": "It is true that I am a graduate",
-        "tag": "ENT"
-    },
-    {
-        "explanation": "Premise states I work at a tech company, not a hospital.",
-        "tag": "CONT"
-    }
-]
+{
+    "statement_inference": [
+        {
+            "explanation": "It is true that I am a graduate",
+            "tag": "ENT"
+        },
+        {
+            "explanation": "Premise states I work at a tech company, not a hospital.",
+            "tag": "CONT"
+        }
+    ]
+}
 ```
 
 Your response must be in JSON format:
 ```json
-[
-    {
-        "explanation": <<explanation>>,
-        "tag": <<"ENT" or "CONT" or "NEUT">>
-    },
-    ...
-]
+{
+    "statement_inference": [
+        {
+            "explanation": <<explanation>>,
+            "tag": <<"ENT" or "CONT" or "NEUT">>
+        },
+        ...
+    ]
+}
 ```
 Request:
 
