@@ -10,8 +10,8 @@ from langchain_core.utils.json import parse_json_markdown
 @chain
 def json_to_list(input_: AIMessage) -> List:
     """
-    Intermediate part of the chain that converts the output of the LLM into a JSON,
-    the outer part of which is a list.
+    Intermediate part of the chain converts the output of the LLM into a JSON,
+    where the outer structure is a dictionary containing a list.
 
     Parameters
     -----------
@@ -24,10 +24,12 @@ def json_to_list(input_: AIMessage) -> List:
         Returns a list; if the LLM output was incorrect, returns an empty list.
     """
     try:
-        return_list = parse_json_markdown(str(input_.content))
+        return_dict = parse_json_markdown(str(input_.content))
+        assert isinstance(return_dict, dict)
+        return_list = return_dict[list(return_dict.keys())[0]]
         assert isinstance(return_list, list)
         return return_list
-    except (OutputParserException, JSONDecodeError, AssertionError):
+    except (IndexError, OutputParserException, JSONDecodeError, AssertionError):
         return []
 
 

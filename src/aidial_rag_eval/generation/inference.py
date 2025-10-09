@@ -237,8 +237,8 @@ def extract_statements(
     Parameters
     -----------
 
-    hypotheses_segments : List[str]
-        List of hypothesis segments.
+    hypotheses_segments : List[List[HypothesisSegment]]
+        Nested list of hypothesis segments.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
