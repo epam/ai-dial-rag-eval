@@ -127,8 +127,11 @@ class LLMInferenceScorer(InferenceScorer):
                 [
                     {
                         "premise": batch_element.premise,
-                        "statements": batch_element.statements,
-                        "document": batch_element.document_name,
+                        "statements": [
+                            f"<statement{index + 1}> {statement} </statement{index + 1}>"
+                            for index, statement in enumerate(batch_element.statements)
+                        ],
+                        "document": batch_element.document_name.strip(),
                     }
                     for batch_element in inference_inputs
                 ],
