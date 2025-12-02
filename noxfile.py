@@ -7,8 +7,21 @@ LOCATIONS = ("src", "tests", "noxfile.py")
 PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12"]
 
 
-@nox.session(python=PYTHON_VERSIONS)
-def test(session):
+@nox.session
+@nox.parametrize(
+    "python, numpy",
+    [
+        ("3.9", "1.26.4"),
+        ("3.9", "2.0.2"),
+        ("3.10", "1.26.4"),
+        ("3.10", "2.2.6"),
+        ("3.11", "1.26.4"),
+        ("3.11", "2.3.5"),
+        ("3.12", "1.26.4"),
+        ("3.12", "2.3.5"),
+    ],
+)
+def test(session: nox.Session, numpy: str):
     session_args = [arg.split("=")[0] for arg in session.posargs]
     mode_args = ["--llm-mode"]
     if set(session_args).issubset(mode_args):
@@ -23,6 +36,7 @@ def test(session):
     else:
         args = session.posargs
     session.run("poetry", "install", external=True)
+    session.install(f"numpy=={numpy}")
     session.run("pytest", *args)
 
 
