@@ -34,9 +34,7 @@ Your response must be in JSON format:
 Request:
 Hypotheses:
 {% for item in hypotheses %}
-<hypothesis{{ loop.index }}>
 {{ item }}
-</hypothesis{{ loop.index }}>
 {% endfor %}
 """
 

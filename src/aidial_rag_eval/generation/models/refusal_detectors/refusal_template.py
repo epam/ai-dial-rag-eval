@@ -38,9 +38,7 @@ Each answer, even meaningless, must have it's own tag, if you don't know how to 
 Request:
 List of answers:
 {% for item in answers %}
-<answer{{ loop.index }}>
 {{ item }}
-</answer{{ loop.index }}>
 {% endfor %}"""
 
 refusal_prompt = PromptTemplate.from_template(
