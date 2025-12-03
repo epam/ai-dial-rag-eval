@@ -57,9 +57,22 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
 
 
 @chain
-def check_if_statements_is_empty(input_: Dict):
+def check_if_statements_is_empty(input_: Dict) -> bool:
     assert type(input_) is dict
     return not input_.get("statements")
+
+
+@chain
+def wrap_statements(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "premise": input_["premise"],
+        "statements": [
+            f"<statement{index + 1}> {statement} </statement{index + 1}>"
+            for index, statement in enumerate(input_["statements"])
+        ],
+        "document": input_["document"],
+    }
 
 
 class LLMInferenceScorer(InferenceScorer):
@@ -89,7 +102,7 @@ class LLMInferenceScorer(InferenceScorer):
                 lambda _: InferenceScore(inference=0.0, explanation=""),
             ),
             RunnablePassthrough.assign(
-                inference=inference_prompt | model | json_to_list
+                inference=wrap_statements | inference_prompt | model | json_to_list
             )
             | returns_to_inference_score,
         )
@@ -127,10 +140,7 @@ class LLMInferenceScorer(InferenceScorer):
                 [
                     {
                         "premise": batch_element.premise,
-                        "statements": [
-                            f"<statement{index + 1}> {statement} </statement{index + 1}>"
-                            for index, statement in enumerate(batch_element.statements)
-                        ],
+                        "statements": batch_element.statements,
                         "document": batch_element.document_name.strip(),
                     }
                     for batch_element in inference_inputs
