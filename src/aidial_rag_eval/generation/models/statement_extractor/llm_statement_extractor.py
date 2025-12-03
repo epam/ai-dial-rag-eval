@@ -75,7 +75,13 @@ class LLMStatementExtractor(StatementExtractor):
         max_concurrency: int,
     ):
 
-        self._chain = wrap_hypotheses | statement_prompt | model | json_to_list | list_to_statements
+        self._chain = (
+            wrap_hypotheses
+            | statement_prompt
+            | model
+            | json_to_list
+            | list_to_statements
+        )
         self.max_concurrency = max_concurrency
 
     def extract(

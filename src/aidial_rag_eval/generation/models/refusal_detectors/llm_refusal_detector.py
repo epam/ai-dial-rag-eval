@@ -1,5 +1,5 @@
 import itertools
-from typing import List, Dict
+from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableSerializable, chain
@@ -71,7 +71,13 @@ class LLMRefusalDetector(RefusalDetector):
         max_concurrency: int,
     ):
 
-        self._chain = wrap_answers | refusal_prompt | model | json_to_list | returns_to_refusal_return
+        self._chain = (
+            wrap_answers
+            | refusal_prompt
+            | model
+            | json_to_list
+            | returns_to_refusal_return
+        )
         self.max_concurrency = max_concurrency
 
     def get_refusal(

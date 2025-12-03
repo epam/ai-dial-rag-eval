@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-from typing import List, Dict
+from typing import Dict, List
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models import BaseChatModel
@@ -50,9 +50,7 @@ def json_to_dict_segments(input_: AIMessage) -> List[str]:
 @chain
 def sentences_to_json_list(input_: Dict) -> Dict:
     assert type(input_) is dict
-    return {
-        "sentences_str": json.dumps(input_["sentences"])
-    }
+    return {"sentences_str": json.dumps(input_["sentences"])}
 
 
 class LLMNoPronounsConverter(SegmentConverter):
@@ -82,7 +80,12 @@ class LLMNoPronounsConverter(SegmentConverter):
         max_concurrency: int,
     ):
 
-        self._chain = sentences_to_json_list | decontextualization_prompt | model | json_to_dict_segments
+        self._chain = (
+            sentences_to_json_list
+            | decontextualization_prompt
+            | model
+            | json_to_dict_segments
+        )
         self.max_concurrency = max_concurrency
 
     def transform_texts(
