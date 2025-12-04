@@ -36,7 +36,11 @@ def calculate_f1(precision: np.float64, recall: np.float64, **kwargs) -> np.floa
     if precision == 0 and recall == 0:
         return np.float64(0.0)
     else:
-        return 2.0 * np.float64(precision * recall) / np.float64(precision + recall)
+        return (
+            np.float64(2.0)
+            * np.float64(precision * recall)
+            / np.float64(precision + recall)
+        )
 
 
 def wrap_facts_metric(metric, fields=FactMatchResult._fields):
