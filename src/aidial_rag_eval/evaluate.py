@@ -85,6 +85,7 @@ def evaluate(
     )
     aggregated_metrics = df_final.mean(numeric_only=True)
     assert isinstance(aggregated_metrics, pd.Series)
+    aggregated_metrics.dropna(inplace=True)
 
     metrics = Dataset.write_dataframe(
         df_final,
