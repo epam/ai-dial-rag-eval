@@ -9,7 +9,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeChatModel
 from langchain_openai import AzureChatOpenAI
 
-CACHE_PATH = f"{Path(__file__).parent.parent}/data/cache/cache_gemini-1.5-flash-002.db"
+CACHE_PATH = f"{Path(__file__).parent.parent}/data/cache/cache.db"
 
 
 def pytest_configure(config):
