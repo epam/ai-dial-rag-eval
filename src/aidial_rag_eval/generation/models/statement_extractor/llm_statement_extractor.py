@@ -43,6 +43,17 @@ def list_to_statements(
         return []
 
 
+@chain
+def wrap_hypotheses(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "hypotheses": [
+            f"<hypothesis{index + 1}> {hypothesis} </hypothesis{index + 1}>"
+            for index, hypothesis in enumerate(input_["hypotheses"])
+        ],
+    }
+
+
 class LLMStatementExtractor(StatementExtractor):
     """
     The LLMStatementExtractor is designed to extract
@@ -64,7 +75,13 @@ class LLMStatementExtractor(StatementExtractor):
         max_concurrency: int,
     ):
 
-        self._chain = statement_prompt | model | json_to_list | list_to_statements
+        self._chain = (
+            wrap_hypotheses
+            | statement_prompt
+            | model
+            | json_to_list
+            | list_to_statements
+        )
         self.max_concurrency = max_concurrency
 
     def extract(

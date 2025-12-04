@@ -9,7 +9,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeChatModel
 from langchain_openai import AzureChatOpenAI
 
-CACHE_PATH = f"{Path(__file__).parent.parent}/data/cache/cache_gemini-1.5-flash-002.db"
+CACHE_PATH = f"{Path(__file__).parent.parent}/data/cache/cache.db"
 
 
 def pytest_configure(config):
@@ -38,7 +38,7 @@ def llm(request) -> BaseChatModel:
     if llm_mode == "real":
         cache = PromptSQLiteCache(CACHE_PATH)
         azure_llm = AzureChatOpenAI(
-            model="gemini-2.0-flash-lite-001",
+            model="gemini-2.5-flash-lite",
             api_key=os.environ.get("DIAL_API_KEY"),  # pyright: ignore # noqa
             azure_endpoint=os.environ.get("DIAL_URL"),
             api_version="2023-03-15-preview",

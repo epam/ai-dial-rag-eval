@@ -1,5 +1,5 @@
 import itertools
-from typing import List
+from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableSerializable, chain
@@ -38,6 +38,17 @@ def returns_to_refusal_return(input_: List) -> List[RefusalReturn]:
     return [RefusalReturn(refusal=float(tag == "REJ")) for tag in input_]
 
 
+@chain
+def wrap_answers(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "answers": [
+            f"<answer{index + 1}> {hypothesis} </answer{index + 1}>"
+            for index, hypothesis in enumerate(input_["answers"])
+        ],
+    }
+
+
 class LLMRefusalDetector(RefusalDetector):
     """
     Experimental:
@@ -60,7 +71,13 @@ class LLMRefusalDetector(RefusalDetector):
         max_concurrency: int,
     ):
 
-        self._chain = refusal_prompt | model | json_to_list | returns_to_refusal_return
+        self._chain = (
+            wrap_answers
+            | refusal_prompt
+            | model
+            | json_to_list
+            | returns_to_refusal_return
+        )
         self.max_concurrency = max_concurrency
 
     def get_refusal(

@@ -33,9 +33,7 @@ Your response template:
 List of input segments:
 ```json
 {
-    "segments": [{% for item in sentences %}
-        "{{ item }}"{% if not loop.last %},{% endif %}{% endfor %}
-    ]
+    "segments": {{ sentences_str }}
 }
 ```
 Important: before generating response, check the number and structure of segments. The response must have the same number of segments, split the same way.

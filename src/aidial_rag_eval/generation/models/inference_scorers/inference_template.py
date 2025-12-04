@@ -5,7 +5,7 @@ inference_template = """
 Natural language inference is the task of determining whether the hypothesis is an entailment, contradiction, or neutral with respect to the premise.
 A hypothesis is a list of statements provided below. 
 
-{% if document.strip() %}
+{% if document %}
 The name of the document from which the premise was derived is also provided.
 {% endif %}
 
@@ -51,7 +51,7 @@ Your response must be in JSON format:
 ```
 Request:
 
-{% if document.strip() %}
+{% if document %}
 <document_name>
 {{ document }}
 </document_name>
@@ -62,9 +62,7 @@ Request:
 
 List of statements:
 {% for item in statements %}
-<statement{{ loop.index }}>
 {{ item }}
-</statement{{ loop.index }}>
 {% endfor %}
 """
 

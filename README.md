@@ -20,12 +20,12 @@ The example of how to get retrieval metrics along with answer inference based on
 
 ```python
 import pandas as pd
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from aidial_rag_eval import create_rag_eval_metrics_report
 from aidial_rag_eval.metric_binds import CONTEXT_TO_ANSWER_INFERENCE,\
     ANSWER_TO_GROUND_TRUTH_INFERENCE, GROUND_TRUTH_TO_ANSWER_INFERENCE
 
-llm = ChatOpenAI(model="gpt-4o")
+llm = AzureChatOpenAI(model="gemini-2.5-flash-lite")
 
 df_ground_truth = pd.DataFrame([
     {
@@ -75,6 +75,15 @@ In this table:
   - "gt" refers to 'ground truth answer'
 - "ctx_ans_inference" and "ans_gt_inference" values of 1.0 mean our answer can be derived directly from the context and the ground truth answer, respectively.
 - "gt_ans_inference" of 0.5, denotes that the ground truth answer can only be partially inferred from our answer.
+
+## Recommended models
+
+The algorithm is token-intensive. Considering the balance between quality and price, the following models are recommended:
+
+- **gemini-2.5-flash-lite**
+- **gpt-5-mini**
+- **gemini-2.0-flash-lite**
+- **gpt-5-nano**
 
 ## Developer environment
 
