@@ -1,5 +1,5 @@
 # flake8: noqa
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 statement_template = """
 Break down each hypothesis into statements, if hypothesis is complex. Else return hypothesis as a single statement.
