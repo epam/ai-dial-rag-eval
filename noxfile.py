@@ -4,15 +4,13 @@ nox.options.sessions = ("lint", "test")
 nox.options.reuse_existing_virtualenvs = True
 
 LOCATIONS = ("src", "tests", "noxfile.py")
-PYTHON_VERSIONS = ["3.10", "3.11", "3.12"]
+PYTHON_VERSIONS = ["3.11", "3.12"]
 
 
 @nox.session
 @nox.parametrize(
     "python, numpy",
     [
-        ("3.10", "1.26.4"),
-        ("3.10", "2.2.6"),
         ("3.11", "1.26.4"),
         ("3.11", "2.3.5"),
         ("3.12", "1.26.4"),
