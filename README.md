@@ -87,7 +87,7 @@ The algorithm is token-intensive. Considering the balance between quality and pr
 
 ## Developer environment
 
-This project uses [Python>=3.9](https://www.python.org/downloads/) and [Poetry>=1.8.5](https://python-poetry.org/) as a dependency manager.
+This project uses [Python>=3.11](https://www.python.org/downloads/) and [Poetry>=1.8.5](https://python-poetry.org/) as a dependency manager.
 
 Check out Poetry's [documentation on how to install it](https://python-poetry.org/docs/#installation) on your system before proceeding.
 
