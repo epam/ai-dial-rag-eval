@@ -1,5 +1,5 @@
 # flake8: noqa
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 decontextualization_template = """
 The task is to replace all pronouns in a segments with their corresponding nouns or proper names when their referents are known.

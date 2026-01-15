@@ -9,15 +9,15 @@ PYTHON_VERSIONS = ["3.11", "3.12"]
 
 @nox.session
 @nox.parametrize(
-    "python, numpy",
+    ("python", "numpy", "langchain_core"),
     [
-        ("3.11", "1.26.4"),
-        ("3.11", "2.3.5"),
-        ("3.12", "1.26.4"),
-        ("3.12", "2.3.5"),
+        ("3.11", "1.26.4", "0.3.72"),
+        ("3.11", "2.3.5", "1.2.0"),
+        ("3.12", "1.26.4", "0.3.72"),
+        ("3.12", "2.3.5", "1.2.0"),
     ],
 )
-def test(session: nox.Session, numpy: str):
+def test(session: nox.Session, numpy: str, langchain_core: str):
     session_args = [arg.split("=")[0] for arg in session.posargs]
     mode_args = ["--llm-mode"]
     if set(session_args).issubset(mode_args):
@@ -33,6 +33,7 @@ def test(session: nox.Session, numpy: str):
         args = session.posargs
     session.run("poetry", "install", external=True)
     session.install(f"numpy=={numpy}")
+    session.install(f"langchain-core=={langchain_core}")
     session.run("pytest", *args)
 
 

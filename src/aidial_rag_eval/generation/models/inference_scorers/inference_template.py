@@ -1,13 +1,11 @@
 # flake8: noqa
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 inference_template = """
 Natural language inference is the task of determining whether the hypothesis is an entailment, contradiction, or neutral with respect to the premise.
 A hypothesis is a list of statements provided below. 
 
-{% if document %}
-The name of the document from which the premise was derived is also provided.
-{% endif %}
+
 
 A statement is considered an entailment if it logically follows from the premise.
 A statement is considered a contradiction if it is logically inconsistent with the premise.
