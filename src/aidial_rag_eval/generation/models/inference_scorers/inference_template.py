@@ -1,5 +1,5 @@
 # flake8: noqa
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 inference_template = """
 Natural language inference is the task of determining whether the hypothesis is an entailment, contradiction, or neutral with respect to the premise.

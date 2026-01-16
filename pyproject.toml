@@ -22,7 +22,7 @@ s3fs = {version = "^2024.3.1", optional = true}
 pydantic = "^2.7.1"
 nltk = "^3.8.1"
 tqdm = "^4.66.4"
-langchain = "^0.3.0"
+langchain-core = ">=0.3.72,<2"
 more-itertools = "^10.5.0"
 
 [tool.poetry.extras]

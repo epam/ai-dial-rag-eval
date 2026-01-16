@@ -1,5 +1,5 @@
 # flake8: noqa
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 refusal_template = """
 Answer Refusal task is to determine if an answer should be tagged as a refusal to answer based on specific criteria.
