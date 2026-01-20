@@ -20,6 +20,7 @@ PYTHON_VERSIONS = ["3.11", "3.12"]
 def test(session: nox.Session, numpy: str, langchain_core: str):
     session_args = [arg.split("=")[0] for arg in session.posargs]
     mode_args = ["--llm-mode"]
+
     if set(session_args).issubset(mode_args):
         args = session.posargs + [
             "--cov=src",
