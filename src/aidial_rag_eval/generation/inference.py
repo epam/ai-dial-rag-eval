@@ -224,7 +224,7 @@ def segment_hypotheses(
 
 
 def extract_statements(
-    hypotheses_segments: List[List[HypothesisSegment]],
+    list_of_hypothesis_segments: List[List[HypothesisSegment]],
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -237,7 +237,7 @@ def extract_statements(
     Parameters
     -----------
 
-    hypotheses_segments : List[List[HypothesisSegment]]
+    list_of_hypothesis_segments : List[List[HypothesisSegment]]
         Nested list of hypothesis segments.
 
     llm : BaseChatModel
@@ -264,7 +264,7 @@ def extract_statements(
     if show_progress_bar:
         print("Extracting statements...")
     statements = extractor.extract(
-        hypotheses_segments,
+        list_of_hypothesis_segments,
         show_progress_bar,
     )
     return statements
@@ -404,7 +404,7 @@ def calculate_batch_inference(
         show_progress_bar=show_progress_bar,
     )
     statements: List[List[List[Statement]]] = extract_statements(
-        hypotheses_segments=[
+        list_of_hypothesis_segments=[
             segmented_hypothesis.segments
             for segmented_hypothesis in segmented_hypotheses
         ],
