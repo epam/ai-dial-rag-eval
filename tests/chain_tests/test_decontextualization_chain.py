@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
@@ -77,3 +79,22 @@ def test_empty_response():
     converter.transform_texts([segmented_text], show_progress_bar=False)
 
     assert segmented_text.segments == original_segments
+
+
+def test_invoke_raises_exception():
+    fake_llm = FakeListChatModel(responses=[""])
+
+    converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
+
+    segmented_text = SegmentedText(
+        segments=["John went to the store.", "He bought milk."], delimiters=[" "]
+    )
+
+    with patch.object(
+        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+    ):
+        try:
+            converter.transform_texts([segmented_text], show_progress_bar=False)
+            raise AssertionError("Expected exception was not raised")
+        except Exception as e:
+            assert str(e) == "LLM invoke failed"

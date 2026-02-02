@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.inference_scorers.llm_inference_scorer import (
@@ -109,3 +111,19 @@ def test_empty_statements():
 
     assert results[0].inference == 0.0
     assert results[0].explanation == ""
+
+
+def test_invoke_raises_exception():
+    fake_llm = FakeListChatModel(responses=[""])
+    scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
+
+    inputs = [_create_inference_input(["Statement1"])]
+
+    with patch.object(
+        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+    ):
+        try:
+            scorer.get_inference(inputs, show_progress_bar=False)
+            raise AssertionError("Expected exception was not raised")
+        except Exception as e:
+            assert str(e) == "LLM invoke failed"
