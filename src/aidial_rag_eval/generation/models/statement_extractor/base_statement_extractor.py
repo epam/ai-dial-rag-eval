@@ -14,7 +14,7 @@ class StatementExtractor(ABC):
     @abstractmethod
     def extract(
         self,
-        hypothesis_segments: List[List[HypothesisSegment]],
+        list_of_hypothesis_segments: List[List[HypothesisSegment]],
         show_progress_bar: bool,
     ) -> List[List[List[Statement]]]:
         pass
