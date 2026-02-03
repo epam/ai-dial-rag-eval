@@ -18,9 +18,14 @@ def test_valid_json_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    converter.transform_texts([segmented_text], show_progress_bar=False)
+    decontext_segmented_text = converter.transform_texts(
+        [segmented_text], show_progress_bar=False
+    )[0]
 
-    assert segmented_text.segments == ["John went to the store.", "John bought milk."]
+    assert decontext_segmented_text.segments == [
+        "John went to the store.",
+        "John bought milk.",
+    ]
 
 
 def test_invalid_json_response():
@@ -30,11 +35,12 @@ def test_invalid_json_response():
     segmented_text = SegmentedText(
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
-    original_segments = segmented_text.segments.copy()
 
-    converter.transform_texts([segmented_text], show_progress_bar=False)
+    decontext_segmented_text = converter.transform_texts(
+        [segmented_text], show_progress_bar=False
+    )[0]
 
-    assert segmented_text.segments == original_segments
+    assert decontext_segmented_text.segments == segmented_text.segments
 
 
 def test_json_missing_segments_key():
@@ -46,11 +52,12 @@ def test_json_missing_segments_key():
     segmented_text = SegmentedText(
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
-    original_segments = segmented_text.segments.copy()
 
-    converter.transform_texts([segmented_text], show_progress_bar=False)
+    decontext_segmented_text = converter.transform_texts(
+        [segmented_text], show_progress_bar=False
+    )[0]
 
-    assert segmented_text.segments == original_segments
+    assert decontext_segmented_text.segments == segmented_text.segments
 
 
 def test_segment_count_mismatch():
@@ -60,11 +67,12 @@ def test_segment_count_mismatch():
     segmented_text = SegmentedText(
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
-    original_segments = segmented_text.segments.copy()
 
-    converter.transform_texts([segmented_text], show_progress_bar=False)
+    decontext_segmented_text = converter.transform_texts(
+        [segmented_text], show_progress_bar=False
+    )[0]
 
-    assert segmented_text.segments == original_segments
+    assert decontext_segmented_text.segments == segmented_text.segments
 
 
 def test_empty_response():
@@ -74,11 +82,12 @@ def test_empty_response():
     segmented_text = SegmentedText(
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
-    original_segments = segmented_text.segments.copy()
 
-    converter.transform_texts([segmented_text], show_progress_bar=False)
+    decontext_segmented_text = converter.transform_texts(
+        [segmented_text], show_progress_bar=False
+    )[0]
 
-    assert segmented_text.segments == original_segments
+    assert decontext_segmented_text.segments == segmented_text.segments
 
 
 def test_invoke_raises_exception():

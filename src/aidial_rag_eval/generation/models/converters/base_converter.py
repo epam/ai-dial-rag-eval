@@ -14,5 +14,5 @@ class SegmentConverter(ABC):
     @abstractmethod
     def transform_texts(
         self, segmented_texts: List[SegmentedText], show_progress_bar: bool
-    ):
+    ) -> List[SegmentedText]:
         pass
