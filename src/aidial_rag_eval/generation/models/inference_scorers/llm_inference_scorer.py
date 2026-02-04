@@ -46,6 +46,7 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
         passed_statements = llm_outputs_with_inputs["statements"]
         list_tags = [d["tag"] for d in outputs]
         inference = float(np.mean([tag == "ENT" for tag in list_tags]))
+        assert all(["explanation" in d for d in outputs])
         assert len(outputs) == len(passed_statements)
         for d, s in zip(outputs, passed_statements):
             d["statement"] = s
