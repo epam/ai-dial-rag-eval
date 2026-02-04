@@ -23,7 +23,26 @@ from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
 @chain
-def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
+def _check_if_statements_is_empty(input_: Dict) -> bool:
+    assert type(input_) is dict
+    return not input_.get("statements")
+
+
+@chain
+def _wrap_statements(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "premise": input_["premise"],
+        "statements": [
+            f"<statement{index + 1}> {statement} </statement{index + 1}>"
+            for index, statement in enumerate(input_["statements"])
+        ],
+        "document": input_["document"],
+    }
+
+
+@chain
+def _returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     """
     The final part of the chain for calculating inference.
     The inference is the average proportion of "ENT" tags among the possible tags:
@@ -58,25 +77,6 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     return InferenceScore(inference=inference, explanation=explanation)
 
 
-@chain
-def check_if_statements_is_empty(input_: Dict) -> bool:
-    assert type(input_) is dict
-    return not input_.get("statements")
-
-
-@chain
-def wrap_statements(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return {
-        "premise": input_["premise"],
-        "statements": [
-            f"<statement{index + 1}> {statement} </statement{index + 1}>"
-            for index, statement in enumerate(input_["statements"])
-        ],
-        "document": input_["document"],
-    }
-
-
 class LLMInferenceScorer(InferenceScorer):
     """
     The LLMInferenceScorer is designed to calculate
@@ -100,16 +100,16 @@ class LLMInferenceScorer(InferenceScorer):
 
         self._chain = RunnableBranch(
             (
-                check_if_statements_is_empty,
+                _check_if_statements_is_empty,
                 lambda _: InferenceScore(inference=0.0, explanation=""),
             ),
             RunnablePassthrough.assign(
-                inference=wrap_statements
+                inference=_wrap_statements
                 | inference_prompt
                 | RunnableLambda(lambda x: safe_model_invoke(model, x))
                 | json_to_list
             )
-            | returns_to_inference_score,
+            | _returns_to_inference_score,
         )
         self.max_concurrency = max_concurrency
 

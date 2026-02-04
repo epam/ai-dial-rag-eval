@@ -18,7 +18,18 @@ from aidial_rag_eval.types import Answer
 
 
 @chain
-def returns_to_refusal_return(input_: List) -> List[RefusalReturn]:
+def _wrap_answers(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "answers": [
+            f"<answer{index + 1}> {hypothesis} </answer{index + 1}>"
+            for index, hypothesis in enumerate(input_["answers"])
+        ],
+    }
+
+
+@chain
+def _returns_to_refusal_return(input_: List) -> List[RefusalReturn]:
     """
     The final part of the chain, which calculates answer refusals
     for each answer in the batch based on the JSON output from the LLM.
@@ -36,17 +47,6 @@ def returns_to_refusal_return(input_: List) -> List[RefusalReturn]:
         is assigned a 1. if it is an answer refusal, or 0. otherwise.
     """
     return [RefusalReturn(refusal=float(tag == "REJ")) for tag in input_]
-
-
-@chain
-def wrap_answers(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return {
-        "answers": [
-            f"<answer{index + 1}> {hypothesis} </answer{index + 1}>"
-            for index, hypothesis in enumerate(input_["answers"])
-        ],
-    }
 
 
 class LLMRefusalDetector(RefusalDetector):
@@ -72,11 +72,11 @@ class LLMRefusalDetector(RefusalDetector):
     ):
 
         self._chain = (
-            wrap_answers
+            _wrap_answers
             | refusal_prompt
             | RunnableLambda(lambda x: safe_model_invoke(model, x))
             | json_to_list
-            | returns_to_refusal_return
+            | _returns_to_refusal_return
         )
         self.max_concurrency = max_concurrency
 

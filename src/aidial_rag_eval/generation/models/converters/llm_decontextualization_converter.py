@@ -24,13 +24,25 @@ from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
 @chain
-def check_if_sentences_less_than_2(input_: Dict) -> bool:
+def _check_if_sentences_less_than_2(input_: Dict) -> bool:
     assert type(input_) is dict
     return len(input_["segmented_text"].segments) < 2
 
 
 @chain
-def json_to_dict_segments(input_: AIMessage) -> List[str]:
+def _return_original_segmented_text(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return input_["segmented_text"]
+
+
+@chain
+def _segmented_text_to_json_list(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {"sentences_str": json.dumps(input_["segmented_text"].segments)}
+
+
+@chain
+def _json_to_dict_segments(input_: AIMessage) -> List[str]:
     """
     Function is part of a chain that extracts segments from an AIMessage.
 
@@ -60,19 +72,7 @@ def json_to_dict_segments(input_: AIMessage) -> List[str]:
 
 
 @chain
-def segmented_text_to_json_list(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return {"sentences_str": json.dumps(input_["segmented_text"].segments)}
-
-
-@chain
-def return_original_segmented_text(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return input_["segmented_text"]
-
-
-@chain
-def dict_segments_to_segmented_text(llm_outputs_with_inputs: Dict) -> SegmentedText:
+def _dict_segments_to_segmented_text(llm_outputs_with_inputs: Dict) -> SegmentedText:
     original_segmented_text: SegmentedText = llm_outputs_with_inputs["segmented_text"]
     try:
         decontextualized_segments = llm_outputs_with_inputs["decontextualized_segments"]
@@ -111,14 +111,14 @@ class LLMNoPronounsConverter(SegmentConverter):
         max_concurrency: int,
     ):
         self._chain = RunnableBranch(
-            (check_if_sentences_less_than_2, return_original_segmented_text),
+            (_check_if_sentences_less_than_2, _return_original_segmented_text),
             RunnablePassthrough.assign(
-                decontextualized_segments=segmented_text_to_json_list
+                decontextualized_segments=_segmented_text_to_json_list
                 | decontextualization_prompt
                 | RunnableLambda(lambda x: safe_model_invoke(model, x))
-                | json_to_dict_segments
+                | _json_to_dict_segments
             )
-            | dict_segments_to_segmented_text,
+            | _dict_segments_to_segmented_text,
         )
         self.max_concurrency = max_concurrency
 

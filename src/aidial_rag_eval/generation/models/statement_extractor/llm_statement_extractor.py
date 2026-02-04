@@ -20,7 +20,18 @@ from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
 @chain
-def list_to_statements(
+def _wrap_hypotheses(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "hypotheses": [
+            f"<hypothesis{index + 1}> {hypothesis_segment} </hypothesis{index + 1}>"
+            for index, hypothesis_segment in enumerate(input_["hypothesis_segments"])
+        ],
+    }
+
+
+@chain
+def _list_to_statements(
     llm_outputs_with_inputs: Dict,
 ) -> List[List[str]]:
     """
@@ -59,17 +70,6 @@ def list_to_statements(
         ]
 
 
-@chain
-def wrap_hypotheses(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return {
-        "hypotheses": [
-            f"<hypothesis{index + 1}> {hypothesis_segment} </hypothesis{index + 1}>"
-            for index, hypothesis_segment in enumerate(input_["hypothesis_segments"])
-        ],
-    }
-
-
 class LLMStatementExtractor(StatementExtractor):
     """
     The LLMStatementExtractor is designed to extract
@@ -93,12 +93,12 @@ class LLMStatementExtractor(StatementExtractor):
 
         self._chain = (
             RunnablePassthrough.assign(
-                llm_output_statements=wrap_hypotheses
+                llm_output_statements=_wrap_hypotheses
                 | statement_prompt
                 | RunnableLambda(lambda x: safe_model_invoke(model, x))
                 | json_to_list
             )
-            | list_to_statements
+            | _list_to_statements
         )
         self.max_concurrency = max_concurrency
 
