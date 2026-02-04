@@ -5,6 +5,7 @@ import numpy as np
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import (
     RunnableBranch,
+    RunnableLambda,
     RunnablePassthrough,
     RunnableSerializable,
     chain,
@@ -16,7 +17,7 @@ from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer i
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
     inference_prompt,
 )
-from aidial_rag_eval.generation.models.lambdas import json_to_list
+from aidial_rag_eval.generation.models.lambdas import json_to_list, safe_model_invoke
 from aidial_rag_eval.generation.types import InferenceInputs, InferenceScore
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
@@ -102,7 +103,10 @@ class LLMInferenceScorer(InferenceScorer):
                 lambda _: InferenceScore(inference=0.0, explanation=""),
             ),
             RunnablePassthrough.assign(
-                inference=wrap_statements | inference_prompt | model | json_to_list
+                inference=wrap_statements
+                | inference_prompt
+                | RunnableLambda(lambda x: safe_model_invoke(model, x))
+                | json_to_list
             )
             | returns_to_inference_score,
         )

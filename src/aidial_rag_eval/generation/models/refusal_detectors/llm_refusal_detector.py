@@ -2,10 +2,10 @@ import itertools
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnableSerializable, chain
+from langchain_core.runnables import RunnableLambda, RunnableSerializable, chain
 from more_itertools import chunked
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
+from aidial_rag_eval.generation.models.lambdas import json_to_list, safe_model_invoke
 from aidial_rag_eval.generation.models.refusal_detectors.base_refusal_detector import (
     RefusalDetector,
 )
@@ -74,7 +74,7 @@ class LLMRefusalDetector(RefusalDetector):
         self._chain = (
             wrap_answers
             | refusal_prompt
-            | model
+            | RunnableLambda(lambda x: safe_model_invoke(model, x))
             | json_to_list
             | returns_to_refusal_return
         )

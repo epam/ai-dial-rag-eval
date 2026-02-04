@@ -122,8 +122,6 @@ def test_invoke_raises_exception():
     with patch.object(
         FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            scorer.get_inference(inputs, show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        results = scorer.get_inference(inputs, show_progress_bar=False)
+        assert results[0].inference == 0.0
+        assert results[0].explanation == ""

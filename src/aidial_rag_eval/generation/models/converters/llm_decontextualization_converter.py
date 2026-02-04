@@ -7,6 +7,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import (
     RunnableBranch,
+    RunnableLambda,
     RunnablePassthrough,
     RunnableSerializable,
     chain,
@@ -14,6 +15,7 @@ from langchain_core.runnables import (
 from langchain_core.utils.json import parse_json_markdown
 
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
+from aidial_rag_eval.generation.models.lambdas import safe_model_invoke
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     decontextualization_prompt,
 )
@@ -113,7 +115,7 @@ class LLMNoPronounsConverter(SegmentConverter):
             RunnablePassthrough.assign(
                 decontextualized_segments=segmented_text_to_json_list
                 | decontextualization_prompt
-                | model
+                | RunnableLambda(lambda x: safe_model_invoke(model, x))
                 | json_to_dict_segments
             )
             | dict_segments_to_segmented_text,

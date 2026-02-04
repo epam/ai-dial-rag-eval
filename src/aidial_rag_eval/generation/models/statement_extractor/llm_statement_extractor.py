@@ -1,9 +1,14 @@
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnablePassthrough,
+    RunnableSerializable,
+    chain,
+)
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
+from aidial_rag_eval.generation.models.lambdas import json_to_list, safe_model_invoke
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
     StatementExtractor,
 )
@@ -90,7 +95,7 @@ class LLMStatementExtractor(StatementExtractor):
             RunnablePassthrough.assign(
                 llm_output_statements=wrap_hypotheses
                 | statement_prompt
-                | model
+                | RunnableLambda(lambda x: safe_model_invoke(model, x))
                 | json_to_list
             )
             | list_to_statements

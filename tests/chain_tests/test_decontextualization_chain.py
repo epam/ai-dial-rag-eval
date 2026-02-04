@@ -102,8 +102,7 @@ def test_invoke_raises_exception():
     with patch.object(
         FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            converter.transform_texts([segmented_text], show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        decontext_segmented_text = converter.transform_texts(
+            [segmented_text], show_progress_bar=False
+        )[0]
+        assert decontext_segmented_text.segments == segmented_text.segments

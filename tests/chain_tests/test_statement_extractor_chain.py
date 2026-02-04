@@ -26,7 +26,7 @@ def test_valid_json_response():
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
+    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
     result = extractor.extract([hypothesis_segments], show_progress_bar=False)
 
@@ -65,7 +65,7 @@ def test_statement_count_mismatch():
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
+    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
     result = extractor.extract([hypothesis_segments], show_progress_bar=False)
 
@@ -78,7 +78,7 @@ def test_empty_response():
     fake_llm = FakeListChatModel(responses=[""])
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
+    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
     result = extractor.extract([hypothesis_segments], show_progress_bar=False)
 
@@ -91,13 +91,12 @@ def test_invoke_raises_exception():
     fake_llm = FakeListChatModel(responses=[""])
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
+    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
     with patch.object(
         FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            extractor.extract([hypothesis_segments], show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        result = extractor.extract([hypothesis_segments], show_progress_bar=False)
+        assert result == [
+            [[hypothesis_segment] for hypothesis_segment in hypothesis_segments]
+        ]
