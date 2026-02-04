@@ -63,9 +63,7 @@ def test_json_missing_tag_key():
 
 
 def test_json_missing_explanation_key():
-    fake_llm = FakeListChatModel(
-        responses=['{"results": [{"tag": "ENT"}]}']
-    )
+    fake_llm = FakeListChatModel(responses=['{"results": [{"tag": "ENT"}]}'])
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 
     inputs = [_create_inference_input(["Statement1"])]
