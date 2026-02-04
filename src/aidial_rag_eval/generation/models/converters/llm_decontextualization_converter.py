@@ -15,10 +15,10 @@ from langchain_core.runnables import (
 from langchain_core.utils.json import parse_json_markdown
 
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
-from aidial_rag_eval.generation.models.lambdas import safe_model_invoke
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     decontextualization_prompt,
 )
+from aidial_rag_eval.generation.models.lambdas import safe_model_invoke
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
