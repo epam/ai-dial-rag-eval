@@ -13,13 +13,13 @@ repository = "https://github.com/epam/ai-dial-rag-eval"
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11, <3.15"
 numpy = ">=1.26.4,<3"
 pandas = "^2.2.2"
 fsspec = "^2024.3.1"
 s3fs = {version = "^2024.3.1", optional = true}
 pydantic = "^2.7.1"
-spacy = ">=3.8.0,<4"
+spacy = ">=3.8.9,<4"
 tqdm = "^4.66.4"
 langchain-core = ">=0.3.80,<2"
 more-itertools = "^10.5.0"
