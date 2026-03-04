@@ -5,6 +5,7 @@ import numpy as np
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import (
     RunnableBranch,
+    RunnableLambda,
     RunnablePassthrough,
     RunnableSerializable,
     chain,
@@ -16,13 +17,32 @@ from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer i
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
     inference_prompt,
 )
-from aidial_rag_eval.generation.models.lambdas import json_to_list
+from aidial_rag_eval.generation.models.lambdas import json_to_list, safe_model_invoke
 from aidial_rag_eval.generation.types import InferenceInputs, InferenceScore
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
 @chain
-def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
+def _check_if_statements_is_empty(input_: Dict) -> bool:
+    assert type(input_) is dict
+    return not input_.get("statements")
+
+
+@chain
+def _wrap_statements(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return {
+        "premise": input_["premise"],
+        "statements": [
+            f"<statement{index + 1}> {statement} </statement{index + 1}>"
+            for index, statement in enumerate(input_["statements"])
+        ],
+        "document": input_["document"],
+    }
+
+
+@chain
+def _returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     """
     The final part of the chain for calculating inference.
     The inference is the average proportion of "ENT" tags among the possible tags:
@@ -45,6 +65,7 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
         passed_statements = llm_outputs_with_inputs["statements"]
         list_tags = [d["tag"] for d in outputs]
         inference = float(np.mean([tag == "ENT" for tag in list_tags]))
+        assert all(["explanation" in d for d in outputs])
         assert len(outputs) == len(passed_statements)
         for d, s in zip(outputs, passed_statements):
             d["statement"] = s
@@ -54,25 +75,6 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
         inference = 0.0
         explanation = ""
     return InferenceScore(inference=inference, explanation=explanation)
-
-
-@chain
-def check_if_statements_is_empty(input_: Dict) -> bool:
-    assert type(input_) is dict
-    return not input_.get("statements")
-
-
-@chain
-def wrap_statements(input_: Dict) -> Dict:
-    assert type(input_) is dict
-    return {
-        "premise": input_["premise"],
-        "statements": [
-            f"<statement{index + 1}> {statement} </statement{index + 1}>"
-            for index, statement in enumerate(input_["statements"])
-        ],
-        "document": input_["document"],
-    }
 
 
 class LLMInferenceScorer(InferenceScorer):
@@ -98,13 +100,16 @@ class LLMInferenceScorer(InferenceScorer):
 
         self._chain = RunnableBranch(
             (
-                check_if_statements_is_empty,
+                _check_if_statements_is_empty,
                 lambda _: InferenceScore(inference=0.0, explanation=""),
             ),
             RunnablePassthrough.assign(
-                inference=wrap_statements | inference_prompt | model | json_to_list
+                inference=_wrap_statements
+                | inference_prompt
+                | RunnableLambda(lambda x: safe_model_invoke(model, x))
+                | json_to_list
             )
-            | returns_to_inference_score,
+            | _returns_to_inference_score,
         )
         self.max_concurrency = max_concurrency
 

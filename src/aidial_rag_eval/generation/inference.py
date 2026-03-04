@@ -219,8 +219,10 @@ def segment_hypotheses(
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
-    converter.transform_texts(segmented_hypotheses, show_progress_bar)
-    return segmented_hypotheses
+    decontextualized__segmented_hypotheses = converter.transform_texts(
+        segmented_hypotheses, show_progress_bar
+    )
+    return decontextualized__segmented_hypotheses
 
 
 def extract_statements(

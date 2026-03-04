@@ -2,9 +2,17 @@ from json import JSONDecodeError
 from typing import Dict, List
 
 from langchain_core.exceptions import OutputParserException
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import chain
 from langchain_core.utils.json import parse_json_markdown
+
+
+def safe_model_invoke(model: BaseChatModel, input_):
+    try:
+        return model.invoke(input_)
+    except Exception:
+        return AIMessage(content="")
 
 
 @chain
