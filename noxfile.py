@@ -7,14 +7,6 @@ LOCATIONS = ("src", "tests", "noxfile.py")
 PYTHON_VERSIONS = ["3.11", "3.12"]
 
 
-@nox.session(python=["3.11"])
-def lint(session):
-    args = session.posargs or LOCATIONS
-    session.run("poetry", "sync", "--with", "lint", external=True)
-    session.run("flake8", *args)
-    session.run("pyright", *args)
-
-
 @nox.session
 @nox.parametrize(
     ("python", "numpy", "langchain_core"),
@@ -44,6 +36,14 @@ def test(session: nox.Session, numpy: str, langchain_core: str):
     session.run("poetry", "sync", external=True)
     session.install(f"langchain-core=={langchain_core}", f"numpy=={numpy}")
     session.run("pytest", *args)
+
+
+@nox.session(python=["3.11"])
+def lint(session):
+    args = session.posargs or LOCATIONS
+    session.run("poetry", "sync", "--with", "lint", external=True)
+    session.run("flake8", *args)
+    session.run("pyright", *args)
 
 
 @nox.session(python=["3.11"])
