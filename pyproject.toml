@@ -18,7 +18,10 @@ numpy = ">=1.26.4,<3"
 pandas = "^2.2.2"
 fsspec = "^2024.3.1"
 s3fs = {version = "^2024.3.1", optional = true}
-pydantic = {version = ">=2.13.0b2", allow-prereleases = true}
+pydantic = [
+    {version = ">=2.7.1", python = ">=3.11,<3.14"},
+    {version = ">=2.13.0b1", python = ">=3.14", allow-prereleases = true}
+]
 spacy = ">=3.8.9,<4"
 srsly = ">=2.5.2"
 murmurhash = ">=1.0.14"
