@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.inference_scorers.llm_inference_scorer import (
@@ -62,18 +63,17 @@ def test_json_missing_tag_key():
     assert results[0].explanation == ""
 
 
-# def test_json_missing_explanation_key():
-#     fake_llm = FakeListChatModel(
-#         responses=['{"results": [{"tag": "ENT"}]}']
-#     )
-#     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
-#
-#     inputs = [_create_inference_input(["Statement1"])]
-#
-#     results = scorer.get_inference(inputs, show_progress_bar=False)
-#
-#     assert results[0].inference == 0.0
-#     assert results[0].explanation == ""
+@pytest.mark.skip(reason="explanation key check is not implemented")
+def test_json_missing_explanation_key():
+    fake_llm = FakeListChatModel(responses=['{"results": [{"tag": "ENT"}]}'])
+    scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
+
+    inputs = [_create_inference_input(["Statement1"])]
+
+    results = scorer.get_inference(inputs, show_progress_bar=False)
+
+    assert results[0].inference == 0.0
+    assert results[0].explanation == ""
 
 
 def test_output_count_mismatch():
