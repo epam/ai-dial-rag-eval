@@ -18,6 +18,7 @@ from aidial_rag_eval.generation.models.inference_scorers.inference_template impo
 )
 from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.types import InferenceInputs, InferenceScore
+from aidial_rag_eval.generation.utils.exceptions import format_exception
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
@@ -40,26 +41,40 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
         Returns the inference and an explanation of how the inference was obtained.
         If the LLM output is incorrect, the inference is 0.
     """
-    try:
-        outputs = llm_outputs_with_inputs["inference"]
-        passed_statements = llm_outputs_with_inputs["statements"]
-        list_tags = [d["tag"] for d in outputs]
-        inference = float(np.mean([tag == "ENT" for tag in list_tags]))
-        assert len(outputs) == len(passed_statements)
-        for d, s in zip(outputs, passed_statements):
-            d["statement"] = s
-        assert not np.isnan(inference)
-        explanation = json.dumps(outputs)
-    except (TypeError, KeyError, AssertionError):
-        inference = 0.0
-        explanation = ""
+    outputs = llm_outputs_with_inputs["inference"]
+    passed_statements = llm_outputs_with_inputs["statements"]
+    list_tags = [d["tag"] for d in outputs]
+    inference = float(np.mean([tag == "ENT" for tag in list_tags]))
+    assert len(outputs) == len(passed_statements)
+    for d, s in zip(outputs, passed_statements):
+        d["statement"] = s
+    assert not np.isnan(inference)
+    explanation = json.dumps(outputs)
     return InferenceScore(inference=inference, explanation=explanation)
 
 
 @chain
-def check_if_statements_is_empty(input_: Dict) -> bool:
-    assert type(input_) is dict
-    return not input_.get("statements")
+def check_if_error_present(input_: InferenceInputs) -> bool:
+    return bool(input_.error)
+
+
+@chain
+def return_error_as_inference_score(input_: InferenceInputs) -> InferenceScore:
+    return InferenceScore(inference=None, explanation="", error=input_.error)
+
+
+@chain
+def check_if_statements_is_empty(input_: InferenceInputs) -> bool:
+    return not input_.statements
+
+
+@chain
+def inference_inputs_to_dict(input_: InferenceInputs) -> Dict:
+    return {
+        "premise": input_.premise,
+        "statements": input_.statements,
+        "document": input_.document_name.strip(),
+    }
 
 
 @chain
@@ -95,13 +110,14 @@ class LLMInferenceScorer(InferenceScorer):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-
         self._chain = RunnableBranch(
+            (check_if_error_present, return_error_as_inference_score),
             (
                 check_if_statements_is_empty,
                 lambda _: InferenceScore(inference=0.0, explanation=""),
             ),
-            RunnablePassthrough.assign(
+            inference_inputs_to_dict
+            | RunnablePassthrough.assign(
                 inference=wrap_statements | inference_prompt | model | json_to_list
             )
             | returns_to_inference_score,
@@ -136,16 +152,19 @@ class LLMInferenceScorer(InferenceScorer):
             for each input.
         """
         with ProgressBarCallback(len(inference_inputs), show_progress_bar) as cb:
-            returns = self._chain.batch(
-                [
-                    {
-                        "premise": batch_element.premise,
-                        "statements": batch_element.statements,
-                        "document": batch_element.document_name.strip(),
-                    }
-                    for batch_element in inference_inputs
-                ],
+            raw_results = self._chain.batch(
+                inference_inputs,
                 config={"callbacks": [cb], "max_concurrency": self.max_concurrency},
+                return_exceptions=True,
             )
-        assert isinstance(returns, list)
-        return returns
+        assert isinstance(raw_results, list)
+        return [
+            (
+                result
+                if not isinstance(result, BaseException)
+                else InferenceScore(
+                    inference=None, explanation="", error=format_exception(result)
+                )
+            )
+            for result in raw_results
+        ]

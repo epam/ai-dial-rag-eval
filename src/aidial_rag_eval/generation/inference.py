@@ -1,6 +1,6 @@
 import itertools
 import json
-from typing import Iterable, List, Optional, Tuple, TypeVar
+from typing import Iterable, List, Optional, Tuple, TypeVar, cast
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
@@ -16,16 +16,18 @@ from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extract
 )
 from aidial_rag_eval.generation.types import (
     Hypothesis,
-    HypothesisSegment,
     InferenceInputs,
     InferenceReturn,
     InferenceScore,
     JoinedDocumentsName,
     Premise,
+    Result,
     Statement,
 )
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from aidial_rag_eval.types import Documents, Question
+
+T = TypeVar("T")
 
 
 def _join_documents(documents: Documents) -> JoinedDocumentsName:
@@ -34,7 +36,7 @@ def _join_documents(documents: Documents) -> JoinedDocumentsName:
 
 def _make_inference_task_inputs(
     premises: List[Premise],
-    statements: List[List[List[Statement]]],
+    statements: List[Result[List[List[Statement]]]],
     document_names: List[JoinedDocumentsName],
 ) -> List[InferenceInputs]:
     """
@@ -45,11 +47,13 @@ def _make_inference_task_inputs(
     premises : List[str]
         A list of premises from which we want to derive hypotheses in pairs.
 
-    statements : List[List[List[Statement]]]
-        A deeply nested list of statements, where the outermost list corresponds to
-        different hypotheses, the next level represents the segmentation of each
-        hypothesis into hypothesis segments, and the innermost list breaks each
-        hypothesis segment down into individual statements.
+    statements : List[Result[List[List[Statement]]]]
+        A deeply nested list of statements wrapped in Result, where the outermost
+        list corresponds to different hypotheses, the next level represents the
+        segmentation of each hypothesis into hypothesis segments, and the innermost
+        list breaks each hypothesis segment down into individual statements.
+        If a Result has an error, a single placeholder InferenceInputs is created
+        with the error propagated.
 
     document_names: List[str]
         A list of document names used as additional information for the inference task.
@@ -57,13 +61,14 @@ def _make_inference_task_inputs(
     Returns
     ------------
     List[InferenceInputs]
-        A list that has as many items as there are innermost lists of statements,
-        each innermost statement list is paired with the premise, document names
-        and the ID of its origin hypothesis.
+        A list that has as many items as there are innermost lists of statements.
+        Each innermost statement list is paired with the premise, document name,
+        and the ID of its origin hypothesis. For failed hypotheses, a single
+        placeholder InferenceInputs with the error field set is created.
     """
-    inference_inputs = list(
+    return list(
         itertools.chain.from_iterable(
-            [
+            (
                 [
                     InferenceInputs(
                         hypothesis_id=i,
@@ -71,16 +76,22 @@ def _make_inference_task_inputs(
                         statements=list_statements,
                         document_name=document_names[i],
                     )
-                    for list_statements in statements[i]
+                    for list_statements in statement_result.value
                 ]
-                for i in range(len(statements))
-            ]
+                if statement_result.value is not None
+                else [
+                    InferenceInputs(
+                        hypothesis_id=i,
+                        premise=premises[i],
+                        statements=[],
+                        document_name=document_names[i],
+                        error=statement_result.error,
+                    )
+                ]
+            )
+            for i, statement_result in enumerate(statements)
         )
     )
-    return inference_inputs
-
-
-T = TypeVar("T")
 
 
 def _iterable_group_with_key_to_list_group(
@@ -134,6 +145,7 @@ def _grouped_data_item_to_json(
                 "hypothesis": segment,
                 "premise": [inference_input.premise],
                 "explanation": inference_score.explanation,
+                "error": inference_score.error,
             }
             for (inference_input, inference_score), segment in zip(
                 grouped_data_item, segmented_text.segments
@@ -171,7 +183,11 @@ def _grouped_data_item_to_highlight(
         highlight["corpus"].append(
             {
                 "text": segment,
-                "score": inference_score.inference - 1,
+                "score": (
+                    (inference_score.inference - 1)
+                    if inference_score.inference is not None
+                    else None
+                ),
                 "title": inference_score.inference,
             }
         )
@@ -179,12 +195,12 @@ def _grouped_data_item_to_highlight(
     return json.dumps(highlight)
 
 
-def segment_hypotheses(
+def _segment_hypotheses(
     hypotheses: List[Hypothesis],
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[SegmentedText]:
+) -> List[Result[SegmentedText]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
     sentences), and then removes pronouns using LLM.
@@ -206,41 +222,39 @@ def segment_hypotheses(
 
     Returns
     ------------
-    List[SegmentedText]
-        List of hypothesis segments with delimiters.
+    List[Result[SegmentedText]]
+        List of decontextualized hypothesis segments wrapped in Result,
+        or Result with error set if processing failed for that item.
     """
     converter = LLMNoPronounsConverter(
         model=llm,
         max_concurrency=max_concurrency,
     )
-
     segmented_hypotheses = [
         SegmentedText.from_text(text=hypothesis) for hypothesis in hypotheses
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
-    decontextualized__segmented_hypotheses = converter.transform_texts(
-        segmented_hypotheses, show_progress_bar
-    )
-    return decontextualized__segmented_hypotheses
+    return converter.transform_texts(segmented_hypotheses, show_progress_bar)
 
 
-def extract_statements(
-    list_of_hypothesis_segments: List[List[HypothesisSegment]],
+def _extract_statements(
+    segmented_hypotheses: List[Result[SegmentedText]],
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[List[List[Statement]]]:
+) -> List[Result[List[List[Statement]]]]:
     """
     Function that extracts statements from each hypothesis segment.
     Hypothesis segments of the inner list are grouped together and
-    fed into the prompt.
+    fed into the prompt. Items that already have an error are passed through.
 
     Parameters
     -----------
 
-    list_of_hypothesis_segments : List[List[HypothesisSegment]]
-        Nested list of hypothesis segments.
+    segmented_hypotheses : List[Result[SegmentedText]]
+        Segmented hypotheses wrapped in Result. Items with error set are
+        passed through without calling the LLM.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
@@ -253,11 +267,12 @@ def extract_statements(
 
     Returns
     ------------
-    List[List[List[Statement]]]
-        A deeply nested list of statements, where the outermost list corresponds to
-        different hypotheses, the next level corresponds to the segmentation of each
-        hypothesis into hypothesis segments, and the innermost list breaks each
-        hypothesis segment down into individual statements.
+    List[Result[List[List[Statement]]]]
+        A deeply nested list of statements wrapped in Result, where the outermost
+        list corresponds to different hypotheses, the next level corresponds to the
+        segmentation of each hypothesis into hypothesis segments, and the innermost
+        list breaks each hypothesis segment down into individual statements.
+        Result with error set is returned for items where extraction failed.
     """
     extractor = LLMStatementExtractor(
         model=llm,
@@ -265,16 +280,12 @@ def extract_statements(
     )
     if show_progress_bar:
         print("Extracting statements...")
-    statements = extractor.extract(
-        list_of_hypothesis_segments,
-        show_progress_bar,
-    )
-    return statements
+    return extractor.extract(segmented_hypotheses, show_progress_bar)
 
 
-def infer_statements(
+def _infer_statements(
     premises: List[Premise],
-    statements: List[List[List[Statement]]],
+    statements: List[Result[List[List[Statement]]]],
     llm: BaseChatModel,
     questions: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
@@ -284,7 +295,8 @@ def infer_statements(
     """
     Function that infers statements.
     Statements of the innermost list are grouped together and
-    fed into the prompt.
+    fed into the prompt. Items that already have an error are passed through
+    as placeholder InferenceInputs with the error propagated.
 
     Parameters
     -----------
@@ -292,11 +304,12 @@ def infer_statements(
     premises : List[str]
         The text of the premise from which the hypothesis will be inferred.
 
-    statements : List[List[List[Statement]]]
-        A deeply nested list of statements, where the outermost list corresponds to
-        different hypotheses, the next level corresponds to the segmentation of each
-        hypothesis into hypothesis segments, and the innermost list breaks each
-        hypothesis segment down into individual statements.
+    statements : List[Result[List[List[Statement]]]]
+        A deeply nested list of statements wrapped in Result, where the outermost
+        list corresponds to different hypotheses, the next level corresponds to the
+        segmentation of each hypothesis into hypothesis segments, and the innermost
+        list breaks each hypothesis segment down into individual statements.
+        Result with error set for items that already failed in a previous stage.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
@@ -317,41 +330,90 @@ def infer_statements(
     Returns
     ------------
     List[List[Tuple[InferenceInputs, InferenceScore]]]
-        A nested list of inputs and outputs of the inference step grouped by hypothesis
-        segment.
+        A nested list of inputs and outputs of the inference step grouped by hypothesis.
+        For items that failed in any stage, InferenceScore will have inference=None
+        and the error field set.
     """
+    adjusted_premises: List[Premise] = list(premises)
+    if questions is not None:
+        for i, question in enumerate(questions):
+            question_split = SegmentedText.from_text(text=question)
+            adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
+
+    document_names: List[JoinedDocumentsName] = (
+        [""] * len(statements)
+        if list_documents is None
+        else [_join_documents(docs) for docs in list_documents]
+    )
+
+    inference_inputs = _make_inference_task_inputs(
+        adjusted_premises,
+        statements,
+        document_names,
+    )
     scorer = LLMInferenceScorer(
         model=llm,
         max_concurrency=max_concurrency,
     )
-    if list_documents is None:
-        document_names: List[JoinedDocumentsName] = [""] * len(premises)
-    else:
-        document_names = [_join_documents(docs) for docs in list_documents]
-    if questions is not None:
-        segmented_questions = [
-            SegmentedText.from_text(text=question) for question in questions
-        ]
-        premises = [
-            question_split.segments[-1] + "\n" + premise
-            for question_split, premise in zip(segmented_questions, premises)
-        ]
-    inference_inputs = _make_inference_task_inputs(
-        premises,
-        statements,
-        document_names,
-    )
     if show_progress_bar:
         print("Getting inference...")
-    inference_scores = scorer.get_inference(
-        inference_inputs,
-        show_progress_bar,
-    )
+    inference_scores = scorer.get_inference(inference_inputs, show_progress_bar)
 
     iterable_groups_with_id = itertools.groupby(
         zip(inference_inputs, inference_scores), lambda x: x[0].hypothesis_id
     )
     return list(map(_iterable_group_with_key_to_list_group, iterable_groups_with_id))
+
+
+def segment_hypotheses(
+    hypotheses: List[Hypothesis],
+    llm: BaseChatModel,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[Optional[SegmentedText]]:
+    return [
+        r.value
+        for r in _segment_hypotheses(
+            hypotheses, llm, max_concurrency, show_progress_bar
+        )
+    ]
+
+
+def extract_statements(
+    segmented_hypotheses: List[SegmentedText],
+    llm: BaseChatModel,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[Optional[List[List[Statement]]]]:
+    return [
+        r.value
+        for r in _extract_statements(
+            [Result(value=s) for s in segmented_hypotheses],
+            llm,
+            max_concurrency,
+            show_progress_bar,
+        )
+    ]
+
+
+def infer_statements(
+    premises: List[Premise],
+    statements: List[List[List[Statement]]],
+    llm: BaseChatModel,
+    questions: Optional[List[Question]] = None,
+    list_documents: Optional[List[Documents]] = None,
+    max_concurrency: int = 8,
+    show_progress_bar: bool = True,
+) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
+    return _infer_statements(
+        premises,
+        [Result(value=s) for s in statements],
+        llm,
+        questions,
+        list_documents,
+        max_concurrency,
+        show_progress_bar,
+    )
 
 
 def calculate_batch_inference(
@@ -399,23 +461,20 @@ def calculate_batch_inference(
         highlights strings used for highlighting each segment of each hypothesis.
     """
 
-    segmented_hypotheses: List[SegmentedText] = segment_hypotheses(
+    segmented_hypotheses: List[Result[SegmentedText]] = _segment_hypotheses(
         hypotheses=hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
     )
-    statements: List[List[List[Statement]]] = extract_statements(
-        list_of_hypothesis_segments=[
-            segmented_hypothesis.segments
-            for segmented_hypothesis in segmented_hypotheses
-        ],
+    statements: List[Result[List[List[Statement]]]] = _extract_statements(
+        segmented_hypotheses=segmented_hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
     )
     grouped_data_list: List[List[Tuple[InferenceInputs, InferenceScore]]] = (
-        infer_statements(
+        _infer_statements(
             premises=premises,
             statements=statements,
             llm=llm,
@@ -426,28 +485,35 @@ def calculate_batch_inference(
         )
     )
 
-    aggregated_inferences = map(
-        lambda grouped_data_item: float(
-            np.mean(
-                [inference_score.inference for _, inference_score in grouped_data_item]
-            )
-        ),
-        grouped_data_list,
-    )
-
-    aggregated_jsons = itertools.starmap(
-        _grouped_data_item_to_json,
-        zip(grouped_data_list, segmented_hypotheses),
-    )
-    highlights = itertools.starmap(
-        _grouped_data_item_to_highlight, zip(grouped_data_list, segmented_hypotheses)
-    )
-    inference_returns = [
-        InferenceReturn(inference=inference, json=js, highlight=highlight)
-        for inference, js, highlight in zip(
-            aggregated_inferences, aggregated_jsons, highlights
+    inference_returns: List[InferenceReturn] = []
+    for hypothesis_index, grouped_data_item in enumerate(grouped_data_list):
+        segmented_text = segmented_hypotheses[hypothesis_index].value
+        assert segmented_text is not None
+        inferences = [score.inference for _, score in grouped_data_item]
+        mean_inference = (
+            None
+            if any(inference is None for inference in inferences)
+            else float(np.mean(cast(List[float], inferences)))
         )
-    ]
+        # fill Nones with 0.0
+        min_possible_inference = float(
+            np.nan_to_num(np.array(inferences, dtype=float), nan=0.0).mean()
+        )
+        # fill Nones with 1.0
+        max_possible_inference = float(
+            np.nan_to_num(np.array(inferences, dtype=float), nan=1.0).mean()
+        )
+        inference_returns.append(
+            InferenceReturn(
+                inference=mean_inference,
+                inference_min=min_possible_inference,
+                inference_max=max_possible_inference,
+                json=_grouped_data_item_to_json(grouped_data_item, segmented_text),
+                highlight=_grouped_data_item_to_highlight(
+                    grouped_data_item, segmented_text
+                ),
+            )
+        )
     return inference_returns
 
 

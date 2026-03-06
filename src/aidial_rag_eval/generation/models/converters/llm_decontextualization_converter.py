@@ -1,8 +1,6 @@
 import json
-from json import JSONDecodeError
 from typing import Dict, List
 
-from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import (
@@ -17,6 +15,9 @@ from aidial_rag_eval.generation.models.converters.base_converter import SegmentC
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     decontextualization_prompt,
 )
+from aidial_rag_eval.generation.models.lambdas import wrap_in_result
+from aidial_rag_eval.generation.types import Result
+from aidial_rag_eval.generation.utils.exceptions import format_exception
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
@@ -43,18 +44,9 @@ def json_to_dict_segments(input_: AIMessage) -> List[str]:
         The transformed segments if the LLM output is valid;
         otherwise, an empty list is returned.
     """
-    try:
-        return_dict = parse_json_markdown(str(input_.content))
-        assert isinstance(return_dict, dict)
-        return return_dict["segments"]
-    except (
-        TypeError,
-        KeyError,
-        OutputParserException,
-        JSONDecodeError,
-        AssertionError,
-    ):
-        return []
+    return_dict = parse_json_markdown(str(input_.content))
+    assert isinstance(return_dict, dict)
+    return return_dict["segments"]
 
 
 @chain
@@ -64,7 +56,7 @@ def segmented_text_to_json_list(input_: Dict) -> Dict:
 
 
 @chain
-def return_original_segmented_text(input_: Dict) -> Dict:
+def return_original_segmented_text(input_: Dict) -> SegmentedText:
     assert type(input_) is dict
     return input_["segmented_text"]
 
@@ -72,14 +64,9 @@ def return_original_segmented_text(input_: Dict) -> Dict:
 @chain
 def dict_segments_to_segmented_text(llm_outputs_with_inputs: Dict) -> SegmentedText:
     original_segmented_text: SegmentedText = llm_outputs_with_inputs["segmented_text"]
-    try:
-        decontextualized_segments = llm_outputs_with_inputs["decontextualized_segments"]
-        assert len(decontextualized_segments) == len(original_segmented_text.segments)
-        return SegmentedText(
-            decontextualized_segments, original_segmented_text.delimiters
-        )
-    except (TypeError, KeyError, AssertionError):
-        return original_segmented_text
+    decontextualized_segments = llm_outputs_with_inputs["decontextualized_segments"]
+    assert len(decontextualized_segments) == len(original_segmented_text.segments)
+    return SegmentedText(decontextualized_segments, original_segmented_text.delimiters)
 
 
 class LLMNoPronounsConverter(SegmentConverter):
@@ -109,25 +96,26 @@ class LLMNoPronounsConverter(SegmentConverter):
         max_concurrency: int,
     ):
         self._chain = RunnableBranch(
-            (check_if_sentences_less_than_2, return_original_segmented_text),
+            (
+                check_if_sentences_less_than_2,
+                return_original_segmented_text | wrap_in_result,
+            ),
             RunnablePassthrough.assign(
                 decontextualized_segments=segmented_text_to_json_list
                 | decontextualization_prompt
                 | model
                 | json_to_dict_segments
             )
-            | dict_segments_to_segmented_text,
+            | dict_segments_to_segmented_text
+            | wrap_in_result,
         )
         self.max_concurrency = max_concurrency
 
     def transform_texts(
         self, segmented_texts: List[SegmentedText], show_progress_bar: bool
-    ) -> List[SegmentedText]:
+    ) -> List[Result[SegmentedText]]:
         """
         Method that converts segmented texts by replacing pronouns using an LLM.
-        The LLM processes all segments and returns converted segments.
-        If the invariant of the length of input and output segment batches
-        is not maintained, the segments of this batch are not replaced.
 
         Parameters
         -----------
@@ -139,17 +127,24 @@ class LLMNoPronounsConverter(SegmentConverter):
 
         Returns
         -------
-        List[SegmentedText]
-            A list of segmented texts with decontextualized segments.
+        List[Result[SegmentedText]]
+            A list where each element is either a decontextualized SegmentedText
+            wrapped in Result, or a Result with error set if processing failed.
         """
         with ProgressBarCallback(len(segmented_texts), show_progress_bar) as cb:
-            decontextualized_segmented_texts = self._chain.batch(
+            raw_results = self._chain.batch(
                 [
-                    {
-                        "segmented_text": segmented_text,
-                    }
+                    {"segmented_text": segmented_text}
                     for segmented_text in segmented_texts
                 ],
                 config={"callbacks": [cb], "max_concurrency": self.max_concurrency},
+                return_exceptions=True,
             )
-        return decontextualized_segmented_texts
+        return [
+            (
+                result
+                if isinstance(result, Result)
+                else Result(error=format_exception(result))
+            )
+            for result in raw_results
+        ]

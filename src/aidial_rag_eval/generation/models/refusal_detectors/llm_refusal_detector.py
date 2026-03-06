@@ -1,4 +1,3 @@
-import itertools
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
@@ -13,6 +12,7 @@ from aidial_rag_eval.generation.models.refusal_detectors.refusal_template import
     refusal_prompt,
 )
 from aidial_rag_eval.generation.types import RefusalReturn
+from aidial_rag_eval.generation.utils.exceptions import format_exception
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.types import Answer
 
@@ -103,7 +103,7 @@ class LLMRefusalDetector(RefusalDetector):
         batches = list(chunked(answers, 10))
 
         with ProgressBarCallback(len(batches), show_progress_bar) as cb:
-            refusal_returns = self._chain.batch(
+            batch_results = self._chain.batch(
                 [
                     {
                         "answers": hypotheses,
@@ -111,13 +111,24 @@ class LLMRefusalDetector(RefusalDetector):
                     for hypotheses in batches
                 ],
                 config={"callbacks": [cb], "max_concurrency": self.max_concurrency},
+                return_exceptions=True,
             )
-        refusal_returns = [
-            (
-                refusal_return
-                if len(refusal_return) == len(input_batch)
-                else [RefusalReturn(refusal=0.0)] * len(input_batch)
-            )
-            for refusal_return, input_batch in zip(refusal_returns, batches)
-        ]
-        return list(itertools.chain.from_iterable(refusal_returns))
+        flat: List[RefusalReturn] = []
+        for result, batch in zip(batch_results, batches):
+            if isinstance(result, BaseException):
+                flat.extend(
+                    [
+                        RefusalReturn(
+                            refusal=None, refusal_error=format_exception(result)
+                        )
+                    ]
+                    * len(batch)
+                )
+            elif len(result) != len(batch):
+                error_msg = f"Expected {len(batch)} refusal results, got {len(result)}"
+                flat.extend(
+                    [RefusalReturn(refusal=None, refusal_error=error_msg)] * len(batch)
+                )
+            else:
+                flat.extend(result)
+        return flat

@@ -18,14 +18,14 @@ def test_valid_json_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    decontext_segmented_text = result.value
+    assert decontext_segmented_text is not None
     assert decontext_segmented_text.segments == [
         "John went to the store.",
         "John bought milk.",
     ]
+    assert result.error is None
 
 
 def test_invalid_json_response():
@@ -36,11 +36,9 @@ def test_invalid_json_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_json_missing_segments_key():
@@ -53,11 +51,9 @@ def test_json_missing_segments_key():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_segment_count_mismatch():
@@ -68,11 +64,9 @@ def test_segment_count_mismatch():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_empty_response():
@@ -83,11 +77,9 @@ def test_empty_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_invoke_raises_exception():
@@ -100,10 +92,8 @@ def test_invoke_raises_exception():
     )
 
     with patch.object(
-        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            converter.transform_texts([segmented_text], show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+        assert result.value is None
+        assert result.error is not None

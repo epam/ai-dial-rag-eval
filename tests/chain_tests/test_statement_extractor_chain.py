@@ -5,6 +5,8 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
     LLMStatementExtractor,
 )
+from aidial_rag_eval.generation.types import Result
+from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
 def test_valid_json_response():
@@ -28,9 +30,19 @@ def test_valid_json_response():
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
 
-    result = extractor.extract([hypothesis_segments], show_progress_bar=False)
+    result = extractor.extract(
+        [
+            Result(
+                value=SegmentedText(
+                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                )
+            )
+        ],
+        show_progress_bar=False,
+    )[0]
 
-    assert result == [[["statement11"], ["statement21"]]]
+    assert result.value == [["statement11"], ["statement21"]]
+    assert result.error is None
 
 
 def test_invalid_json_response():
@@ -39,11 +51,18 @@ def test_invalid_json_response():
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
-    result = extractor.extract([hypothesis_segments], show_progress_bar=False)
-
-    assert result == [
-        [[hypothesis_segment] for hypothesis_segment in hypothesis_segments]
-    ]
+    result = extractor.extract(
+        [
+            Result(
+                value=SegmentedText(
+                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                )
+            )
+        ],
+        show_progress_bar=False,
+    )[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_json_wrong_structure():
@@ -52,11 +71,18 @@ def test_json_wrong_structure():
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
-    result = extractor.extract([hypothesis_segments], show_progress_bar=False)
-
-    assert result == [
-        [[hypothesis_segment] for hypothesis_segment in hypothesis_segments]
-    ]
+    result = extractor.extract(
+        [
+            Result(
+                value=SegmentedText(
+                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                )
+            )
+        ],
+        show_progress_bar=False,
+    )[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_statement_count_mismatch():
@@ -67,11 +93,18 @@ def test_statement_count_mismatch():
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
 
-    result = extractor.extract([hypothesis_segments], show_progress_bar=False)
-
-    assert result == [
-        [[hypothesis_segment] for hypothesis_segment in hypothesis_segments]
-    ]
+    result = extractor.extract(
+        [
+            Result(
+                value=SegmentedText(
+                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                )
+            )
+        ],
+        show_progress_bar=False,
+    )[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_empty_response():
@@ -80,11 +113,18 @@ def test_empty_response():
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
 
-    result = extractor.extract([hypothesis_segments], show_progress_bar=False)
-
-    assert result == [
-        [[hypothesis_segment] for hypothesis_segment in hypothesis_segments]
-    ]
+    result = extractor.extract(
+        [
+            Result(
+                value=SegmentedText(
+                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                )
+            )
+        ],
+        show_progress_bar=False,
+    )[0]
+    assert result.value is None
+    assert result.error is not None
 
 
 def test_invoke_raises_exception():
@@ -94,10 +134,17 @@ def test_invoke_raises_exception():
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
 
     with patch.object(
-        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            extractor.extract([hypothesis_segments], show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        result = extractor.extract(
+            [
+                Result(
+                    value=SegmentedText(
+                        hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
+                    )
+                )
+            ],
+            show_progress_bar=False,
+        )[0]
+        assert result.value is None
+        assert result.error is not None

@@ -1,17 +1,40 @@
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import (
+    RunnableBranch,
+    RunnablePassthrough,
+    RunnableSerializable,
+    chain,
+)
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
+from aidial_rag_eval.generation.models.lambdas import json_to_list, wrap_in_result
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
     StatementExtractor,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
     statement_prompt,
 )
-from aidial_rag_eval.generation.types import HypothesisSegment, Statement
+from aidial_rag_eval.generation.types import Result, Statement
+from aidial_rag_eval.generation.utils.exceptions import format_exception
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
+from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
+
+
+@chain
+def check_if_error_present(input_: Result[SegmentedText]) -> bool:
+    return bool(input_.error)
+
+
+@chain
+def return_error_as_statement_result(input_: Result[SegmentedText]) -> Result:
+    return Result(error=input_.error)
+
+
+@chain
+def segmented_text_result_to_dict(input_: Result[SegmentedText]) -> Dict:
+    assert input_.value is not None
+    return {"hypothesis_segments": input_.value.segments}
 
 
 @chain
@@ -29,29 +52,16 @@ def list_to_statements(
     Returns
     ------------
     List[List[str]]
-        The extracted statements. if the LLM output is valid;
-        otherwise, return an original list of hypothesis_segments,
-        each hypothesis_segment is wrapped.
+        The extracted statements if the LLM output is valid.
     """
-    try:
-        statements_for_hypothesis_segments = llm_outputs_with_inputs[
-            "llm_output_statements"
-        ]
-        hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
-        assert len(hypothesis_segments) == len(statements_for_hypothesis_segments)
-        return [
-            return_dict["statements"]
-            for return_dict in llm_outputs_with_inputs["llm_output_statements"]
-        ]
-    except (
-        TypeError,
-        KeyError,
-        AssertionError,
-    ):
-        return [
-            [hypothesis_segment]
-            for hypothesis_segment in llm_outputs_with_inputs["hypothesis_segments"]
-        ]
+    hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
+    statements_for_hypothesis_segments = llm_outputs_with_inputs[
+        "llm_output_statements"
+    ]
+    assert len(hypothesis_segments) == len(statements_for_hypothesis_segments)
+    return [
+        return_dict["statements"] for return_dict in statements_for_hypothesis_segments
+    ]
 
 
 @chain
@@ -85,51 +95,55 @@ class LLMStatementExtractor(StatementExtractor):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-
-        self._chain = (
-            RunnablePassthrough.assign(
+        self._chain = RunnableBranch(
+            (check_if_error_present, return_error_as_statement_result),
+            segmented_text_result_to_dict
+            | RunnablePassthrough.assign(
                 llm_output_statements=wrap_hypotheses
                 | statement_prompt
                 | model
                 | json_to_list
             )
             | list_to_statements
+            | wrap_in_result,
         )
         self.max_concurrency = max_concurrency
 
     def extract(
         self,
-        list_of_hypothesis_segments: List[List[HypothesisSegment]],
+        segmented_hypotheses: List[Result[SegmentedText]],
         show_progress_bar: bool,
-    ) -> List[List[List[Statement]]]:
+    ) -> List[Result[List[List[Statement]]]]:
         """
         Method that calls a chain to extract statements from each
         hypothesis segment.
 
         Parameters
         -----------
-        list_of_hypothesis_segments : List[List[HypothesisSegment]]
-            A list of hypothesis segments as a sources of statements.
+        segmented_hypotheses : List[Result[SegmentedText]]
+            A list of segmented hypotheses wrapped in Result.
+            Items with error set are passed through without calling the LLM.
 
         show_progress_bar : bool
             A flag that controls the display of a progress bar
 
         Returns
         ------------
-        List[List[List[Statement]]]
-            Returns the statements for each hypothesis segment.
+        List[Result[List[List[Statement]]]]
+            Returns the statements for each hypothesis segment wrapped in Result,
+            or a Result with error set if extraction failed for that item.
         """
-
-        with ProgressBarCallback(
-            len(list_of_hypothesis_segments), show_progress_bar
-        ) as cb:
-            returns = self._chain.batch(
-                [
-                    {
-                        "hypothesis_segments": hypothesis_segments,
-                    }
-                    for hypothesis_segments in list_of_hypothesis_segments
-                ],
+        with ProgressBarCallback(len(segmented_hypotheses), show_progress_bar) as cb:
+            raw_results = self._chain.batch(
+                segmented_hypotheses,
                 config={"callbacks": [cb], "max_concurrency": self.max_concurrency},
+                return_exceptions=True,
             )
-        return returns
+        return [
+            (
+                result
+                if isinstance(result, Result)
+                else Result(error=format_exception(result))
+            )
+            for result in raw_results
+        ]
