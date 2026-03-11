@@ -5,6 +5,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
     LLMNoPronounsConverter,
 )
+from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
@@ -19,13 +20,11 @@ def test_valid_json_response():
     )
 
     result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    decontext_segmented_text = result.value
-    assert decontext_segmented_text is not None
-    assert decontext_segmented_text.segments == [
+    assert not isinstance(result, ErrorInfo)
+    assert result.segments == [
         "John went to the store.",
         "John bought milk.",
     ]
-    assert result.error is None
 
 
 def test_invalid_json_response():
@@ -37,8 +36,7 @@ def test_invalid_json_response():
     )
 
     result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert result.value is None
-    assert result.error is not None
+    assert isinstance(result, ErrorInfo)
 
 
 def test_json_missing_segments_key():
@@ -52,8 +50,7 @@ def test_json_missing_segments_key():
     )
 
     result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert result.value is None
-    assert result.error is not None
+    assert isinstance(result, ErrorInfo)
 
 
 def test_segment_count_mismatch():
@@ -65,8 +62,7 @@ def test_segment_count_mismatch():
     )
 
     result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert result.value is None
-    assert result.error is not None
+    assert isinstance(result, ErrorInfo)
 
 
 def test_empty_response():
@@ -78,8 +74,7 @@ def test_empty_response():
     )
 
     result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert result.value is None
-    assert result.error is not None
+    assert isinstance(result, ErrorInfo)
 
 
 def test_invoke_raises_exception():
@@ -95,5 +90,4 @@ def test_invoke_raises_exception():
         FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
     ):
         result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-        assert result.value is None
-        assert result.error is not None
+        assert isinstance(result, ErrorInfo)

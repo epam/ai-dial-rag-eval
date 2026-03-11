@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -15,9 +15,8 @@ from aidial_rag_eval.generation.models.converters.base_converter import SegmentC
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     decontextualization_prompt,
 )
-from aidial_rag_eval.generation.models.lambdas import wrap_in_result
-from aidial_rag_eval.generation.types import Result
-from aidial_rag_eval.generation.utils.exceptions import format_exception
+from aidial_rag_eval.generation.types import ErrorInfo
+from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
@@ -98,7 +97,7 @@ class LLMNoPronounsConverter(SegmentConverter):
         self._chain = RunnableBranch(
             (
                 check_if_sentences_less_than_2,
-                return_original_segmented_text | wrap_in_result,
+                return_original_segmented_text,
             ),
             RunnablePassthrough.assign(
                 decontextualized_segments=segmented_text_to_json_list
@@ -106,14 +105,13 @@ class LLMNoPronounsConverter(SegmentConverter):
                 | model
                 | json_to_dict_segments
             )
-            | dict_segments_to_segmented_text
-            | wrap_in_result,
+            | dict_segments_to_segmented_text,
         )
         self.max_concurrency = max_concurrency
 
     def transform_texts(
         self, segmented_texts: List[SegmentedText], show_progress_bar: bool
-    ) -> List[Result[SegmentedText]]:
+    ) -> List[Union[SegmentedText, ErrorInfo]]:
         """
         Method that converts segmented texts by replacing pronouns using an LLM.
 
@@ -127,7 +125,7 @@ class LLMNoPronounsConverter(SegmentConverter):
 
         Returns
         -------
-        List[Result[SegmentedText]]
+        List[Union[SegmentedText, ErrorInfo]]
             A list where each element is either a decontextualized SegmentedText
             wrapped in Result, or a Result with error set if processing failed.
         """
@@ -143,8 +141,8 @@ class LLMNoPronounsConverter(SegmentConverter):
         return [
             (
                 result
-                if isinstance(result, Result)
-                else Result(error=format_exception(result))
+                if not isinstance(result, BaseException)
+                else make_error_info(result)
             )
             for result in raw_results
         ]

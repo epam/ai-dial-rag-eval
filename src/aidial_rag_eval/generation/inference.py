@@ -1,6 +1,6 @@
 import itertools
 import json
-from typing import Iterable, List, Optional, Tuple, TypeVar, cast
+from typing import Iterable, List, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
@@ -15,13 +15,13 @@ from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extract
     LLMStatementExtractor,
 )
 from aidial_rag_eval.generation.types import (
+    ErrorInfo,
     Hypothesis,
     InferenceInputs,
     InferenceReturn,
     InferenceScore,
     JoinedDocumentsName,
     Premise,
-    Result,
     Statement,
 )
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
@@ -36,7 +36,7 @@ def _join_documents(documents: Documents) -> JoinedDocumentsName:
 
 def _make_inference_task_inputs(
     premises: List[Premise],
-    statements: List[Result[List[List[Statement]]]],
+    statements: List[Union[List[List[Statement]], ErrorInfo]],
     document_names: List[JoinedDocumentsName],
 ) -> List[InferenceInputs]:
     """
@@ -47,12 +47,12 @@ def _make_inference_task_inputs(
     premises : List[str]
         A list of premises from which we want to derive hypotheses in pairs.
 
-    statements : List[Result[List[List[Statement]]]]
-        A deeply nested list of statements wrapped in Result, where the outermost
+    statements : List[Union[List[List[Statement]], ErrorInfo]]
+        A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level represents the
         segmentation of each hypothesis into hypothesis segments, and the innermost
         list breaks each hypothesis segment down into individual statements.
-        If a Result has an error, a single placeholder InferenceInputs is created
+        If an error, a single placeholder InferenceInputs is created
         with the error propagated.
 
     document_names: List[str]
@@ -76,16 +76,16 @@ def _make_inference_task_inputs(
                         statements=list_statements,
                         document_name=document_names[i],
                     )
-                    for list_statements in statement_result.value
+                    for list_statements in statement_result
                 ]
-                if statement_result.value is not None
+                if not isinstance(statement_result, ErrorInfo)
                 else [
                     InferenceInputs(
                         hypothesis_id=i,
                         premise=premises[i],
                         statements=[],
                         document_name=document_names[i],
-                        error=statement_result.error,
+                        error=statement_result,
                     )
                 ]
             )
@@ -145,7 +145,9 @@ def _grouped_data_item_to_json(
                 "hypothesis": segment,
                 "premise": [inference_input.premise],
                 "explanation": inference_score.explanation,
-                "error": inference_score.error,
+                "error": (
+                    inference_score.error.to_json() if inference_score.error else None
+                ),
             }
             for (inference_input, inference_score), segment in zip(
                 grouped_data_item, segmented_text.segments
@@ -200,7 +202,7 @@ def _segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[Result[SegmentedText]]:
+) -> List[Union[SegmentedText, ErrorInfo]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
     sentences), and then removes pronouns using LLM.
@@ -222,9 +224,9 @@ def _segment_hypotheses(
 
     Returns
     ------------
-    List[Result[SegmentedText]]
-        List of decontextualized hypothesis segments wrapped in Result,
-        or Result with error set if processing failed for that item.
+    List[Union[SegmentedText, ErrorInfo]]
+        List of decontextualized hypothesis segments,
+        or error if processing failed for that item.
     """
     converter = LLMNoPronounsConverter(
         model=llm,
@@ -239,11 +241,11 @@ def _segment_hypotheses(
 
 
 def _extract_statements(
-    segmented_hypotheses: List[Result[SegmentedText]],
+    segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]],
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[Result[List[List[Statement]]]]:
+) -> List[Union[List[List[Statement]], ErrorInfo]]:
     """
     Function that extracts statements from each hypothesis segment.
     Hypothesis segments of the inner list are grouped together and
@@ -252,8 +254,8 @@ def _extract_statements(
     Parameters
     -----------
 
-    segmented_hypotheses : List[Result[SegmentedText]]
-        Segmented hypotheses wrapped in Result. Items with error set are
+    segmented_hypotheses : List[Union[SegmentedText, ErrorInfo]]
+        Segmented hypotheses. Errors are
         passed through without calling the LLM.
 
     llm : BaseChatModel
@@ -267,12 +269,12 @@ def _extract_statements(
 
     Returns
     ------------
-    List[Result[List[List[Statement]]]]
-        A deeply nested list of statements wrapped in Result, where the outermost
+    List[Union[List[List[Statement]], ErrorInfo]]
+        A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level corresponds to the
         segmentation of each hypothesis into hypothesis segments, and the innermost
         list breaks each hypothesis segment down into individual statements.
-        Result with error set is returned for items where extraction failed.
+        Error is returned for items where extraction failed.
     """
     extractor = LLMStatementExtractor(
         model=llm,
@@ -285,7 +287,7 @@ def _extract_statements(
 
 def _infer_statements(
     premises: List[Premise],
-    statements: List[Result[List[List[Statement]]]],
+    statements: List[Union[List[List[Statement]], ErrorInfo]],
     llm: BaseChatModel,
     questions: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
@@ -304,12 +306,12 @@ def _infer_statements(
     premises : List[str]
         The text of the premise from which the hypothesis will be inferred.
 
-    statements : List[Result[List[List[Statement]]]]
-        A deeply nested list of statements wrapped in Result, where the outermost
+    statements : List[Union[List[List[Statement]], ErrorInfo]]
+        A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level corresponds to the
         segmentation of each hypothesis into hypothesis segments, and the innermost
         list breaks each hypothesis segment down into individual statements.
-        Result with error set for items that already failed in a previous stage.
+        Errors are for items that already failed in a previous stage.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
@@ -372,7 +374,7 @@ def segment_hypotheses(
     show_progress_bar: bool = True,
 ) -> List[Optional[SegmentedText]]:
     return [
-        r.value
+        None if isinstance(r, ErrorInfo) else r
         for r in _segment_hypotheses(
             hypotheses, llm, max_concurrency, show_progress_bar
         )
@@ -386,9 +388,9 @@ def extract_statements(
     show_progress_bar: bool = True,
 ) -> List[Optional[List[List[Statement]]]]:
     return [
-        r.value
+        None if isinstance(r, ErrorInfo) else r
         for r in _extract_statements(
-            [Result(value=s) for s in segmented_hypotheses],
+            cast(List[Union[SegmentedText, ErrorInfo]], segmented_hypotheses),
             llm,
             max_concurrency,
             show_progress_bar,
@@ -407,7 +409,7 @@ def infer_statements(
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
         premises,
-        [Result(value=s) for s in statements],
+        cast(List[Union[List[List[Statement]], ErrorInfo]], statements),
         llm,
         questions,
         list_documents,
@@ -461,13 +463,13 @@ def calculate_batch_inference(
         highlights strings used for highlighting each segment of each hypothesis.
     """
 
-    segmented_hypotheses: List[Result[SegmentedText]] = _segment_hypotheses(
+    segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]] = _segment_hypotheses(
         hypotheses=hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
     )
-    statements: List[Result[List[List[Statement]]]] = _extract_statements(
+    statements: List[Union[List[List[Statement]], ErrorInfo]] = _extract_statements(
         segmented_hypotheses=segmented_hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
@@ -487,9 +489,13 @@ def calculate_batch_inference(
 
     inference_returns: List[InferenceReturn] = []
     for hypothesis_index, grouped_data_item in enumerate(grouped_data_list):
-        segmented_text = segmented_hypotheses[hypothesis_index].value
-        assert segmented_text is not None
+        segmented_text = segmented_hypotheses[hypothesis_index]
+        assert not isinstance(segmented_text, ErrorInfo)
         inferences = [score.inference for _, score in grouped_data_item]
+        errors = [
+            score.error.to_json() if score.error else None
+            for _, score in grouped_data_item
+        ]
         mean_inference = (
             None
             if any(inference is None for inference in inferences)
@@ -512,6 +518,7 @@ def calculate_batch_inference(
                 highlight=_grouped_data_item_to_highlight(
                     grouped_data_item, segmented_text
                 ),
+                errors=errors,
             )
         )
     return inference_returns

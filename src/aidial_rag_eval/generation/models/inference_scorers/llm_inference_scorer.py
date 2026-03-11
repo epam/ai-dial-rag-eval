@@ -17,8 +17,8 @@ from aidial_rag_eval.generation.models.inference_scorers.inference_template impo
     inference_prompt,
 )
 from aidial_rag_eval.generation.models.lambdas import json_to_list
-from aidial_rag_eval.generation.types import InferenceInputs, InferenceScore
-from aidial_rag_eval.generation.utils.exceptions import format_exception
+from aidial_rag_eval.generation.types import ErrorInfo, InferenceInputs, InferenceScore
+from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
@@ -55,7 +55,7 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
 
 @chain
 def check_if_error_present(input_: InferenceInputs) -> bool:
-    return bool(input_.error)
+    return isinstance(input_.error, ErrorInfo)
 
 
 @chain
@@ -163,7 +163,7 @@ class LLMInferenceScorer(InferenceScorer):
                 result
                 if not isinstance(result, BaseException)
                 else InferenceScore(
-                    inference=None, explanation="", error=format_exception(result)
+                    inference=None, explanation="", error=make_error_info(result)
                 )
             )
             for result in raw_results

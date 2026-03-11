@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Union
 
-from aidial_rag_eval.generation.types import Result, Statement
+from aidial_rag_eval.generation.types import ErrorInfo, Statement
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
@@ -15,7 +15,7 @@ class StatementExtractor(ABC):
     @abstractmethod
     def extract(
         self,
-        segmented_hypotheses: List[Result[SegmentedText]],
+        segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]],
         show_progress_bar: bool,
-    ) -> List[Result[List[List[Statement]]]]:
+    ) -> List[Union[List[List[Statement]], ErrorInfo]]:
         pass

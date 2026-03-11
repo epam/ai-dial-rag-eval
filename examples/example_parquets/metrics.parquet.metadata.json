@@ -1,5 +1,5 @@
 {
-  "created_at": "2025-04-22T12:18:47.384458",
+  "created_at": "2026-03-10T21:04:19.472765",
   "sources": [
     {
       "metadata_path": "./example_parquets/ground_truth.parquet.metadata.json",
@@ -9,16 +9,16 @@
         "sources": [],
         "tools": {},
         "file_info": {
-          "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/nli-branch-new/dial-rag-eval/examples/example_parquets/ground_truth.parquet",
+          "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/ground_truth.parquet",
           "size": 4958,
           "type": "file",
-          "created": 1744772694.473407,
+          "created": 1748278709.0742927,
           "islink": false,
           "mode": 33279,
           "uid": 1000,
           "gid": 1000,
-          "mtime": 1744772694.473407,
-          "ino": 41095346599928296,
+          "mtime": 1748278709.0742927,
+          "ino": 1407374884781850,
           "nlink": 1
         },
         "metrics": {},
@@ -33,16 +33,16 @@
         "sources": [],
         "tools": {},
         "file_info": {
-          "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/nli-branch-new/dial-rag-eval/examples/example_parquets/answer.parquet",
+          "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/answer.parquet",
           "size": 5705,
           "type": "file",
-          "created": 1744772698.7876534,
+          "created": 1748278709.0742927,
           "islink": false,
           "mode": 33279,
           "uid": 1000,
           "gid": 1000,
-          "mtime": 1744772698.7876534,
-          "ino": 19984723346991670,
+          "mtime": 1748278709.0742927,
+          "ino": 1407374884781849,
           "nlink": 1
         },
         "metrics": {},
@@ -51,26 +51,39 @@
     }
   ],
   "tools": {
-    "aidial-rag-eval": "0.0.0"
+    "aidial-rag-eval": "0.6.0rc0"
   },
   "file_info": {
-    "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/nli-branch-new/dial-rag-eval/examples/example_parquets/metrics.parquet",
-    "size": 14728,
+    "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/metrics.parquet",
+    "size": 37876,
     "type": "file",
-    "created": 1745342327.3815076,
+    "created": 1773194659.470888,
     "islink": false,
     "mode": 33279,
     "uid": 1000,
     "gid": 1000,
-    "mtime": 1745342327.3815076,
-    "ino": 18577348463505924,
+    "mtime": 1773194659.470888,
+    "ino": 1688849861492507,
     "nlink": 1
   },
   "metrics": {
     "recall": 0.5,
     "precision": 0.3333333333333333,
     "mrr": 0.4166666666666667,
-    "f1": 0.38888888888888884
+    "f1": 0.38888888888888884,
+    "ctx_ans_inference": 0.6666666666666666,
+    "ctx_ans_inference_min": 0.6666666666666666,
+    "ctx_ans_inference_max": 0.6666666666666666,
+    "ans_gt_inference": 0.5,
+    "ans_gt_inference_min": 0.5,
+    "ans_gt_inference_max": 0.5,
+    "gt_ans_inference": 0.6666666666666666,
+    "gt_ans_inference_min": 0.6666666666666666,
+    "gt_ans_inference_max": 0.6666666666666666,
+    "answer_refusal": 0.0,
+    "ground_truth_refusal": 0.0,
+    "mean_inference": 0.6111111111111112,
+    "median_inference": 0.6666666666666666
   },
   "statistics": {
     "Ground truth size": 3,

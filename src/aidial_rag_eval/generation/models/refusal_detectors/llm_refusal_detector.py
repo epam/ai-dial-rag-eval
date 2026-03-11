@@ -12,7 +12,7 @@ from aidial_rag_eval.generation.models.refusal_detectors.refusal_template import
     refusal_prompt,
 )
 from aidial_rag_eval.generation.types import RefusalReturn
-from aidial_rag_eval.generation.utils.exceptions import format_exception
+from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.types import Answer
 
@@ -119,7 +119,8 @@ class LLMRefusalDetector(RefusalDetector):
                 flat.extend(
                     [
                         RefusalReturn(
-                            refusal=None, refusal_error=format_exception(result)
+                            refusal=None,
+                            refusal_error=make_error_info(result).traceback,
                         )
                     ]
                     * len(batch)

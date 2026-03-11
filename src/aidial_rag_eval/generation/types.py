@@ -1,5 +1,7 @@
+import dataclasses
+import json
 from dataclasses import dataclass, fields
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import List, Optional, Union
 
 from aidial_rag_eval.types import Answer, GroundTruthAnswer, Text
 
@@ -13,19 +15,20 @@ JoinedDocumentsName = str
 
 MetricBind = str
 
-T = TypeVar("T")
-
 
 @dataclass
-class Result(Generic[T]):
-    """Wrapper for a chain output that may have failed.
+class ErrorInfo:
+    """Error information from a failed chain step.
 
-    Either value is set (success) or error is set (failure).
-    The error field contains a formatted traceback string.
+    name: exception class name, e.g. "ValueError"
+    traceback: full formatted traceback string
     """
 
-    value: Optional[T] = None
-    error: Optional[str] = None
+    name: str
+    traceback: str
+
+    def to_json(self) -> str:
+        return json.dumps(dataclasses.asdict(self))
 
 
 @dataclass
@@ -36,7 +39,7 @@ class InferenceInputs:
     premise: Premise
     statements: List[Statement]
     document_name: JoinedDocumentsName
-    error: Optional[str] = None
+    error: Optional[ErrorInfo] = None
 
 
 @dataclass
@@ -45,7 +48,7 @@ class InferenceScore:
 
     inference: Optional[float]
     explanation: str
-    error: Optional[str] = None
+    error: Optional[ErrorInfo] = None
 
 
 @dataclass
@@ -57,6 +60,7 @@ class InferenceReturn:
     inference_max: float
     json: str
     highlight: str
+    errors: List[Optional[str]]
 
 
 # Used for calculating mean and median inferences

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Union
 
-from aidial_rag_eval.generation.types import Result
+from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
@@ -15,5 +15,5 @@ class SegmentConverter(ABC):
     @abstractmethod
     def transform_texts(
         self, segmented_texts: List[SegmentedText], show_progress_bar: bool
-    ) -> List[Result[SegmentedText]]:
+    ) -> List[Union[SegmentedText, ErrorInfo]]:
         pass

@@ -1,15 +1,8 @@
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import chain
 from langchain_core.utils.json import parse_json_markdown
-
-from aidial_rag_eval.generation.types import Result
-
-
-@chain
-def wrap_in_result(value: Any) -> Result:
-    return Result(value=value)
 
 
 @chain

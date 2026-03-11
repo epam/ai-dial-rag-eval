@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import (
@@ -8,33 +8,27 @@ from langchain_core.runnables import (
     chain,
 )
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list, wrap_in_result
+from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
     StatementExtractor,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
     statement_prompt,
 )
-from aidial_rag_eval.generation.types import Result, Statement
-from aidial_rag_eval.generation.utils.exceptions import format_exception
+from aidial_rag_eval.generation.types import ErrorInfo, Statement
+from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
 @chain
-def check_if_error_present(input_: Result[SegmentedText]) -> bool:
-    return bool(input_.error)
+def check_if_error_present(input_: Union[SegmentedText, ErrorInfo]) -> bool:
+    return isinstance(input_, ErrorInfo)
 
 
 @chain
-def return_error_as_statement_result(input_: Result[SegmentedText]) -> Result:
-    return Result(error=input_.error)
-
-
-@chain
-def segmented_text_result_to_dict(input_: Result[SegmentedText]) -> Dict:
-    assert input_.value is not None
-    return {"hypothesis_segments": input_.value.segments}
+def segmented_text_result_to_dict(input_: SegmentedText) -> Dict:
+    return {"hypothesis_segments": input_.segments}
 
 
 @chain
@@ -96,7 +90,7 @@ class LLMStatementExtractor(StatementExtractor):
         max_concurrency: int,
     ):
         self._chain = RunnableBranch(
-            (check_if_error_present, return_error_as_statement_result),
+            (check_if_error_present, RunnablePassthrough()),
             segmented_text_result_to_dict
             | RunnablePassthrough.assign(
                 llm_output_statements=wrap_hypotheses
@@ -104,34 +98,33 @@ class LLMStatementExtractor(StatementExtractor):
                 | model
                 | json_to_list
             )
-            | list_to_statements
-            | wrap_in_result,
+            | list_to_statements,
         )
         self.max_concurrency = max_concurrency
 
     def extract(
         self,
-        segmented_hypotheses: List[Result[SegmentedText]],
+        segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]],
         show_progress_bar: bool,
-    ) -> List[Result[List[List[Statement]]]]:
+    ) -> List[Union[List[List[Statement]], ErrorInfo]]:
         """
         Method that calls a chain to extract statements from each
         hypothesis segment.
 
         Parameters
         -----------
-        segmented_hypotheses : List[Result[SegmentedText]]
-            A list of segmented hypotheses wrapped in Result.
-            Items with error set are passed through without calling the LLM.
+        segmented_hypotheses : List[Union[SegmentedText, ErrorInfo]]
+            A list of segmented hypotheses or ErrorInfo.
+            Errors are passed through without calling the LLM.
 
         show_progress_bar : bool
             A flag that controls the display of a progress bar
 
         Returns
         ------------
-        List[Result[List[List[Statement]]]]
-            Returns the statements for each hypothesis segment wrapped in Result,
-            or a Result with error set if extraction failed for that item.
+        List[Union[List[List[Statement]], ErrorInfo]]
+            Returns the statements for each hypothesis segment,
+            or errors if extraction failed for that item.
         """
         with ProgressBarCallback(len(segmented_hypotheses), show_progress_bar) as cb:
             raw_results = self._chain.batch(
@@ -142,8 +135,8 @@ class LLMStatementExtractor(StatementExtractor):
         return [
             (
                 result
-                if isinstance(result, Result)
-                else Result(error=format_exception(result))
+                if not isinstance(result, BaseException)
+                else make_error_info(result)
             )
             for result in raw_results
         ]
