@@ -32,6 +32,7 @@ def _wrapped_dataframe_inference(
     document_column: Optional[str] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> pd.DataFrame:
     inference_returns = calculate_batch_inference(
         premises=_get_column_as_list_str(df_merged, premise_column),
@@ -49,6 +50,7 @@ def _wrapped_dataframe_inference(
         ),
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
     return pd.DataFrame(
         [vars(inference_return) for inference_return in inference_returns]
@@ -62,12 +64,14 @@ def _wrapped_dataframe_refusal(
     prefix: str,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> pd.DataFrame:
     refusal_returns = calculate_batch_refusal(
         answers=_get_column_as_list_str(df_merged, answer_column),
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
     return pd.DataFrame([vars(refusal) for refusal in refusal_returns]).add_prefix(
         prefix
@@ -75,7 +79,7 @@ def _wrapped_dataframe_refusal(
 
 
 def context_to_answer_inference(
-    df_merged, llm, max_concurrency, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, show_progress_bar, auto_download_nltk, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
         df_merged=df_merged,
@@ -93,11 +97,12 @@ def context_to_answer_inference(
         document_column=MergedColumns.DOCUMENTS,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
 def answer_to_ground_truth_inference(
-    df_merged, llm, max_concurrency, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, show_progress_bar, auto_download_nltk, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
         df_merged=df_merged,
@@ -109,11 +114,12 @@ def answer_to_ground_truth_inference(
         document_column=MergedColumns.DOCUMENTS,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
 def ground_truth_to_answer_inference(
-    df_merged, llm, max_concurrency, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, show_progress_bar, auto_download_nltk, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_inference(
         df_merged=df_merged,
@@ -125,11 +131,12 @@ def ground_truth_to_answer_inference(
         document_column=MergedColumns.DOCUMENTS,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
 def answer_refusal(
-    df_merged, llm, max_concurrency, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, show_progress_bar, auto_download_nltk, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_refusal(
         df_merged=df_merged,
@@ -138,11 +145,12 @@ def answer_refusal(
         prefix=ANSWER_REFUSAL_PREFIX,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
 def ground_truth_refusal(
-    df_merged, llm, max_concurrency, show_progress_bar, **kwargs
+    df_merged, llm, max_concurrency, show_progress_bar, auto_download_nltk, **kwargs
 ) -> pd.DataFrame:
     return _wrapped_dataframe_refusal(
         df_merged=df_merged,
@@ -151,6 +159,7 @@ def ground_truth_refusal(
         prefix=GT_ANSWER_REFUSAL_PREFIX,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
