@@ -3,12 +3,7 @@ from typing import Dict, List
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import (
-    RunnableBranch,
-    RunnablePassthrough,
-    RunnableSerializable,
-    chain,
-)
+from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
 
 from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer import (
     InferenceScorer,
@@ -54,21 +49,6 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
 
 
 @chain
-def check_if_error_present(input_: InferenceInputs) -> bool:
-    return isinstance(input_.error, ErrorInfo)
-
-
-@chain
-def return_error_as_inference_score(input_: InferenceInputs) -> InferenceScore:
-    return InferenceScore(inference=None, explanation="", error=input_.error)
-
-
-@chain
-def check_if_statements_is_empty(input_: InferenceInputs) -> bool:
-    return not input_.statements
-
-
-@chain
 def inference_inputs_to_dict(input_: InferenceInputs) -> Dict:
     return {
         "premise": input_.premise,
@@ -110,18 +90,23 @@ class LLMInferenceScorer(InferenceScorer):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-        self._chain = RunnableBranch(
-            (check_if_error_present, return_error_as_inference_score),
-            (
-                check_if_statements_is_empty,
-                lambda _: InferenceScore(inference=0.0, explanation=""),
-            ),
-            inference_inputs_to_dict
-            | RunnablePassthrough.assign(
-                inference=wrap_statements | inference_prompt | model | json_to_list
+        @chain
+        def inference_chain(input_: InferenceInputs):
+            if isinstance(input_.error, ErrorInfo):
+                return InferenceScore(
+                    inference=None, explanation="", error=input_.error
+                )
+            if not input_.statements:
+                return InferenceScore(inference=0.0, explanation="")
+            return (
+                inference_inputs_to_dict
+                | RunnablePassthrough.assign(
+                    inference=wrap_statements | inference_prompt | model | json_to_list
+                )
+                | returns_to_inference_score
             )
-            | returns_to_inference_score,
-        )
+
+        self._chain = inference_chain  # type: ignore[assignment]
         self.max_concurrency = max_concurrency
 
     def get_inference(

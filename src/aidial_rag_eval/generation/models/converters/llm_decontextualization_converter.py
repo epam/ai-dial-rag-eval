@@ -3,12 +3,7 @@ from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import (
-    RunnableBranch,
-    RunnablePassthrough,
-    RunnableSerializable,
-    chain,
-)
+from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
 from langchain_core.utils.json import parse_json_markdown
 
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
@@ -19,12 +14,6 @@ from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
-
-
-@chain
-def check_if_sentences_less_than_2(input_: Dict) -> bool:
-    assert type(input_) is dict
-    return len(input_["segmented_text"].segments) < 2
 
 
 @chain
@@ -94,19 +83,21 @@ class LLMNoPronounsConverter(SegmentConverter):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-        self._chain = RunnableBranch(
-            (
-                check_if_sentences_less_than_2,
-                return_original_segmented_text,
-            ),
-            RunnablePassthrough.assign(
-                decontextualized_segments=segmented_text_to_json_list
-                | decontextualization_prompt
-                | model
-                | json_to_dict_segments
+        @chain
+        def pronouns_converter_chain(input_: Dict):
+            if len(input_["segmented_text"].segments) < 2:
+                return return_original_segmented_text
+            return (
+                RunnablePassthrough.assign(
+                    decontextualized_segments=segmented_text_to_json_list
+                    | decontextualization_prompt
+                    | model
+                    | json_to_dict_segments
+                )
+                | dict_segments_to_segmented_text
             )
-            | dict_segments_to_segmented_text,
-        )
+
+        self._chain = pronouns_converter_chain  # type: ignore[assignment]
         self.max_concurrency = max_concurrency
 
     def transform_texts(

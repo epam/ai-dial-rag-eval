@@ -1,12 +1,7 @@
 from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import (
-    RunnableBranch,
-    RunnablePassthrough,
-    RunnableSerializable,
-    chain,
-)
+from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
 
 from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
@@ -19,11 +14,6 @@ from aidial_rag_eval.generation.types import ErrorInfo, Statement
 from aidial_rag_eval.generation.utils.exceptions import make_error_info
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
-
-
-@chain
-def check_if_error_present(input_: Union[SegmentedText, ErrorInfo]) -> bool:
-    return isinstance(input_, ErrorInfo)
 
 
 @chain
@@ -89,17 +79,22 @@ class LLMStatementExtractor(StatementExtractor):
         model: BaseChatModel,
         max_concurrency: int,
     ):
-        self._chain = RunnableBranch(
-            (check_if_error_present, RunnablePassthrough()),
-            segmented_text_result_to_dict
-            | RunnablePassthrough.assign(
-                llm_output_statements=wrap_hypotheses
-                | statement_prompt
-                | model
-                | json_to_list
+        @chain
+        def statement_chain(input_: Union[SegmentedText, ErrorInfo]):
+            if isinstance(input_, ErrorInfo):
+                return input_
+            return (
+                segmented_text_result_to_dict
+                | RunnablePassthrough.assign(
+                    llm_output_statements=wrap_hypotheses
+                    | statement_prompt
+                    | model
+                    | json_to_list
+                )
+                | list_to_statements
             )
-            | list_to_statements,
-        )
+
+        self._chain = statement_chain  # type: ignore[assignment]
         self.max_concurrency = max_concurrency
 
     def extract(
