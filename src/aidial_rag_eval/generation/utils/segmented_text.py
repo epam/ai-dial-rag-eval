@@ -80,8 +80,9 @@ class SegmentedText:
         self.delimiters = delimiters.copy()
 
     @classmethod
-    def from_text(cls, text: Text) -> "SegmentedText":
-        nltk.download("punkt_tab", quiet=True)
+    def from_text(cls, text: Text, auto_download_nltk: bool = True) -> "SegmentedText":
+        if auto_download_nltk:
+            nltk.download("punkt_tab", quiet=True)
 
         max_len = 500
         min_len = 10
