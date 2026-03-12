@@ -37,7 +37,7 @@ langchain-community = "^0.3.14"
 langchain-openai = "^0.2.1"
 
 [tool.poetry.group.lint.dependencies]
-black = "^24.3.0"
+black = ">=24.3,<27.0"
 flake8 = "^7.0.0"
 flake8-bandit = "^4.1.1"
 flake8-black = "^0.3.6"
