@@ -1,3 +1,5 @@
+import pytest
+
 from aidial_rag_eval.metrics import calculate_inference, calculate_refusal
 
 
@@ -17,6 +19,13 @@ def test_inference(llm):
         show_progress_bar=False,
     )
     assert inference_return.inference == 0.0
+    inference_return = calculate_inference(
+        "The sun is shining brightly today. The coffee is hot.",
+        "The sun is shining brightly today. The coffee is hot, and the muffins are freshly baked.",
+        llm=llm,
+        show_progress_bar=False,
+    )
+    assert inference_return.inference == pytest.approx(0.66667, abs=1e-4)
 
 
 def test_refusal(llm):
