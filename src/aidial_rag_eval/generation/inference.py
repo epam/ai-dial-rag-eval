@@ -491,7 +491,13 @@ def calculate_batch_inference(
     for hypothesis_index, grouped_data_item in enumerate(grouped_data_list):
         segmented_text = segmented_hypotheses[hypothesis_index]
         assert not isinstance(segmented_text, ErrorInfo)
-        inferences = [score.inference for _, score in grouped_data_item]
+        inferences = np.array(
+            [score.inference for _, score in grouped_data_item], dtype=float
+        )
+        weights = np.array(
+            [float(len(inputs.statements)) for inputs, _ in grouped_data_item],
+            dtype=float,
+        )
         errors = [
             score.error.to_json() if score.error else None
             for _, score in grouped_data_item
@@ -499,15 +505,15 @@ def calculate_batch_inference(
         mean_inference = (
             None
             if any(inference is None for inference in inferences)
-            else float(np.mean(cast(List[float], inferences)))
+            else float(np.average(inferences, weights=weights))
         )
         # fill Nones with 0.0
         min_possible_inference = float(
-            np.nan_to_num(np.array(inferences, dtype=float), nan=0.0).mean()
+            np.average(np.nan_to_num(inferences, nan=0.0), weights=weights)
         )
         # fill Nones with 1.0
         max_possible_inference = float(
-            np.nan_to_num(np.array(inferences, dtype=float), nan=1.0).mean()
+            np.average(np.nan_to_num(inferences, nan=1.0), weights=weights)
         )
         inference_returns.append(
             InferenceReturn(
