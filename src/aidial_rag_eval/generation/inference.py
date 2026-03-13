@@ -202,7 +202,12 @@ def _segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+<<<<<<< feat/error-handling
 ) -> List[Union[SegmentedText, ErrorInfo]]:
+=======
+    auto_download_nltk: bool = True,
+) -> List[SegmentedText]:
+>>>>>>> development
     """
     Function that segments hypotheses into hypothesis segments(roughly into
     sentences), and then removes pronouns using LLM.
@@ -233,7 +238,8 @@ def _segment_hypotheses(
         max_concurrency=max_concurrency,
     )
     segmented_hypotheses = [
-        SegmentedText.from_text(text=hypothesis) for hypothesis in hypotheses
+        SegmentedText.from_text(text=hypothesis, auto_download_nltk=auto_download_nltk)
+        for hypothesis in hypotheses
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
@@ -293,6 +299,7 @@ def _infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     """
     Function that infers statements.
@@ -338,6 +345,7 @@ def _infer_statements(
     """
     adjusted_premises: List[Premise] = list(premises)
     if questions is not None:
+<<<<<<< feat/error-handling
         for i, question in enumerate(questions):
             question_split = SegmentedText.from_text(text=question)
             adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
@@ -348,6 +356,18 @@ def _infer_statements(
         else [_join_documents(docs) for docs in list_documents]
     )
 
+=======
+        segmented_questions = [
+            SegmentedText.from_text(
+                text=question, auto_download_nltk=auto_download_nltk
+            )
+            for question in questions
+        ]
+        premises = [
+            question_split.segments[-1] + "\n" + premise
+            for question_split, premise in zip(segmented_questions, premises)
+        ]
+>>>>>>> development
     inference_inputs = _make_inference_task_inputs(
         adjusted_premises,
         statements,
@@ -426,6 +446,7 @@ def calculate_batch_inference(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> List[InferenceReturn]:
     """
     Calculates pairwise the inference of a hypotheses from a premises.
@@ -468,6 +489,7 @@ def calculate_batch_inference(
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
     statements: List[Union[List[List[Statement]], ErrorInfo]] = _extract_statements(
         segmented_hypotheses=segmented_hypotheses,
@@ -484,6 +506,7 @@ def calculate_batch_inference(
             list_documents=list_documents,
             max_concurrency=max_concurrency,
             show_progress_bar=show_progress_bar,
+            auto_download_nltk=auto_download_nltk,
         )
     )
 
@@ -532,6 +555,7 @@ def calculate_inference(
     documents: Optional[Documents] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> InferenceReturn:
     """
     Calculates the inference of a hypothesis from a premise.
@@ -577,5 +601,6 @@ def calculate_inference(
         list_documents=list_documents,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
     return inference_returns[0]
