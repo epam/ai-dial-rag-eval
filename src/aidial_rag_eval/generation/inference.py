@@ -225,8 +225,9 @@ def _segment_hypotheses(
 
     Returns
     ------------
-    List[Union[SegmentedText, ErrorInfo]]
-        List of decontextualized hypothesis segments,
+    Tuple[List[SegmentedText], List[Union[SegmentedText, ErrorInfo]]]
+        List of original hypothesis segments and
+        List of decontextualized hypothesis segments
         or error if processing failed for that item.
     """
     converter = LLMNoPronounsConverter(
@@ -378,11 +379,16 @@ def segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> List[Optional[SegmentedText]]:
     return [
         None if isinstance(r, ErrorInfo) else r
         for r in _segment_hypotheses(
-            hypotheses, llm, max_concurrency, show_progress_bar
+            hypotheses=hypotheses,
+            llm=llm,
+            max_concurrency=max_concurrency,
+            show_progress_bar=show_progress_bar,
+            auto_download_nltk=auto_download_nltk,
         )[1]
     ]
 
@@ -396,10 +402,12 @@ def extract_statements(
     return [
         None if isinstance(r, ErrorInfo) else r
         for r in _extract_statements(
-            cast(List[Union[SegmentedText, ErrorInfo]], segmented_hypotheses),
-            llm,
-            max_concurrency,
-            show_progress_bar,
+            segmented_hypotheses=cast(
+                List[Union[SegmentedText, ErrorInfo]], segmented_hypotheses
+            ),
+            llm=llm,
+            max_concurrency=max_concurrency,
+            show_progress_bar=show_progress_bar,
         )
     ]
 
@@ -412,15 +420,17 @@ def infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
-        premises,
-        cast(List[Union[List[List[Statement]], ErrorInfo]], statements),
-        llm,
-        questions,
-        list_documents,
-        max_concurrency,
-        show_progress_bar,
+        premises=premises,
+        statements=cast(List[Union[List[List[Statement]], ErrorInfo]], statements),
+        llm=llm,
+        questions=questions,
+        list_documents=list_documents,
+        max_concurrency=max_concurrency,
+        show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
     )
 
 
