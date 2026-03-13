@@ -120,7 +120,7 @@ class LLMRefusalDetector(RefusalDetector):
                     [
                         RefusalReturn(
                             refusal=None,
-                            refusal_error=make_error_info(result).traceback,
+                            refusal_error=make_error_info(result).to_json(),
                         )
                     ]
                     * len(batch)
