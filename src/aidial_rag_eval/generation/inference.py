@@ -202,12 +202,8 @@ def _segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-<<<<<<< feat/error-handling
-) -> List[Union[SegmentedText, ErrorInfo]]:
-=======
     auto_download_nltk: bool = True,
-) -> List[SegmentedText]:
->>>>>>> development
+) -> Tuple[List[SegmentedText], List[Union[SegmentedText, ErrorInfo]]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
     sentences), and then removes pronouns using LLM.
@@ -243,7 +239,9 @@ def _segment_hypotheses(
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
-    return converter.transform_texts(segmented_hypotheses, show_progress_bar)
+    return segmented_hypotheses, converter.transform_texts(
+        segmented_hypotheses, show_progress_bar
+    )
 
 
 def _extract_statements(
@@ -345,9 +343,10 @@ def _infer_statements(
     """
     adjusted_premises: List[Premise] = list(premises)
     if questions is not None:
-<<<<<<< feat/error-handling
         for i, question in enumerate(questions):
-            question_split = SegmentedText.from_text(text=question)
+            question_split = SegmentedText.from_text(
+                text=question, auto_download_nltk=auto_download_nltk
+            )
             adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
 
     document_names: List[JoinedDocumentsName] = (
@@ -355,19 +354,6 @@ def _infer_statements(
         if list_documents is None
         else [_join_documents(docs) for docs in list_documents]
     )
-
-=======
-        segmented_questions = [
-            SegmentedText.from_text(
-                text=question, auto_download_nltk=auto_download_nltk
-            )
-            for question in questions
-        ]
-        premises = [
-            question_split.segments[-1] + "\n" + premise
-            for question_split, premise in zip(segmented_questions, premises)
-        ]
->>>>>>> development
     inference_inputs = _make_inference_task_inputs(
         adjusted_premises,
         statements,
@@ -397,7 +383,7 @@ def segment_hypotheses(
         None if isinstance(r, ErrorInfo) else r
         for r in _segment_hypotheses(
             hypotheses, llm, max_concurrency, show_progress_bar
-        )
+        )[1]
     ]
 
 
@@ -484,7 +470,10 @@ def calculate_batch_inference(
         highlights strings used for highlighting each segment of each hypothesis.
     """
 
-    segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]] = _segment_hypotheses(
+    (
+        segmented_hypotheses,
+        decontextualized_segmented_hypotheses,
+    ) = _segment_hypotheses(
         hypotheses=hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
@@ -492,7 +481,7 @@ def calculate_batch_inference(
         auto_download_nltk=auto_download_nltk,
     )
     statements: List[Union[List[List[Statement]], ErrorInfo]] = _extract_statements(
-        segmented_hypotheses=segmented_hypotheses,
+        segmented_hypotheses=decontextualized_segmented_hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
@@ -513,7 +502,6 @@ def calculate_batch_inference(
     inference_returns: List[InferenceReturn] = []
     for hypothesis_index, grouped_data_item in enumerate(grouped_data_list):
         segmented_text = segmented_hypotheses[hypothesis_index]
-        assert not isinstance(segmented_text, ErrorInfo)
         inferences = [score.inference for _, score in grouped_data_item]
         errors = [
             score.error.to_json() if score.error else None
