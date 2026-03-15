@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
@@ -53,7 +54,7 @@ def _wrapped_dataframe_inference(
         auto_download_nltk=auto_download_nltk,
     )
     return pd.DataFrame(
-        [vars(inference_return) for inference_return in inference_returns]
+        [dataclasses.asdict(inference_return) for inference_return in inference_returns]
     ).add_prefix(prefix)
 
 
@@ -73,9 +74,9 @@ def _wrapped_dataframe_refusal(
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
     )
-    return pd.DataFrame([vars(refusal) for refusal in refusal_returns]).add_prefix(
-        prefix
-    )
+    return pd.DataFrame(
+        [dataclasses.asdict(refusal) for refusal in refusal_returns]
+    ).add_prefix(prefix)
 
 
 def context_to_answer_inference(
