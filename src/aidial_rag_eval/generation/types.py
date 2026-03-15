@@ -24,7 +24,7 @@ class ErrorInfo:
     traceback: full formatted traceback string
     """
 
-    name: str
+    error_repr: str
     traceback: str
 
     def to_json(self) -> str:

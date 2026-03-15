@@ -515,7 +515,7 @@ def calculate_batch_inference(
         segmented_text = segmented_hypotheses[hypothesis_index]
         inferences = [score.inference for _, score in grouped_data_item]
         errors = [
-            score.error.to_json() if score.error else None
+            score.error.error_repr if score.error else None
             for _, score in grouped_data_item
         ]
         mean_inference = (
