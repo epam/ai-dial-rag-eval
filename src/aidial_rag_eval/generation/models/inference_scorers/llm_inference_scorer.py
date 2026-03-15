@@ -1,4 +1,5 @@
 import json
+import math
 from typing import Dict, List
 
 import numpy as np
@@ -94,7 +95,7 @@ class LLMInferenceScorer(InferenceScorer):
         def inference_chain(input_: InferenceInputs):
             if isinstance(input_.error, ErrorInfo):
                 return InferenceScore(
-                    inference=None, explanation="", error=input_.error
+                    inference=math.nan, explanation="", error=input_.error
                 )
             if not input_.statements:
                 return InferenceScore(inference=0.0, explanation="")
@@ -148,7 +149,7 @@ class LLMInferenceScorer(InferenceScorer):
                 result
                 if not isinstance(result, BaseException)
                 else InferenceScore(
-                    inference=None, explanation="", error=make_error_info(result)
+                    inference=math.nan, explanation="", error=make_error_info(result)
                 )
             )
             for result in raw_results

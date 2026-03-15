@@ -1,5 +1,6 @@
 import itertools
 import json
+import math
 from typing import Iterable, List, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
@@ -518,8 +519,8 @@ def calculate_batch_inference(
             for _, score in grouped_data_item
         ]
         mean_inference = (
-            None
-            if any(inference is None for inference in inferences)
+            math.nan
+            if any(math.isnan(inference) for inference in inferences)
             else float(np.mean(cast(List[float], inferences)))
         )
         # fill Nones with 0.0

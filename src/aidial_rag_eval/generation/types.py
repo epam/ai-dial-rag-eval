@@ -46,7 +46,7 @@ class InferenceInputs:
 class InferenceScore:
     """Inference score for a hypothesis segment, calculated based on InferenceInputs"""
 
-    inference: Optional[float]
+    inference: float
     explanation: str
     error: Optional[ErrorInfo] = None
 
@@ -55,7 +55,7 @@ class InferenceScore:
 class InferenceReturn:
     """Inference for a hypothesis, aggregated results for hypothesis segments"""
 
-    inference: Optional[float]
+    inference: float
     inference_min: float
     inference_max: float
     json: str
@@ -71,5 +71,5 @@ inference_column = fields(InferenceReturn)[0].name
 class RefusalReturn:
     """Answer refusal calculated for the answer"""
 
-    refusal: Optional[float]
+    refusal: float
     refusal_error: Optional[str] = None

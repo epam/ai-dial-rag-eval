@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
@@ -119,7 +120,7 @@ class LLMRefusalDetector(RefusalDetector):
                 flat.extend(
                     [
                         RefusalReturn(
-                            refusal=None,
+                            refusal=math.nan,
                             refusal_error=make_error_info(result).to_json(),
                         )
                     ]
@@ -128,7 +129,8 @@ class LLMRefusalDetector(RefusalDetector):
             elif len(result) != len(batch):
                 error_msg = f"Expected {len(batch)} refusal results, got {len(result)}"
                 flat.extend(
-                    [RefusalReturn(refusal=None, refusal_error=error_msg)] * len(batch)
+                    [RefusalReturn(refusal=math.nan, refusal_error=error_msg)]
+                    * len(batch)
                 )
             else:
                 flat.extend(result)
