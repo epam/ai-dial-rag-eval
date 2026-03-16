@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-03-10T21:04:19.472765",
+  "created_at": "2026-03-16T09:43:22.720552",
   "sources": [
     {
       "metadata_path": "./example_parquets/ground_truth.parquet.metadata.json",
@@ -55,15 +55,15 @@
   },
   "file_info": {
     "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/metrics.parquet",
-    "size": 37876,
+    "size": 38110,
     "type": "file",
-    "created": 1773194659.470888,
+    "created": 1773672202.7175121,
     "islink": false,
     "mode": 33279,
     "uid": 1000,
     "gid": 1000,
-    "mtime": 1773194659.470888,
-    "ino": 1688849861492507,
+    "mtime": 1773672202.7175121,
+    "ino": 72339069015181302,
     "nlink": 1
   },
   "metrics": {
@@ -74,15 +74,15 @@
     "ctx_ans_inference": 0.6666666666666666,
     "ctx_ans_inference_min": 0.6666666666666666,
     "ctx_ans_inference_max": 0.6666666666666666,
-    "ans_gt_inference": 0.5,
-    "ans_gt_inference_min": 0.5,
-    "ans_gt_inference_max": 0.5,
+    "ans_gt_inference": 0.6666666666666666,
+    "ans_gt_inference_min": 0.6666666666666666,
+    "ans_gt_inference_max": 0.6666666666666666,
     "gt_ans_inference": 0.6666666666666666,
     "gt_ans_inference_min": 0.6666666666666666,
     "gt_ans_inference_max": 0.6666666666666666,
     "answer_refusal": 0.0,
     "ground_truth_refusal": 0.0,
-    "mean_inference": 0.6111111111111112,
+    "mean_inference": 0.6666666666666666,
     "median_inference": 0.6666666666666666
   },
   "statistics": {
