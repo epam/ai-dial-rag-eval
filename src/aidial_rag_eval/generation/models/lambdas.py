@@ -22,9 +22,13 @@ def json_to_list(input_: AIMessage) -> List:
         Returns a list; if the LLM output was incorrect, returns an empty list.
     """
     return_dict = parse_json_markdown(str(input_.content))
-    assert isinstance(return_dict, dict)
+    assert isinstance(
+        return_dict, dict
+    ), f"LLM response is not a dict, got {type(return_dict).__name__}"
     return_list = return_dict[list(return_dict.keys())[0]]
-    assert isinstance(return_list, list)
+    assert isinstance(
+        return_list, list
+    ), f"LLM response dict value is not a list, got {type(return_list).__name__}"
     return return_list
 
 
@@ -46,5 +50,7 @@ def json_to_dict(input_: AIMessage) -> Dict[str, List[str]]:
         otherwise, an empty dict is returned.
     """
     return_dict = parse_json_markdown(str(input_.content))
-    assert isinstance(return_dict, dict)
+    assert isinstance(
+        return_dict, dict
+    ), f"LLM response is not a dict, got {type(return_dict).__name__}"
     return return_dict

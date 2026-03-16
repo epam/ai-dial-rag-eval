@@ -42,7 +42,11 @@ def list_to_statements(
     statements_for_hypothesis_segments = llm_outputs_with_inputs[
         "llm_output_statements"
     ]
-    assert len(hypothesis_segments) == len(statements_for_hypothesis_segments)
+    assert len(hypothesis_segments) == len(statements_for_hypothesis_segments), (
+        f"Statement extraction LLM response"
+        f" has {len(statements_for_hypothesis_segments)} items,"
+        f" expected {len(hypothesis_segments)}"
+    )
     return [
         return_dict["statements"] for return_dict in statements_for_hypothesis_segments
     ]

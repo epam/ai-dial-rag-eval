@@ -33,7 +33,9 @@ def json_to_dict_segments(input_: AIMessage) -> List[str]:
         otherwise, an empty list is returned.
     """
     return_dict = parse_json_markdown(str(input_.content))
-    assert isinstance(return_dict, dict)
+    assert isinstance(
+        return_dict, dict
+    ), f"Decontextualization LLM response is not a dict, got {type(return_dict).__name__}"
     return return_dict["segments"]
 
 
@@ -53,7 +55,10 @@ def return_original_segmented_text(input_: Dict) -> SegmentedText:
 def dict_segments_to_segmented_text(llm_outputs_with_inputs: Dict) -> SegmentedText:
     original_segmented_text: SegmentedText = llm_outputs_with_inputs["segmented_text"]
     decontextualized_segments = llm_outputs_with_inputs["decontextualized_segments"]
-    assert len(decontextualized_segments) == len(original_segmented_text.segments)
+    assert len(decontextualized_segments) == len(original_segmented_text.segments), (
+        f"Decontextualization LLM response has {len(decontextualized_segments)} segments,"
+        f" expected {len(original_segmented_text.segments)}"
+    )
     return SegmentedText(decontextualized_segments, original_segmented_text.delimiters)
 
 
