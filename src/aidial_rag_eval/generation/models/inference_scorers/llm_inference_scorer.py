@@ -46,7 +46,7 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     ), f"Inference LLM response has {len(outputs)} outputs, expected {len(passed_statements)}"
     for d, s in zip(outputs, passed_statements):
         d["statement"] = s
-    assert not np.isnan(inference), "Inference LLM response produced NaN inference"
+    assert not math.isnan(inference), "Inference LLM response produced NaN inference"
     explanation = json.dumps(outputs)
     return InferenceScore(inference=inference, explanation=explanation)
 
