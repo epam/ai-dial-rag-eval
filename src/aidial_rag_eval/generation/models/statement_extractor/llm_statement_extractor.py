@@ -10,7 +10,7 @@ from aidial_rag_eval.generation.models.statement_extractor.base_statement_extrac
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
     statement_prompt,
 )
-from aidial_rag_eval.generation.types import ErrorInfo, Statement
+from aidial_rag_eval.generation.types import ErrorInfo, HypothesisStatements
 from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
@@ -105,7 +105,7 @@ class LLMStatementExtractor(StatementExtractor):
         self,
         segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]],
         show_progress_bar: bool,
-    ) -> List[Union[List[List[Statement]], ErrorInfo]]:
+    ) -> List[Union[HypothesisStatements, ErrorInfo]]:
         """
         Method that calls a chain to extract statements from each
         hypothesis segment.
@@ -121,7 +121,7 @@ class LLMStatementExtractor(StatementExtractor):
 
         Returns
         ------------
-        List[Union[List[List[Statement]], ErrorInfo]]
+        List[Union[HypothesisStatements, ErrorInfo]]
             Returns the statements for each hypothesis segment,
             or errors if extraction failed for that item.
         """

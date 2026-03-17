@@ -11,6 +11,8 @@ JoinedContext = Text
 Premise = Union[JoinedContext, Answer, GroundTruthAnswer]
 Hypothesis = Union[Answer, GroundTruthAnswer]
 Statement = str
+HypothesisSegmentStatements = List[Statement]
+HypothesisStatements = List[HypothesisSegmentStatements]
 JoinedDocumentsName = str
 
 MetricBind = str

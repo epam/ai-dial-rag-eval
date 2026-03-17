@@ -18,12 +18,12 @@ from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extract
 from aidial_rag_eval.generation.types import (
     ErrorInfo,
     Hypothesis,
+    HypothesisStatements,
     InferenceInputs,
     InferenceReturn,
     InferenceScore,
     JoinedDocumentsName,
     Premise,
-    Statement,
 )
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from aidial_rag_eval.types import Documents, Question
@@ -37,7 +37,7 @@ def _join_documents(documents: Documents) -> JoinedDocumentsName:
 
 def _make_inference_task_inputs(
     premises: List[Premise],
-    statements: List[Union[List[List[Statement]], ErrorInfo]],
+    statements: List[Union[HypothesisStatements, ErrorInfo]],
     document_names: List[JoinedDocumentsName],
 ) -> List[InferenceInputs]:
     """
@@ -48,7 +48,7 @@ def _make_inference_task_inputs(
     premises : List[str]
         A list of premises from which we want to derive hypotheses in pairs.
 
-    statements : List[Union[List[List[Statement]], ErrorInfo]]
+    statements : List[Union[HypothesisStatements, ErrorInfo]]
         A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level represents the
         segmentation of each hypothesis into hypothesis segments, and the innermost
@@ -251,7 +251,7 @@ def _extract_statements(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[Union[List[List[Statement]], ErrorInfo]]:
+) -> List[Union[HypothesisStatements, ErrorInfo]]:
     """
     Function that extracts statements from each hypothesis segment.
     Hypothesis segments of the inner list are grouped together and
@@ -275,7 +275,7 @@ def _extract_statements(
 
     Returns
     ------------
-    List[Union[List[List[Statement]], ErrorInfo]]
+    List[Union[HypothesisStatements, ErrorInfo]]
         A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level corresponds to the
         segmentation of each hypothesis into hypothesis segments, and the innermost
@@ -293,7 +293,7 @@ def _extract_statements(
 
 def _infer_statements(
     premises: List[Premise],
-    statements: List[Union[List[List[Statement]], ErrorInfo]],
+    statements: List[Union[HypothesisStatements, ErrorInfo]],
     llm: BaseChatModel,
     questions: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
@@ -313,7 +313,7 @@ def _infer_statements(
     premises : List[str]
         The text of the premise from which the hypothesis will be inferred.
 
-    statements : List[Union[List[List[Statement]], ErrorInfo]]
+    statements : List[Union[HypothesisStatements, ErrorInfo]]
         A deeply nested list of statements, where the outermost
         list corresponds to different hypotheses, the next level corresponds to the
         segmentation of each hypothesis into hypothesis segments, and the innermost
@@ -399,7 +399,7 @@ def extract_statements(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[Optional[List[List[Statement]]]]:
+) -> List[Optional[HypothesisStatements]]:
     return [
         None if isinstance(r, ErrorInfo) else r
         for r in _extract_statements(
@@ -415,7 +415,7 @@ def extract_statements(
 
 def infer_statements(
     premises: List[Premise],
-    statements: List[List[List[Statement]]],
+    statements: List[HypothesisStatements],
     llm: BaseChatModel,
     questions: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
@@ -425,7 +425,7 @@ def infer_statements(
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
         premises=premises,
-        statements=cast(List[Union[List[List[Statement]], ErrorInfo]], statements),
+        statements=cast(List[Union[HypothesisStatements, ErrorInfo]], statements),
         llm=llm,
         questions=questions,
         list_documents=list_documents,
@@ -491,7 +491,7 @@ def calculate_batch_inference(
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
     )
-    statements: List[Union[List[List[Statement]], ErrorInfo]] = _extract_statements(
+    statements: List[Union[HypothesisStatements, ErrorInfo]] = _extract_statements(
         segmented_hypotheses=decontextualized_segmented_hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
