@@ -291,6 +291,21 @@ def _extract_statements(
     return extractor.extract(segmented_hypotheses, show_progress_bar)
 
 
+def _add_questions_to_premises(
+    premises: List[Premise],
+    questions: Optional[List[Question]],
+    auto_download_nltk: bool,
+) -> List[Premise]:
+    adjusted_premises: List[Premise] = list(premises)
+    if questions is not None:
+        for i, question in enumerate(questions):
+            question_split = SegmentedText.from_text(
+                text=question, auto_download_nltk=auto_download_nltk
+            )
+            adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
+    return adjusted_premises
+
+
 def _infer_statements(
     premises: List[Premise],
     statements: List[Union[HypothesisStatements, ErrorInfo]],
@@ -343,13 +358,9 @@ def _infer_statements(
         For items that failed in any stage, InferenceScore will have inference=None
         and the error field set.
     """
-    adjusted_premises: List[Premise] = list(premises)
-    if questions is not None:
-        for i, question in enumerate(questions):
-            question_split = SegmentedText.from_text(
-                text=question, auto_download_nltk=auto_download_nltk
-            )
-            adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
+    adjusted_premises = _add_questions_to_premises(
+        premises, questions, auto_download_nltk
+    )
 
     document_names: List[JoinedDocumentsName] = (
         [""] * len(statements)
