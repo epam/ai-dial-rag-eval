@@ -381,17 +381,14 @@ def segment_hypotheses(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
-) -> List[Optional[SegmentedText]]:
-    return [
-        None if isinstance(r, ErrorInfo) else r
-        for r in _segment_hypotheses(
-            hypotheses=hypotheses,
-            llm=llm,
-            max_concurrency=max_concurrency,
-            show_progress_bar=show_progress_bar,
-            auto_download_nltk=auto_download_nltk,
-        )[1]
-    ]
+) -> List[Union[SegmentedText, ErrorInfo]]:
+    return _segment_hypotheses(
+        hypotheses=hypotheses,
+        llm=llm,
+        max_concurrency=max_concurrency,
+        show_progress_bar=show_progress_bar,
+        auto_download_nltk=auto_download_nltk,
+    )[1]
 
 
 def extract_statements(
@@ -399,18 +396,15 @@ def extract_statements(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-) -> List[Optional[HypothesisStatements]]:
-    return [
-        None if isinstance(r, ErrorInfo) else r
-        for r in _extract_statements(
-            segmented_hypotheses=cast(
-                List[Union[SegmentedText, ErrorInfo]], segmented_hypotheses
-            ),
-            llm=llm,
-            max_concurrency=max_concurrency,
-            show_progress_bar=show_progress_bar,
-        )
-    ]
+) -> List[Union[HypothesisStatements, ErrorInfo]]:
+    return _extract_statements(
+        segmented_hypotheses=cast(
+            List[Union[SegmentedText, ErrorInfo]], segmented_hypotheses
+        ),
+        llm=llm,
+        max_concurrency=max_concurrency,
+        show_progress_bar=show_progress_bar,
+    )
 
 
 def infer_statements(
