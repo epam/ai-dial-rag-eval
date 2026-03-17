@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
@@ -98,7 +98,7 @@ class LLMStatementExtractor(StatementExtractor):
                 | list_to_statements
             )
 
-        self._chain = statement_chain  # type: ignore[assignment]
+        self._chain = cast(RunnableSerializable, statement_chain)
         self.max_concurrency = max_concurrency
 
     def extract(
@@ -132,10 +132,6 @@ class LLMStatementExtractor(StatementExtractor):
                 return_exceptions=True,
             )
         return [
-            (
-                result
-                if not isinstance(result, Exception)
-                else make_error_info(result)
-            )
+            (result if not isinstance(result, Exception) else make_error_info(result))
             for result in raw_results
         ]

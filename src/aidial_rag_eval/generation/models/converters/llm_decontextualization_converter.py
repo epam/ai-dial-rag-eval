@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Union
+from typing import Dict, List, Union, cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -102,7 +102,7 @@ class LLMNoPronounsConverter(SegmentConverter):
                 | dict_segments_to_segmented_text
             )
 
-        self._chain = pronouns_converter_chain  # type: ignore[assignment]
+        self._chain = cast(RunnableSerializable, pronouns_converter_chain)
         self.max_concurrency = max_concurrency
 
     def transform_texts(
@@ -135,10 +135,6 @@ class LLMNoPronounsConverter(SegmentConverter):
                 return_exceptions=True,
             )
         return [
-            (
-                result
-                if not isinstance(result, Exception)
-                else make_error_info(result)
-            )
+            (result if not isinstance(result, Exception) else make_error_info(result))
             for result in raw_results
         ]

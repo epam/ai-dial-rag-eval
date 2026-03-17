@@ -1,6 +1,6 @@
 import json
 import math
-from typing import Dict, List
+from typing import Dict, List, cast
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
@@ -109,7 +109,7 @@ class LLMInferenceScorer(InferenceScorer):
                 | returns_to_inference_score
             )
 
-        self._chain = inference_chain  # type: ignore[assignment]
+        self._chain = cast(RunnableSerializable, inference_chain)
         self.max_concurrency = max_concurrency
 
     def get_inference(
