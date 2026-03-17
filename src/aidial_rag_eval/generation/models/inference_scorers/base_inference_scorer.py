@@ -1,4 +1,3 @@
-import math
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -17,6 +16,4 @@ class InferenceScorer(ABC):
         inference_inputs: List[InferenceInputs],
         show_progress_bar: bool,
     ) -> List[InferenceScore]:
-        return [InferenceScore(inference=math.nan, explanation="")] * len(
-            inference_inputs
-        )
+        raise NotImplementedError()

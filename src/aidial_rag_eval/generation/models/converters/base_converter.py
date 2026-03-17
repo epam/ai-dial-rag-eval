@@ -16,4 +16,4 @@ class SegmentConverter(ABC):
     def transform_texts(
         self, segmented_texts: List[SegmentedText], show_progress_bar: bool
     ) -> List[Union[SegmentedText, ErrorInfo]]:
-        pass
+        raise NotImplementedError()

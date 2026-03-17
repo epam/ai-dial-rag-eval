@@ -18,4 +18,4 @@ class StatementExtractor(ABC):
         segmented_hypotheses: List[Union[SegmentedText, ErrorInfo]],
         show_progress_bar: bool,
     ) -> List[Union[List[List[Statement]], ErrorInfo]]:
-        pass
+        raise NotImplementedError()
