@@ -149,7 +149,7 @@ class LLMInferenceScorer(InferenceScorer):
         return [
             (
                 result
-                if not isinstance(result, BaseException)
+                if not isinstance(result, Exception)
                 else InferenceScore(
                     inference=math.nan, explanation="", error=make_error_info(result)
                 )

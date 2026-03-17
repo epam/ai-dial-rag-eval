@@ -137,7 +137,7 @@ class LLMNoPronounsConverter(SegmentConverter):
         return [
             (
                 result
-                if not isinstance(result, BaseException)
+                if not isinstance(result, Exception)
                 else make_error_info(result)
             )
             for result in raw_results
