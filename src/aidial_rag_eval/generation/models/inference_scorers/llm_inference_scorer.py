@@ -14,7 +14,10 @@ from aidial_rag_eval.generation.models.inference_scorers.inference_template impo
 )
 from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.types import ErrorInfo, InferenceInputs, InferenceScore
-from aidial_rag_eval.generation.utils.exceptions import make_error_info
+from aidial_rag_eval.generation.utils.exceptions import (
+    make_error_info,
+    wrap_batch_errors,
+)
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 
 
@@ -146,13 +149,9 @@ class LLMInferenceScorer(InferenceScorer):
                 return_exceptions=True,
             )
         assert isinstance(raw_results, list)
-        return [
-            (
-                result
-                if not isinstance(result, Exception)
-                else InferenceScore(
-                    inference=math.nan, explanation="", error=make_error_info(result)
-                )
-            )
-            for result in raw_results
-        ]
+        return wrap_batch_errors(
+            raw_results,
+            lambda error: InferenceScore(
+                inference=math.nan, explanation="", error=make_error_info(error)
+            ),
+        )

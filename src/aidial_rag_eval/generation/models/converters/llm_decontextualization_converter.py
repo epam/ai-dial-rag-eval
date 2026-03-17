@@ -11,7 +11,7 @@ from aidial_rag_eval.generation.models.converters.decontextualization_template i
     decontextualization_prompt,
 )
 from aidial_rag_eval.generation.types import ErrorInfo
-from aidial_rag_eval.generation.utils.exceptions import make_error_info
+from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
 from aidial_rag_eval.generation.utils.progress_bar import ProgressBarCallback
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
@@ -134,7 +134,4 @@ class LLMNoPronounsConverter(SegmentConverter):
                 config={"callbacks": [cb], "max_concurrency": self.max_concurrency},
                 return_exceptions=True,
             )
-        return [
-            (result if not isinstance(result, Exception) else make_error_info(result))
-            for result in raw_results
-        ]
+        return wrap_batch_errors(raw_results)
