@@ -1,5 +1,17 @@
 # flake8: noqa
+from typing import List
+
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel
+
+
+class HypothesisSegmentStatementsOutput(BaseModel):
+    statements: List[str]
+
+
+class HypothesisStatementsOutput(BaseModel):
+    hypothesis_statements: List[HypothesisSegmentStatementsOutput]
+
 
 statement_template = """
 Break down each hypothesis into statements, if hypothesis is complex. Else return hypothesis as a single statement.
@@ -7,29 +19,6 @@ Break down each hypothesis into statements, if hypothesis is complex. Else retur
 A statement is a declarative independent self-contained non-overlapping substring forming a complete sentence derived from the hypothesis.
 
 Single words, signs, numbers, links, etc. are not statements.
-
-Your response must be in JSON format:
-```json
-{
-    "hypothesis_statements": [
-        {
-            "statements": [
-                <<statement1 from the first hypothesis>>,
-                <<statement2 from the first hypothesis>>,
-                ...
-            ]
-        },
-        {
-            "statements": [
-                <<statement1 from the second hypothesis>>,
-                <<statement2 from the second hypothesis>>,
-                ...
-            ]
-        },
-        ...
-    ]
-}
-```
 
 Request:
 Hypotheses:

@@ -10,9 +10,9 @@ from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer i
     InferenceScorer,
 )
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
+    StatementInferenceOutput,
     inference_prompt,
 )
-from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.types import ErrorInfo, InferenceInputs, InferenceScore
 from aidial_rag_eval.generation.utils.exceptions import (
     make_error_info,
@@ -31,7 +31,7 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
     Parameters
     -----------
     llm_outputs_with_inputs : Dict
-        Passed inputs with a list of tags and explanations for each input statement
+        Passed inputs with a StatementInferenceOutput from the LLM
         stored in the "inference" key.
 
     Returns
@@ -40,17 +40,21 @@ def returns_to_inference_score(llm_outputs_with_inputs: Dict) -> InferenceScore:
         Returns the inference and an explanation of how the inference was obtained.
         If the LLM output is incorrect, the inference is 0.
     """
-    outputs = llm_outputs_with_inputs["inference"]
+    output: StatementInferenceOutput = llm_outputs_with_inputs["inference"]
     passed_statements = llm_outputs_with_inputs["statements"]
-    list_tags = [d["tag"] for d in outputs]
+    assert len(output.statement_inference) == len(passed_statements), (
+        f"Inference LLM response has {len(output.statement_inference)} outputs,"
+        f" expected {len(passed_statements)}"
+    )
+    list_tags = [item.tag for item in output.statement_inference]
     inference = float(np.mean([tag == "ENT" for tag in list_tags]))
-    assert len(outputs) == len(
-        passed_statements
-    ), f"Inference LLM response has {len(outputs)} outputs, expected {len(passed_statements)}"
-    for d, s in zip(outputs, passed_statements):
-        d["statement"] = s
     assert not math.isnan(inference), "Inference LLM response produced NaN inference"
-    explanation = json.dumps(outputs)
+    explanation = json.dumps(
+        [
+            {"explanation": item.explanation, "tag": item.tag, "statement": s}
+            for item, s in zip(output.statement_inference, passed_statements)
+        ]
+    )
     return InferenceScore(inference=inference, explanation=explanation)
 
 
@@ -107,7 +111,9 @@ class LLMInferenceScorer(InferenceScorer):
             return (
                 inference_inputs_to_dict
                 | RunnablePassthrough.assign(
-                    inference=wrap_statements | inference_prompt | model | json_to_list
+                    inference=wrap_statements
+                    | inference_prompt
+                    | model.with_structured_output(StatementInferenceOutput)
                 )
                 | returns_to_inference_score
             )

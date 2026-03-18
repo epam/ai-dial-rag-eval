@@ -1,5 +1,13 @@
 # flake8: noqa
+from typing import List, Literal
+
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel
+
+
+class RefusalTagsOutput(BaseModel):
+    tags: List[Literal["REJ", "ANS"]]
+
 
 refusal_template = """
 Answer Refusal task is to determine if an answer should be tagged as a refusal to answer based on specific criteria.
@@ -18,17 +26,6 @@ Tagging guidelines:
 Example:
 An explicit statement: "There is no answer to this question." should be tagged "REJ".
 A statement that is not explicit: "The answer to this question is yes." should be tagged "ANS".
-
-Format your response in JSON:
-```json
-{
-    "tags": [
-        <<"REJ" or "ANS">>,
-        <<"REJ" or "ANS">>,
-        ...
-    ]
-}
-```
 
 Each answer from the list of answers corresponds to a tag in your response.
 The first answer corresponds to the first tag, the second corresponds to the second.

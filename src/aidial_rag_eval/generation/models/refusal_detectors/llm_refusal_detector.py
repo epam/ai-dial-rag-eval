@@ -5,11 +5,11 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 from more_itertools import chunked
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.refusal_detectors.base_refusal_detector import (
     RefusalDetector,
 )
 from aidial_rag_eval.generation.models.refusal_detectors.refusal_template import (
+    RefusalTagsOutput,
     refusal_prompt,
 )
 from aidial_rag_eval.generation.types import RefusalReturn
@@ -22,7 +22,7 @@ from aidial_rag_eval.types import Answer
 def returns_to_refusal_return(input_: Dict) -> List[RefusalReturn]:
     """
     The final part of the chain, which calculates answer refusals
-    for each answer in the batch based on the JSON output from the LLM.
+    for each answer in the batch based on the LLM output.
 
     Parameters
     -----------
@@ -37,12 +37,12 @@ def returns_to_refusal_return(input_: Dict) -> List[RefusalReturn]:
         Returns a list of RefusalReturn, where each input answer from the batch
         is assigned a 1. if it is an answer refusal, or 0. otherwise.
     """
-    tags = input_["refusal_tags"]
+    output: RefusalTagsOutput = input_["refusal_tags"]
     answers = input_["answers"]
-    assert len(tags) == len(
+    assert len(output.tags) == len(
         answers
-    ), f"Refusal LLM response has {len(tags)} outputs, expected {len(answers)}"
-    return [RefusalReturn(refusal=float(tag == "REJ")) for tag in tags]
+    ), f"Refusal LLM response has {len(output.tags)} outputs, expected {len(answers)}"
+    return [RefusalReturn(refusal=float(tag == "REJ")) for tag in output.tags]
 
 
 @chain
@@ -81,7 +81,8 @@ class LLMRefusalDetector(RefusalDetector):
         self._chain = (
             wrap_answers
             | RunnablePassthrough.assign(
-                refusal_tags=refusal_prompt | model | json_to_list
+                refusal_tags=refusal_prompt
+                | model.with_structured_output(RefusalTagsOutput)
             )
             | returns_to_refusal_return
         )

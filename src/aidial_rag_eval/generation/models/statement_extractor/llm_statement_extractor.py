@@ -3,11 +3,11 @@ from typing import Dict, List, Union
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
     StatementExtractor,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
+    HypothesisStatementsOutput,
     statement_prompt,
 )
 from aidial_rag_eval.generation.types import ErrorInfo, HypothesisStatements
@@ -39,17 +39,15 @@ def list_to_statements(
         The extracted statements if the LLM output is valid.
     """
     hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
-    statements_for_hypothesis_segments = llm_outputs_with_inputs[
+    output: HypothesisStatementsOutput = llm_outputs_with_inputs[
         "llm_output_statements"
     ]
-    assert len(hypothesis_segments) == len(statements_for_hypothesis_segments), (
+    assert len(hypothesis_segments) == len(output.hypothesis_statements), (
         f"Statement extraction LLM response"
-        f" has {len(statements_for_hypothesis_segments)} items,"
+        f" has {len(output.hypothesis_statements)} items,"
         f" expected {len(hypothesis_segments)}"
     )
-    return [
-        return_dict["statements"] for return_dict in statements_for_hypothesis_segments
-    ]
+    return [item.statements for item in output.hypothesis_statements]
 
 
 @chain
@@ -92,8 +90,7 @@ class LLMStatementExtractor(StatementExtractor):
                 | RunnablePassthrough.assign(
                     llm_output_statements=wrap_hypotheses
                     | statement_prompt
-                    | model
-                    | json_to_list
+                    | model.with_structured_output(HypothesisStatementsOutput)
                 )
                 | list_to_statements
             )
