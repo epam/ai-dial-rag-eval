@@ -18,7 +18,12 @@ def wrap_batch_errors(
     raw_results: List[Union[T, Exception]],
     make_error: Callable[[Exception], E] = make_error_info,
 ) -> List[Union[T, E]]:
-    return [
-        (result if not isinstance(result, Exception) else make_error(result))
-        for result in raw_results
-    ]
+    results = []
+    for result in raw_results:
+        if isinstance(result, Exception):
+            results.append(make_error(result))
+        elif isinstance(result, BaseException):
+            raise result
+        else:
+            results.append(result)
+    return results
