@@ -1,7 +1,7 @@
-from typing import Dict, List, Union, cast
+from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 
 from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
@@ -69,7 +69,7 @@ class LLMStatementExtractor(StatementExtractor):
     statements from a hypothesis segment using a LLM.
     """
 
-    _chain: RunnableSerializable
+    _chain: Runnable
     """A chain that contains the core logic, which includes:
     the prompt, model, conversion of output content to JSON,
     and transformation of JSON into statements."""
@@ -98,7 +98,7 @@ class LLMStatementExtractor(StatementExtractor):
                 | list_to_statements
             )
 
-        self._chain = cast(RunnableSerializable, statement_chain)
+        self._chain = statement_chain
         self.max_concurrency = max_concurrency
 
     def extract(

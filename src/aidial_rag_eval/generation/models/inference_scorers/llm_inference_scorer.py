@@ -1,10 +1,10 @@
 import json
 import math
-from typing import Dict, List, cast
+from typing import Dict, List
 
 import numpy as np
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 
 from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer import (
     InferenceScorer,
@@ -82,7 +82,7 @@ class LLMInferenceScorer(InferenceScorer):
     inference of a hypothesis from a premise using a LLM.
     """
 
-    _chain: RunnableSerializable
+    _chain: Runnable
     """A chain that contains the core logic, which includes:
     the prompt, model, conversion of output content to JSON,
     and transformation of JSON into InferenceScore."""
@@ -112,7 +112,7 @@ class LLMInferenceScorer(InferenceScorer):
                 | returns_to_inference_score
             )
 
-        self._chain = cast(RunnableSerializable, inference_chain)
+        self._chain = inference_chain
         self.max_concurrency = max_concurrency
 
     def get_inference(

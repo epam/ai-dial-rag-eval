@@ -2,7 +2,7 @@ import math
 from typing import Dict, List
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 from more_itertools import chunked
 
 from aidial_rag_eval.generation.models.lambdas import json_to_list
@@ -63,7 +63,7 @@ class LLMRefusalDetector(RefusalDetector):
     answer refusal using a LLM.
     """
 
-    _chain: RunnableSerializable
+    _chain: Runnable
     """A chain that contains the core logic, which includes:
     the prompt, model, conversion of output content to JSON,
     and  and transformation of JSON into RefusalReturn."""
