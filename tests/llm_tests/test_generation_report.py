@@ -45,8 +45,14 @@ def test_data_inference_from_fsspec(llm):
     expected_metrics = pd.DataFrame(
         {
             "ctx_ans_inference": [0.0, 1.0, 0.0],
+            "ctx_ans_inference_min": [0.0, 1.0, 0.0],
+            "ctx_ans_inference_max": [0.0, 1.0, 0.0],
             "ans_gt_inference": [0.0, 1.0, 0.0],
+            "ans_gt_inference_min": [0.0, 1.0, 0.0],
+            "ans_gt_inference_max": [0.0, 1.0, 0.0],
             "gt_ans_inference": [0.0, 1.0, 0.0],
+            "gt_ans_inference_min": [0.0, 1.0, 0.0],
+            "gt_ans_inference_max": [0.0, 1.0, 0.0],
             "mean_inference": [0.0, 1.0, 0.0],
             "median_inference": [0.0, 1.0, 0.0],
             "answer_refusal": [0.0, 0.0, 1.0],

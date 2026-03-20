@@ -5,6 +5,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
     LLMNoPronounsConverter,
 )
+from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
@@ -18,11 +19,9 @@ def test_valid_json_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == [
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert not isinstance(result, ErrorInfo)
+    assert result.segments == [
         "John went to the store.",
         "John bought milk.",
     ]
@@ -36,11 +35,8 @@ def test_invalid_json_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert isinstance(result, ErrorInfo)
 
 
 def test_json_missing_segments_key():
@@ -53,11 +49,8 @@ def test_json_missing_segments_key():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert isinstance(result, ErrorInfo)
 
 
 def test_segment_count_mismatch():
@@ -68,11 +61,8 @@ def test_segment_count_mismatch():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert isinstance(result, ErrorInfo)
 
 
 def test_empty_response():
@@ -83,11 +73,8 @@ def test_empty_response():
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    decontext_segmented_text = converter.transform_texts(
-        [segmented_text], show_progress_bar=False
-    )[0]
-
-    assert decontext_segmented_text.segments == segmented_text.segments
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert isinstance(result, ErrorInfo)
 
 
 def test_invoke_raises_exception():
@@ -100,10 +87,7 @@ def test_invoke_raises_exception():
     )
 
     with patch.object(
-        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            converter.transform_texts([segmented_text], show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+        assert isinstance(result, ErrorInfo)

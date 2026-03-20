@@ -1,3 +1,4 @@
+import math
 from unittest.mock import patch
 
 import pytest
@@ -47,8 +48,9 @@ def test_invalid_json_response():
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
     assert len(results) == 1
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
     assert results[0].explanation == ""
+    assert results[0].error is not None
 
 
 def test_json_missing_tag_key():
@@ -59,8 +61,9 @@ def test_json_missing_tag_key():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
     assert results[0].explanation == ""
+    assert results[0].error is not None
 
 
 @pytest.mark.skip(reason="explanation key check is not implemented")
@@ -72,8 +75,9 @@ def test_json_missing_explanation_key():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
     assert results[0].explanation == ""
+    assert results[0].error is not None
 
 
 def test_output_count_mismatch():
@@ -86,7 +90,9 @@ def test_output_count_mismatch():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
+    assert results[0].explanation == ""
+    assert results[0].error is not None
 
 
 def test_empty_response():
@@ -97,8 +103,9 @@ def test_empty_response():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
     assert results[0].explanation == ""
+    assert results[0].error is not None
 
 
 def test_empty_statements():
@@ -111,6 +118,7 @@ def test_empty_statements():
 
     assert results[0].inference == 0.0
     assert results[0].explanation == ""
+    assert results[0].error is None
 
 
 def test_invoke_raises_exception():
@@ -120,10 +128,9 @@ def test_invoke_raises_exception():
     inputs = [_create_inference_input(["Statement1"])]
 
     with patch.object(
-        FakeListChatModel, "invoke", side_effect=Exception("LLM invoke failed")
+        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
     ):
-        try:
-            scorer.get_inference(inputs, show_progress_bar=False)
-            raise AssertionError("Expected exception was not raised")
-        except Exception as e:
-            assert str(e) == "LLM invoke failed"
+        results = scorer.get_inference(inputs, show_progress_bar=False)
+        assert math.isnan(results[0].inference)
+        assert results[0].explanation == ""
+        assert results[0].error is not None
