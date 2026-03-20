@@ -2,16 +2,27 @@
 from typing import List, Literal
 
 from langchain_core.prompts import PromptTemplate
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class StatementInference(BaseModel):
-    explanation: str
-    tag: Literal["ENT", "CONT", "NEUT"]
+    """Inference result for a single statement."""
+
+    explanation: str = Field(description="Brief explanation of the inference decision.")
+    tag: Literal["ENT", "CONT", "NEUT"] = Field(
+        description='"ENT" if the statement is entailed by the premise, "CONT" if it contradicts the premise, "NEUT" otherwise.'
+    )
 
 
 class StatementInferenceOutput(BaseModel):
-    statement_inference: List[StatementInference]
+    """The list must contain exactly as many items as there are input statements. The first item corresponds to statement1, the second to statement2, and so on."""
+
+    statement_inference: List[StatementInference] = Field(
+        description=(
+            "One item per input statement, in the same order. "
+            "The first item corresponds to statement1, the second to statement2, etc."
+        )
+    )
 
 
 inference_template = """

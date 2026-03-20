@@ -2,11 +2,18 @@
 from typing import List
 
 from langchain_core.prompts import PromptTemplate
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DecontextualizationOutput(BaseModel):
-    segments: List[str]
+    """The list must contain exactly as many segments as in the input, in the same order."""
+
+    segments: List[str] = Field(
+        description=(
+            "Decontextualized segments, one per input segment, in the same order. "
+            "If the input has N segments, this list must have exactly N items."
+        )
+    )
 
 
 decontextualization_template = """

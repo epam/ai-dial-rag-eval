@@ -7,7 +7,7 @@ from aidial_rag_eval.generation.models.statement_extractor.base_statement_extrac
     StatementExtractor,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
-    HypothesisStatementsOutput,
+    StatementsOutput,
     statement_prompt,
 )
 from aidial_rag_eval.generation.types import ErrorInfo, HypothesisStatements
@@ -39,9 +39,13 @@ def list_to_statements(
         The extracted statements if the LLM output is valid.
     """
     hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
-    output: HypothesisStatementsOutput = llm_outputs_with_inputs[
+    output: StatementsOutput = llm_outputs_with_inputs[
         "llm_output_statements"
     ]
+    print("--------------------------------------------------------")
+    print("input:", hypothesis_segments)
+    print("output", [item.statements for item in output.hypothesis_statements])
+    print("--------------------------------------------------------")
     assert len(hypothesis_segments) == len(output.hypothesis_statements), (
         f"Statement extraction LLM response"
         f" has {len(output.hypothesis_statements)} items,"
@@ -50,15 +54,19 @@ def list_to_statements(
     return [item.statements for item in output.hypothesis_statements]
 
 
-@chain
-def wrap_hypotheses(input_: Dict) -> Dict:
-    assert type(input_) is dict
+def _make_statement_prompt_input(hypothesis_segments: list) -> Dict:
     return {
         "hypotheses": [
             f"<hypothesis{index + 1}> {hypothesis_segment} </hypothesis{index + 1}>"
-            for index, hypothesis_segment in enumerate(input_["hypothesis_segments"])
+            for index, hypothesis_segment in enumerate(hypothesis_segments)
         ],
     }
+
+
+@chain
+def wrap_hypotheses(input_: Dict) -> Dict:
+    assert type(input_) is dict
+    return _make_statement_prompt_input(input_["hypothesis_segments"])
 
 
 class LLMStatementExtractor(StatementExtractor):
@@ -90,7 +98,7 @@ class LLMStatementExtractor(StatementExtractor):
                 | RunnablePassthrough.assign(
                     llm_output_statements=wrap_hypotheses
                     | statement_prompt
-                    | model.with_structured_output(HypothesisStatementsOutput)
+                    | model.with_structured_output(StatementsOutput)
                 )
                 | list_to_statements
             )

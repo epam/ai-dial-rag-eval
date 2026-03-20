@@ -2,15 +2,27 @@
 from typing import List
 
 from langchain_core.prompts import PromptTemplate
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class HypothesisSegmentStatementsOutput(BaseModel):
-    statements: List[str]
+class HypothesisStatements(BaseModel):
+    """Statements extracted from a single hypothesis."""
+
+    statements: List[str] = Field(
+        description="Declarative statements extracted from one hypothesis."
+    )
 
 
-class HypothesisStatementsOutput(BaseModel):
-    hypothesis_statements: List[HypothesisSegmentStatementsOutput]
+class StatementsOutput(BaseModel):
+    """The list must contain exactly as many items as there are input hypotheses. The first item corresponds to hypothesis1, the second item to hypothesis2, and so on."""
+
+    hypothesis_statements: List[HypothesisStatements] = Field(
+        description=(
+            "One item per input hypothesis, in the same order. "
+            "The first item contains statements for hypothesis1, "
+            "the second item contains statements for hypothesis2, etc."
+        )
+    )
 
 
 statement_template = """
