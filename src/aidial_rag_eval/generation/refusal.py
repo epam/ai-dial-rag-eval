@@ -5,6 +5,9 @@ from langchain_core.language_models import BaseChatModel
 from aidial_rag_eval.generation.models.refusal_detectors.llm_refusal_detector import (
     LLMRefusalDetector,
 )
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+)
 from aidial_rag_eval.generation.types import RefusalReturn
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from aidial_rag_eval.types import Answer
@@ -16,6 +19,7 @@ def calculate_batch_refusal(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[RefusalReturn]:
     """
     Checks if the answers are answer refusal.
@@ -40,7 +44,9 @@ def calculate_batch_refusal(
     RefusalReturn
         Returns the list of the answer refusals.
     """
-    detector = LLMRefusalDetector(llm, max_concurrency)
+    detector = LLMRefusalDetector(
+        llm, max_concurrency, structured_output_method=structured_output_method
+    )
     answers_split = [
         SegmentedText.from_text(text=answer, auto_download_nltk=auto_download_nltk)
         for answer in answers
@@ -65,6 +71,7 @@ def calculate_refusal(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> RefusalReturn:
     """
     Checks if the answer is answer refusal.
@@ -95,5 +102,6 @@ def calculate_refusal(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     return refusal_returns[0]

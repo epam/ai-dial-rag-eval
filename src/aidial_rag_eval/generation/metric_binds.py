@@ -5,6 +5,9 @@ import pandas as pd
 from langchain_core.language_models import BaseChatModel
 
 from aidial_rag_eval.generation.inference import calculate_batch_inference
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+)
 from aidial_rag_eval.generation.refusal import calculate_batch_refusal
 from aidial_rag_eval.generation.types import MetricBind
 from aidial_rag_eval.types import MergedColumns
@@ -34,6 +37,7 @@ def _wrapped_dataframe_inference(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> pd.DataFrame:
     inference_returns = calculate_batch_inference(
         premises=_get_column_as_list_str(df_merged, premise_column),
@@ -52,6 +56,7 @@ def _wrapped_dataframe_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     return pd.DataFrame(
         [dataclasses.asdict(inference_return) for inference_return in inference_returns]
@@ -66,6 +71,7 @@ def _wrapped_dataframe_refusal(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> pd.DataFrame:
     refusal_returns = calculate_batch_refusal(
         answers=_get_column_as_list_str(df_merged, answer_column),
@@ -73,6 +79,7 @@ def _wrapped_dataframe_refusal(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     return pd.DataFrame(
         [dataclasses.asdict(refusal) for refusal in refusal_returns]
@@ -99,6 +106,9 @@ def context_to_answer_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=kwargs.get(
+            "structured_output_method", "function_calling"
+        ),
     )
 
 
@@ -116,6 +126,9 @@ def answer_to_ground_truth_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=kwargs.get(
+            "structured_output_method", "function_calling"
+        ),
     )
 
 
@@ -133,6 +146,9 @@ def ground_truth_to_answer_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=kwargs.get(
+            "structured_output_method", "function_calling"
+        ),
     )
 
 
@@ -147,6 +163,9 @@ def answer_refusal(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=kwargs.get(
+            "structured_output_method", "function_calling"
+        ),
     )
 
 
@@ -161,6 +180,9 @@ def ground_truth_refusal(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=kwargs.get(
+            "structured_output_method", "function_calling"
+        ),
     )
 
 

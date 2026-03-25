@@ -15,6 +15,9 @@ from aidial_rag_eval.generation.models.inference_scorers.llm_inference_scorer im
 from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
     LLMStatementExtractor,
 )
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+)
 from aidial_rag_eval.generation.types import (
     ErrorInfo,
     Hypothesis,
@@ -204,6 +207,7 @@ def _segment_hypotheses(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> Tuple[List[SegmentedText], List[Union[SegmentedText, ErrorInfo]]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
@@ -234,6 +238,7 @@ def _segment_hypotheses(
     converter = LLMNoPronounsConverter(
         model=llm,
         max_concurrency=max_concurrency,
+        structured_output_method=structured_output_method,
     )
     segmented_hypotheses = [
         SegmentedText.from_text(text=hypothesis, auto_download_nltk=auto_download_nltk)
@@ -251,6 +256,7 @@ def _extract_statements(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[Union[HypothesisStatements, ErrorInfo]]:
     """
     Function that extracts statements from each hypothesis segment.
@@ -285,6 +291,7 @@ def _extract_statements(
     extractor = LLMStatementExtractor(
         model=llm,
         max_concurrency=max_concurrency,
+        structured_output_method=structured_output_method,
     )
     if show_progress_bar:
         print("Extracting statements...")
@@ -315,6 +322,7 @@ def _infer_statements(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     """
     Function that infers statements.
@@ -375,6 +383,7 @@ def _infer_statements(
     scorer = LLMInferenceScorer(
         model=llm,
         max_concurrency=max_concurrency,
+        structured_output_method=structured_output_method,
     )
     if show_progress_bar:
         print("Getting inference...")
@@ -392,6 +401,7 @@ def segment_hypotheses(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[Union[SegmentedText, ErrorInfo]]:
     return _segment_hypotheses(
         hypotheses=hypotheses,
@@ -399,6 +409,7 @@ def segment_hypotheses(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )[1]
 
 
@@ -407,6 +418,7 @@ def extract_statements(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[Union[HypothesisStatements, ErrorInfo]]:
     return _extract_statements(
         segmented_hypotheses=cast(
@@ -415,6 +427,7 @@ def extract_statements(
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        structured_output_method=structured_output_method,
     )
 
 
@@ -427,6 +440,7 @@ def infer_statements(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
         premises=premises,
@@ -437,6 +451,7 @@ def infer_statements(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
 
 
@@ -449,6 +464,7 @@ def calculate_batch_inference(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> List[InferenceReturn]:
     """
     Calculates pairwise the inference of a hypotheses from a premises.
@@ -495,12 +511,14 @@ def calculate_batch_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     statements: List[Union[HypothesisStatements, ErrorInfo]] = _extract_statements(
         segmented_hypotheses=decontextualized_segmented_hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
+        structured_output_method=structured_output_method,
     )
     grouped_data_list: List[List[Tuple[InferenceInputs, InferenceScore]]] = (
         _infer_statements(
@@ -512,6 +530,7 @@ def calculate_batch_inference(
             max_concurrency=max_concurrency,
             show_progress_bar=show_progress_bar,
             auto_download_nltk=auto_download_nltk,
+            structured_output_method=structured_output_method,
         )
     )
 
@@ -560,6 +579,7 @@ def calculate_inference(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> InferenceReturn:
     """
     Calculates the inference of a hypothesis from a premise.
@@ -606,5 +626,6 @@ def calculate_inference(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     return inference_returns[0]

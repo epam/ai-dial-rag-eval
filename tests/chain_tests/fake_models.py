@@ -15,7 +15,9 @@ class FakeStructuredChatModel(FakeListChatModel):
         self.received_messages.append(messages)
         return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
 
-    def with_structured_output(self, schema, *, include_raw=False, **kwargs) -> Runnable:
+    def with_structured_output(
+        self, schema, *, include_raw=False, **kwargs
+    ) -> Runnable:
         tool_name = convert_to_openai_tool(schema)["function"]["name"]
 
         @chain
@@ -27,4 +29,8 @@ class FakeStructuredChatModel(FakeListChatModel):
                 tool_calls=[{"name": tool_name, "args": args, "id": "fake_id"}],
             )
 
-        return self | content_to_tool_call | PydanticToolsParser(tools=[schema], first_tool_only=True)
+        return (
+            self
+            | content_to_tool_call
+            | PydanticToolsParser(tools=[schema], first_tool_only=True)
+        )

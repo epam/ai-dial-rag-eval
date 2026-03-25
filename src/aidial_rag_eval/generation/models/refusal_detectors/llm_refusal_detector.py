@@ -10,7 +10,10 @@ from aidial_rag_eval.generation.models.refusal_detectors.base_refusal_detector i
 )
 from aidial_rag_eval.generation.models.refusal_detectors.refusal_template import (
     RefusalTagsOutput,
-    refusal_prompt,
+    get_refusal_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import RefusalReturn
 from aidial_rag_eval.generation.utils.exceptions import make_error_info
@@ -76,14 +79,16 @@ class LLMRefusalDetector(RefusalDetector):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            RefusalTagsOutput, method=structured_output_method
+        )
+        prompt = get_refusal_prompt(structured_output_method)
 
         self._chain = (
             wrap_answers
-            | RunnablePassthrough.assign(
-                refusal_tags=refusal_prompt
-                | model.with_structured_output(RefusalTagsOutput)
-            )
+            | RunnablePassthrough.assign(refusal_tags=prompt | structured_model)
             | returns_to_refusal_return
         )
         self.max_concurrency = max_concurrency

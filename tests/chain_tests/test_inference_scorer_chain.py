@@ -4,7 +4,7 @@ from unittest.mock import patch
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
-    inference_prompt,
+    get_inference_prompt,
 )
 from aidial_rag_eval.generation.models.inference_scorers.llm_inference_scorer import (
     LLMInferenceScorer,
@@ -125,7 +125,7 @@ def test_prompt_contains_statements():
     scorer.get_inference([_create_inference_input(statements)], show_progress_bar=False)
 
     assert len(fake_llm.received_messages) == 1
-    expected_prompt = inference_prompt.format(
+    expected_prompt = get_inference_prompt("function_calling").format(
         **_make_inference_prompt_input(
             premise="Water is wet.",
             statements=statements,

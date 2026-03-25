@@ -8,7 +8,10 @@ from aidial_rag_eval.generation.models.statement_extractor.base_statement_extrac
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
     StatementsOutput,
-    statement_prompt,
+    get_statement_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import ErrorInfo, HypothesisStatements
 from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
@@ -39,9 +42,7 @@ def list_to_statements(
         The extracted statements if the LLM output is valid.
     """
     hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
-    output: StatementsOutput = llm_outputs_with_inputs[
-        "llm_output_statements"
-    ]
+    output: StatementsOutput = llm_outputs_with_inputs["llm_output_statements"]
     print("--------------------------------------------------------")
     print("input:", hypothesis_segments)
     print("output", [item.statements for item in output.hypothesis_statements])
@@ -88,7 +89,13 @@ class LLMStatementExtractor(StatementExtractor):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            StatementsOutput, method=structured_output_method
+        )
+        prompt = get_statement_prompt(structured_output_method)
+
         @chain
         def statement_chain(input_: Union[SegmentedText, ErrorInfo]):
             if isinstance(input_, ErrorInfo):
@@ -96,9 +103,7 @@ class LLMStatementExtractor(StatementExtractor):
             return (
                 segmented_text_result_to_dict
                 | RunnablePassthrough.assign(
-                    llm_output_statements=wrap_hypotheses
-                    | statement_prompt
-                    | model.with_structured_output(StatementsOutput)
+                    llm_output_statements=wrap_hypotheses | prompt | structured_model
                 )
                 | list_to_statements
             )

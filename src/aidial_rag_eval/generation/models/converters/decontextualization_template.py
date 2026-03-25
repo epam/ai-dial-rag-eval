@@ -4,6 +4,11 @@ from typing import List
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+    get_structured_output_instruction,
+)
+
 
 class DecontextualizationOutput(BaseModel):
     """The list must contain exactly as many segments as in the input, in the same order."""
@@ -33,7 +38,10 @@ List of input segments:
 {{ sentences_str }}
 """
 
-decontextualization_prompt = PromptTemplate.from_template(
-    template=decontextualization_template,
-    template_format="jinja2",
-)
+
+def get_decontextualization_prompt(method: StructuredOutputMethod) -> PromptTemplate:
+    return PromptTemplate.from_template(
+        template=decontextualization_template
+        + get_structured_output_instruction(method),
+        template_format="jinja2",
+    )

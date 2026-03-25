@@ -9,6 +9,9 @@ from aidial_rag_eval.dataframe.match_facts import (
 )
 from aidial_rag_eval.dataframe.merge import merge_ground_truth_and_answers
 from aidial_rag_eval.generation.metric_binds import metric_binds_dict
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+)
 from aidial_rag_eval.generation.types import MetricBind, inference_column
 from aidial_rag_eval.retrieval.metrics import (
     calculate_metrics as calculate_metrics_by_row,
@@ -115,6 +118,7 @@ def calculate_generation_metrics(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from df_merged dataframe.
@@ -157,6 +161,7 @@ def calculate_generation_metrics(
                 max_concurrency=max_concurrency,
                 show_progress_bar=show_progress_bar,
                 auto_download_nltk=auto_download_nltk,
+                structured_output_method=structured_output_method,
             ).to_dict(orient="series")
         )
     df_metrics = pd.DataFrame(data=metric_results)
@@ -181,6 +186,7 @@ def create_generation_metrics_report(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from input dataframes.
@@ -224,6 +230,7 @@ def create_generation_metrics_report(
         max_concurrency,
         show_progress_bar,
         auto_download_nltk,
+        structured_output_method,
     )
     return pd.merge(df_merged, df_metrics, left_index=True, right_index=True)
 
@@ -237,6 +244,7 @@ def create_rag_eval_metrics_report(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = True,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation metrics from input dataframes.
@@ -288,5 +296,6 @@ def create_rag_eval_metrics_report(
         max_concurrency,
         show_progress_bar,
         auto_download_nltk,
+        structured_output_method,
     )
     return pd.concat([df_merged, retrieval_metrics, generation_metrics], axis=1)

@@ -7,7 +7,7 @@ from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extract
     _make_statement_prompt_input,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
-    statement_prompt,
+    get_statement_prompt,
 )
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
@@ -100,7 +100,9 @@ def test_prompt_contains_hypotheses():
     )
 
     assert len(fake_llm.received_messages) == 1
-    expected_prompt = statement_prompt.format(**_make_statement_prompt_input(segments))
+    expected_prompt = get_statement_prompt("function_calling").format(
+        **_make_statement_prompt_input(segments)
+    )
     assert fake_llm.received_messages[0][-1].content == expected_prompt
 
 

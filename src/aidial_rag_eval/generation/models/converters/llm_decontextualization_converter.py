@@ -7,7 +7,10 @@ from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     DecontextualizationOutput,
-    decontextualization_prompt,
+    get_decontextualization_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
@@ -65,8 +68,12 @@ class LLMNoPronounsConverter(SegmentConverter):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
-        structured_model = model.with_structured_output(DecontextualizationOutput)
+        structured_model = model.with_structured_output(
+            DecontextualizationOutput, method=structured_output_method
+        )
+        prompt = get_decontextualization_prompt(structured_output_method)
 
         @chain
         def pronouns_converter_chain(input_: Dict):
@@ -75,7 +82,7 @@ class LLMNoPronounsConverter(SegmentConverter):
             return (
                 RunnablePassthrough.assign(
                     decontextualized_segments=segmented_text_to_json_list
-                    | decontextualization_prompt
+                    | prompt
                     | structured_model
                 )
                 | dict_segments_to_segmented_text

@@ -4,6 +4,11 @@ from typing import List, Literal
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+    get_structured_output_instruction,
+)
+
 
 class StatementInference(BaseModel):
     """Inference result for a single statement."""
@@ -63,7 +68,9 @@ List of statements:
 {% endfor %}
 """
 
-inference_prompt = PromptTemplate.from_template(
-    template=inference_template,
-    template_format="jinja2",
-)
+
+def get_inference_prompt(method: StructuredOutputMethod) -> PromptTemplate:
+    return PromptTemplate.from_template(
+        template=inference_template + get_structured_output_instruction(method),
+        template_format="jinja2",
+    )

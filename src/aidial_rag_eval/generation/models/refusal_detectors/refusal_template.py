@@ -4,6 +4,11 @@ from typing import List, Literal
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+    get_structured_output_instruction,
+)
+
 
 class RefusalTagsOutput(BaseModel):
     """The list must contain exactly as many tags as there are input answers. The first tag corresponds to answer1, the second to answer2, and so on."""
@@ -45,7 +50,9 @@ List of answers:
 {{ item }}
 {% endfor %}"""
 
-refusal_prompt = PromptTemplate.from_template(
-    template=refusal_template,
-    template_format="jinja2",
-)
+
+def get_refusal_prompt(method: StructuredOutputMethod) -> PromptTemplate:
+    return PromptTemplate.from_template(
+        template=refusal_template + get_structured_output_instruction(method),
+        template_format="jinja2",
+    )

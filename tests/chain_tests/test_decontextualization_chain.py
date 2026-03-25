@@ -4,7 +4,7 @@ from unittest.mock import patch
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
-    decontextualization_prompt,
+    get_decontextualization_prompt,
 )
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
     LLMNoPronounsConverter,
@@ -83,7 +83,7 @@ def test_prompt_contains_segments():
     )
 
     assert len(fake_llm.received_messages) == 1
-    expected_prompt = decontextualization_prompt.format(
+    expected_prompt = get_decontextualization_prompt("function_calling").format(
         sentences_str=json.dumps(segments)
     )
     assert fake_llm.received_messages[0][-1].content == expected_prompt

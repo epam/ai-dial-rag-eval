@@ -4,6 +4,11 @@ from typing import List
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+    get_structured_output_instruction,
+)
+
 
 class HypothesisStatements(BaseModel):
     """Statements extracted from a single hypothesis."""
@@ -39,7 +44,9 @@ Hypotheses:
 {% endfor %}
 """
 
-statement_prompt = PromptTemplate.from_template(
-    template=statement_template,
-    template_format="jinja2",
-)
+
+def get_statement_prompt(method: StructuredOutputMethod) -> PromptTemplate:
+    return PromptTemplate.from_template(
+        template=statement_template + get_structured_output_instruction(method),
+        template_format="jinja2",
+    )

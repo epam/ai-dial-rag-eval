@@ -11,7 +11,10 @@ from aidial_rag_eval.generation.models.inference_scorers.base_inference_scorer i
 )
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
     StatementInferenceOutput,
-    inference_prompt,
+    get_inference_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import ErrorInfo, InferenceInputs, InferenceScore
 from aidial_rag_eval.generation.utils.exceptions import (
@@ -67,9 +70,7 @@ def inference_inputs_to_dict(input_: InferenceInputs) -> Dict:
     }
 
 
-def _make_inference_prompt_input(
-    premise: str, statements: list, document: str
-) -> Dict:
+def _make_inference_prompt_input(premise: str, statements: list, document: str) -> Dict:
     return {
         "premise": premise,
         "statements": [
@@ -109,7 +110,13 @@ class LLMInferenceScorer(InferenceScorer):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            StatementInferenceOutput, method=structured_output_method
+        )
+        prompt = get_inference_prompt(structured_output_method)
+
         @chain
         def inference_chain(input_: InferenceInputs):
             if isinstance(input_.error, ErrorInfo):
@@ -121,9 +128,7 @@ class LLMInferenceScorer(InferenceScorer):
             return (
                 inference_inputs_to_dict
                 | RunnablePassthrough.assign(
-                    inference=wrap_statements
-                    | inference_prompt
-                    | model.with_structured_output(StatementInferenceOutput)
+                    inference=wrap_statements | prompt | structured_model
                 )
                 | returns_to_inference_score
             )
