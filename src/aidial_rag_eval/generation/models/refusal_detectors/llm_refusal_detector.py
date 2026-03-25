@@ -122,7 +122,7 @@ class LLMRefusalDetector(RefusalDetector):
                 return_exceptions=True,
             )
         flat: List[RefusalReturn] = []
-        for result, batch in zip(batch_results, batches):
+        for result, batch in zip(batch_results, batches, strict=True):
             if isinstance(result, Exception):
                 flat.extend(
                     [
