@@ -7,6 +7,7 @@ import pytest
 from langchain_community.cache import SQLiteCache
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import AzureChatOpenAI
+from pydantic import SecretStr
 
 CACHE_PATH = f"{Path(__file__).parent.parent}/data/cache/cache.db"
 
@@ -30,7 +31,7 @@ class PromptSQLiteCache(SQLiteCache):
 def _make_llm(cache: PromptSQLiteCache, real: bool) -> AzureChatOpenAI:
     return AzureChatOpenAI(
         model="gemini-2.5-flash-lite",
-        api_key=os.environ.get("DIAL_API_KEY", "") if real else "cache-only",
+        api_key=SecretStr(os.environ.get("DIAL_API_KEY", "") if real else "cache-only"),
         azure_endpoint=(
             os.environ.get("DIAL_URL", "") if real else "https://cache-only.invalid"
         ),

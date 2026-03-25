@@ -1,36 +1,33 @@
-import json
+from typing import Any
 
-from langchain_core.language_models.fake_chat_models import FakeListChatModel
-from langchain_core.messages import AIMessage, BaseMessage
-from langchain_core.output_parsers.openai_tools import PydanticToolsParser
-from langchain_core.runnables import Runnable, chain
-from langchain_core.utils.function_calling import convert_to_openai_tool
-from pydantic import Field
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.outputs import ChatResult
+from langchain_core.runnables import RunnableLambda
 
 
-class FakeStructuredChatModel(FakeListChatModel):
-    received_messages: list[list[BaseMessage]] = Field(default_factory=list)
+class FakeStructuredChatModel(BaseChatModel):
+    responses: list[Any] = []
+    side_effect: Exception | None = None
 
-    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
-        self.received_messages.append(messages)
-        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
+    @property
+    def _llm_type(self) -> str:
+        return "fake-structured"
 
-    def with_structured_output(
-        self, schema, *, include_raw=False, **kwargs
-    ) -> Runnable:
-        tool_name = convert_to_openai_tool(schema)["function"]["name"]
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs) -> ChatResult:
+        raise NotImplementedError("Use with_structured_output instead")
 
-        @chain
-        def content_to_tool_call(message: BaseMessage) -> BaseMessage:
-            assert isinstance(message.content, str)
-            args = json.loads(message.content)
-            return AIMessage(
-                content="",
-                tool_calls=[{"name": tool_name, "args": args, "id": "fake_id"}],
-            )
+    def with_structured_output(self, schema, **kwargs) -> RunnableLambda:
+        def get_response(input_value) -> Any:
+            if self.side_effect is not None:
+                raise self.side_effect
+            resp = self.responses.pop(0)
+            if isinstance(resp, tuple):
+                expected_input, output = resp
+                actual_input = input_value.to_string()
+                assert actual_input == expected_input, (
+                    f"Unexpected LLM input.\nExpected:\n{expected_input}\n\nActual:\n{actual_input}"
+                )
+                return output
+            return resp
 
-        return (
-            self
-            | content_to_tool_call
-            | PydanticToolsParser(tools=[schema], first_tool_only=True)
-        )
+        return RunnableLambda(get_response)
