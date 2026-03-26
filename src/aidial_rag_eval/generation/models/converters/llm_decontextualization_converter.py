@@ -1,9 +1,9 @@
 import json
-from typing import Dict, List, Union, cast
+from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable, chain
+from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 from langchain_core.utils.json import parse_json_markdown
 
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
@@ -74,7 +74,7 @@ class LLMNoPronounsConverter(SegmentConverter):
     to make each segment self-contained.
     """
 
-    _chain: RunnableSerializable
+    _chain: Runnable
     """A chain that contains the core logic, which includes:
     the prompt, model, conversion of output content to JSON,
     and extraction of segments from JSON."""
@@ -102,7 +102,7 @@ class LLMNoPronounsConverter(SegmentConverter):
                 | dict_segments_to_segmented_text
             )
 
-        self._chain = cast(RunnableSerializable, pronouns_converter_chain)
+        self._chain = pronouns_converter_chain
         self.max_concurrency = max_concurrency
 
     def transform_texts(
