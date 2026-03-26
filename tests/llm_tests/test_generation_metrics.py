@@ -21,7 +21,8 @@ def test_inference(llm):
     assert inference_return.inference == 0.0
     inference_return = calculate_inference(
         "The sun is shining brightly today. The coffee is hot.",
-        "The sun is shining brightly today. The coffee is hot, and the muffins are freshly baked.",
+        "The sun is shining brightly today."
+        " The coffee is hot, and the muffins are freshly baked.",
         llm=llm,
         show_progress_bar=False,
     )
