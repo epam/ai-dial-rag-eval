@@ -31,11 +31,20 @@ class StatementsOutput(BaseModel):
 
 
 statement_template = """
-Break down each hypothesis into statements, if hypothesis is complex. Else return hypothesis as a single statement.
+Break down each hypothesis into statements, if hypothesis is complex. Else if the hypothesis is already a single statement, return it unchanged as a single statement.
 
 A statement is a declarative independent self-contained non-overlapping substring forming a complete sentence derived from the hypothesis.
 
 Single words, signs, numbers, links, etc. are not statements.
+
+Example:
+Hypotheses:
+1. The sky is blue and the grass is green.
+2. Water boils at 100 degrees Celsius.
+
+Expected output:
+- Hypothesis 1 → ["The sky is blue.", "The grass is green."]
+- Hypothesis 2 → ["Water boils at 100 degrees Celsius."]
 
 Request:
 Hypotheses:
