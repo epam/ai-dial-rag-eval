@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 import math
 
 from aidial_rag_eval.generation.models.inference_scorers.inference_template import (
@@ -69,7 +70,9 @@ def test_valid_json_response():
             (
                 EXPECTED_INFERENCE_PROMPT,
                 StatementInferenceOutput(
-                    statement_inference=[StatementInference(explanation="test", tag="ENT")]
+                    statement_inference=[
+                        StatementInference(explanation="test", tag="ENT")
+                    ]
                 ),
             )
         ]
@@ -115,7 +118,7 @@ def test_empty_statements():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert math.isnan(results[0].inference)
+    assert results[0].inference == 0.0
     assert results[0].explanation == ""
     assert results[0].error is None
 

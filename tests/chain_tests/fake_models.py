@@ -25,7 +25,8 @@ class FakeStructuredChatModel(BaseChatModel):
                 expected_input, output = resp
                 actual_input = input_value.to_string()
                 assert actual_input == expected_input, (
-                    f"Unexpected LLM input.\nExpected:\n{expected_input}\n\nActual:\n{actual_input}"
+                    f"Unexpected LLM input.\nExpected:"
+                    f"\n{expected_input}\n\nActual:\n{actual_input}"
                 )
                 return output
             return resp

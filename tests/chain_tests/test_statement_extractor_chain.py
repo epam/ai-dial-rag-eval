@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
     LLMStatementExtractor,
 )
@@ -8,7 +9,6 @@ from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_t
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from tests.chain_tests.fake_models import FakeStructuredChatModel
-
 
 EXPECTED_STATEMENT_PROMPT = (
     "\nBreak down each hypothesis into statements, if hypothesis is complex. Else return hypothesis as a single statement.\n"

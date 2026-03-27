@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
     DecontextualizationOutput,
 )
@@ -7,7 +8,6 @@ from aidial_rag_eval.generation.models.converters.llm_decontextualization_conver
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from tests.chain_tests.fake_models import FakeStructuredChatModel
-
 
 EXPECTED_DECONTEXTUALIZATION_PROMPT = (
     "\nThe task is to replace all pronouns in segments with their corresponding nouns or proper names when their referents are known.\n"
