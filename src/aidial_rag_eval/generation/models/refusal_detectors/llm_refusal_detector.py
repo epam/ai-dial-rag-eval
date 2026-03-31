@@ -1,3 +1,4 @@
+import json
 import math
 from typing import Dict, List
 
@@ -51,11 +52,10 @@ def returns_to_refusal_return(input_: Dict) -> List[RefusalReturn]:
 @chain
 def wrap_answers(input_: Dict) -> Dict:
     assert type(input_) is dict
+    answers = input_["answers"]
     return {
-        "answers": [
-            f"<answer{index + 1}> {hypothesis} </answer{index + 1}>"
-            for index, hypothesis in enumerate(input_["answers"])
-        ],
+        "answers": answers,
+        "answers_json": json.dumps(answers, ensure_ascii=False),
     }
 
 

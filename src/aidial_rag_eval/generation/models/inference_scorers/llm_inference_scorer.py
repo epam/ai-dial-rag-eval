@@ -73,10 +73,7 @@ def inference_inputs_to_dict(input_: InferenceInputs) -> Dict:
 def _make_inference_prompt_input(premise: str, statements: list, document: str) -> Dict:
     return {
         "premise": premise,
-        "statements": [
-            f"<statement{index + 1}> {statement} </statement{index + 1}>"
-            for index, statement in enumerate(statements)
-        ],
+        "statements_json": json.dumps(statements, ensure_ascii=False),
         "document": document,
     }
 

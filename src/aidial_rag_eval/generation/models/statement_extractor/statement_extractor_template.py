@@ -38,19 +38,15 @@ A statement is a declarative independent self-contained non-overlapping substrin
 Single words, signs, numbers, links, etc. are not statements.
 
 Example:
-Hypotheses:
-1. The sky is blue and the grass is green.
-2. Water boils at 100 degrees Celsius.
+Input hypotheses: ["The sky is blue and the grass is green.", "Water boils at 100 degrees Celsius."]
 
 Expected output:
-- Hypothesis 1 → ["The sky is blue.", "The grass is green."]
-- Hypothesis 2 → ["Water boils at 100 degrees Celsius."]
+- hypothesis1 → statements: ["The sky is blue.", "The grass is green."]
+- hypothesis2 → statements: ["Water boils at 100 degrees Celsius."]
 
 Request:
-Hypotheses:
-{% for item in hypotheses %}
-{{ item }}
-{% endfor %}
+Input hypotheses:
+{{ hypotheses_json }}
 """
 
 

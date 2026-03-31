@@ -46,9 +46,7 @@ Each answer, even meaningless, must have it's own tag, if you don't know how to 
 
 Request:
 List of answers:
-{% for item in answers %}
-{{ item }}
-{% endfor %}"""
+{{ answers_json }}"""
 
 
 def get_refusal_prompt(method: StructuredOutputMethod) -> PromptTemplate:

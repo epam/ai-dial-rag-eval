@@ -63,9 +63,7 @@ Request:
 </premise>
 
 List of statements:
-{% for item in statements %}
-{{ item }}
-{% endfor %}
+{{ statements_json }}
 """
 
 
