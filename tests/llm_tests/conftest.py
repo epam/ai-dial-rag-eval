@@ -30,7 +30,7 @@ class PromptSQLiteCache(SQLiteCache):
 
 def _make_llm(cache: PromptSQLiteCache, real: bool) -> AzureChatOpenAI:
     return AzureChatOpenAI(
-        model="gemini-2.5-flash-lite",
+        model="gemini-3.1-flash-lite-preview",
         api_key=SecretStr(os.environ.get("DIAL_API_KEY", "") if real else "cache-only"),
         azure_endpoint=(
             os.environ.get("DIAL_URL", "") if real else "https://cache-only.invalid"

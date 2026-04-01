@@ -56,9 +56,7 @@ EXPECTED_INFERENCE_PROMPT = (
     "</premise>\n"
     "\n"
     "List of statements:\n"
-    "\n"
-    "<statement1> Water is wet. </statement1>\n"
-    "\n"
+    '["Water is wet."]\n'
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )

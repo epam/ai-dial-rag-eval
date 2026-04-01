@@ -11,19 +11,22 @@ from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 from tests.chain_tests.fake_models import FakeStructuredChatModel
 
 EXPECTED_STATEMENT_PROMPT = (
-    "\nBreak down each hypothesis into statements, if hypothesis is complex. Else return hypothesis as a single statement.\n"
+    "\nBreak down each hypothesis into statements, if hypothesis is complex. Else if the hypothesis is already a single statement, return it unchanged as a single statement.\n"
     "\n"
     "A statement is a declarative independent self-contained non-overlapping substring forming a complete sentence derived from the hypothesis.\n"
     "\n"
     "Single words, signs, numbers, links, etc. are not statements.\n"
     "\n"
+    "Example:\n"
+    'Input hypotheses: ["The sky is blue and the grass is green.", "Water boils at 100 degrees Celsius."]\n'
+    "\n"
+    "Expected output:\n"
+    '- hypothesis1 \u2192 statements: ["The sky is blue.", "The grass is green."]\n'
+    '- hypothesis2 \u2192 statements: ["Water boils at 100 degrees Celsius."]\n'
+    "\n"
     "Request:\n"
-    "Hypotheses:\n"
-    "\n"
-    "<hypothesis1> hypothesis_segment1 </hypothesis1>\n"
-    "\n"
-    "<hypothesis2> hypothesis_segment2 </hypothesis2>\n"
-    "\n"
+    "Input hypotheses:\n"
+    '["hypothesis_segment1", "hypothesis_segment2"]\n'
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )
