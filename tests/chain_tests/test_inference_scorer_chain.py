@@ -27,9 +27,7 @@ EXPECTED_INFERENCE_PROMPT = (
     "\nNatural language inference is the task of determining whether the hypothesis is an entailment, contradiction, or neutral with respect to the premise.\n"
     "A hypothesis is a list of statements provided below.\n"
     "\n"
-    "\n"
-    "The name of the document from which the premise was derived is also provided.\n"
-    "\n"
+    "The name of the document from which the premise was derived is also provided (if available).\n"
     "\n"
     "A statement is considered an entailment if it logically follows from the premise.\n"
     "A statement is considered a contradiction if it is logically inconsistent with the premise.\n"
@@ -45,18 +43,13 @@ EXPECTED_INFERENCE_PROMPT = (
     '- explanation: "Premise states I work at a tech company, not a hospital.", tag: "CONT"\n'
     "\n"
     "Request:\n"
-    "\n"
-    "\n"
-    "<document_name>\n"
-    "test_doc\n"
-    "</document_name>\n"
-    "\n"
-    "<premise>\n"
-    "Water is wet.\n"
-    "</premise>\n"
-    "\n"
-    "List of statements:\n"
-    '["Water is wet."]\n'
+    '{\n'
+    '  "document_name": "test_doc",\n'
+    '  "premise": "Water is wet.",\n'
+    '  "statements": [\n'
+    '    "Water is wet."\n'
+    '  ]\n'
+    '}\n'
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )

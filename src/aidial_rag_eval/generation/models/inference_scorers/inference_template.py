@@ -34,9 +34,7 @@ inference_template = """
 Natural language inference is the task of determining whether the hypothesis is an entailment, contradiction, or neutral with respect to the premise.
 A hypothesis is a list of statements provided below.
 
-{% if document %}
-The name of the document from which the premise was derived is also provided.
-{% endif %}
+The name of the document from which the premise was derived is also provided (if available).
 
 A statement is considered an entailment if it logically follows from the premise.
 A statement is considered a contradiction if it is logically inconsistent with the premise.
@@ -52,18 +50,7 @@ For example, if the premise is "I am a biology graduate and I work at a tech com
 - explanation: "Premise states I work at a tech company, not a hospital.", tag: "CONT"
 
 Request:
-
-{% if document %}
-<document_name>
-{{ document }}
-</document_name>
-{% endif %}
-<premise>
-{{ premise }}
-</premise>
-
-List of statements:
-{{ statements_json }}
+{{ request_json }}
 """
 
 
