@@ -36,10 +36,16 @@ A hypothesis is a list of statements provided below.
 
 The name of the document from which the premise was derived is also provided (if available).
 
-A statement is considered an entailment if it logically follows from the premise.
+A statement is considered an entailment if everything it claims is directly and explicitly supported by information stated in the premise.
 A statement is considered a contradiction if it is logically inconsistent with the premise.
-Else a statement is considered a neutral.
-Important: Don't reject entailment just because of minor extra details - if the main meaning holds, it's still entailment.
+A statement is considered neutral if the premise neither supports nor contradicts it, or if the statement contains information the premise does not address.
+
+A statement can be entailed even if the premise contains additional details not mentioned in the statement — a subset or summary of the premise is still entailment.
+However, if the statement claims something the premise does not explicitly state, it is not entailment.
+
+Important: Base your decision only on what the premise explicitly states.
+Do not use general knowledge, logical inference, or draw conclusions beyond what is literally written in the premise.
+If the premise is silent on some aspect of the statement, treat that aspect as not supported.
 
 For each statement:
 Provide a brief short(1 sentences) explanation of whether the statement is an entailment, contradiction or neutral with respect to the premise.
