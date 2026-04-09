@@ -54,7 +54,9 @@ def list_to_statements(
 
 def _make_statement_prompt_input(hypothesis_segments: list) -> Dict:
     return {
-        "hypotheses_json": json.dumps(hypothesis_segments, ensure_ascii=False),
+        "hypotheses_json": json.dumps(
+            hypothesis_segments, ensure_ascii=False, indent=2
+        ),
     }
 
 

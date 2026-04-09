@@ -17,13 +17,24 @@ EXPECTED_DECONTEXTUALIZATION_PROMPT = (
     "Only perform the task; do not shorten, simplify, or correct errors.\n"
     "Do not provide explanations.\n"
     "\n"
-    'For example: "My mom is a good person.", "She always takes care of me."\n'
-    'should return segments: ["My mom is a good person.", "My mom always takes care of me."]\n'
+    "For example:\n"
+    "[\n"
+    '  "My mom is a good person.",\n'
+    '  "She always takes care of me."\n'
+    "]\n"
+    "should return segments:\n"
+    "[\n"
+    '  "My mom is a good person.",\n'
+    '  "My mom always takes care of me."\n'
+    "]\n"
     "\n"
     "Important: the response must have the same number of segments, split the same way.\n"
     "\n"
-    "List of input segments:\n"
-    '["John went to the store.", "He bought milk."]\n'
+    "List of input segments (JSON array of strings, one segment per element):\n"
+    "[\n"
+    '  "John went to the store.",\n'
+    '  "He bought milk."\n'
+    "]\n"
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )

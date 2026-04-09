@@ -29,12 +29,20 @@ If unsure what to do with segment, return the original segment.
 Only perform the task; do not shorten, simplify, or correct errors.
 Do not provide explanations.
 
-For example: "My mom is a good person.", "She always takes care of me."
-should return segments: ["My mom is a good person.", "My mom always takes care of me."]
+For example:
+[
+  "My mom is a good person.",
+  "She always takes care of me."
+]
+should return segments:
+[
+  "My mom is a good person.",
+  "My mom always takes care of me."
+]
 
 Important: the response must have the same number of segments, split the same way.
 
-List of input segments:
+List of input segments (JSON array of strings, one segment per element):
 {{ sentences_str }}
 """
 

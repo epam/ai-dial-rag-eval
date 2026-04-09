@@ -17,16 +17,39 @@ EXPECTED_STATEMENT_PROMPT = (
     "\n"
     "Single words, signs, numbers, links, etc. are not statements.\n"
     "\n"
-    "Example:\n"
-    'Input hypotheses: ["The sky is blue and the grass is green.", "Water boils at 100 degrees Celsius."]\n'
+    "When a hypothesis contains an enumeration or list, split it so that each item in the list becomes a separate statement. Preserve the relationship from the parent clause in each statement.\n"
+    "\n"
+    "Examples:\n"
+    "Input hypotheses (JSON array of strings, one hypothesis per element):\n"
+    "[\n"
+    '  "The sky is blue and the grass is green.",\n'
+    '  "Water boils at 100 degrees Celsius.",\n'
+    '  "The company has offices in Paris, London, and Berlin."\n'
+    "]\n"
     "\n"
     "Expected output:\n"
-    '- hypothesis1 \u2192 statements: ["The sky is blue.", "The grass is green."]\n'
-    '- hypothesis2 \u2192 statements: ["Water boils at 100 degrees Celsius."]\n'
+    "- hypothesis1 \u2192 statements:\n"
+    "  [\n"
+    '    "The sky is blue.",\n'
+    '    "The grass is green."\n'
+    "  ]\n"
+    "- hypothesis2 \u2192 statements:\n"
+    "  [\n"
+    '    "Water boils at 100 degrees Celsius."\n'
+    "  ]\n"
+    "- hypothesis3 \u2192 statements:\n"
+    "  [\n"
+    '    "The company has an office in Paris.",\n'
+    '    "The company has an office in London.",\n'
+    '    "The company has an office in Berlin."\n'
+    "  ]\n"
     "\n"
     "Request:\n"
-    "Input hypotheses:\n"
-    '["hypothesis_segment1", "hypothesis_segment2"]\n'
+    "Input hypotheses (JSON array of strings, one hypothesis per element):\n"
+    "[\n"
+    '  "hypothesis_segment1",\n'
+    '  "hypothesis_segment2"\n'
+    "]\n"
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )

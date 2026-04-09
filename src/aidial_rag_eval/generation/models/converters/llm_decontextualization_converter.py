@@ -21,7 +21,11 @@ from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 @chain
 def segmented_text_to_json_list(input_: Dict) -> Dict:
     assert type(input_) is dict
-    return {"sentences_str": json.dumps(input_["segmented_text"].segments)}
+    return {
+        "sentences_str": json.dumps(
+            input_["segmented_text"].segments, ensure_ascii=False, indent=2
+        )
+    }
 
 
 @chain

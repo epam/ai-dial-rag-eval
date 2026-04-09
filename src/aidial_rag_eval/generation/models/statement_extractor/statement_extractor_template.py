@@ -40,15 +40,32 @@ Single words, signs, numbers, links, etc. are not statements.
 When a hypothesis contains an enumeration or list, split it so that each item in the list becomes a separate statement. Preserve the relationship from the parent clause in each statement.
 
 Examples:
-Input hypotheses: ["The sky is blue and the grass is green.", "Water boils at 100 degrees Celsius.", "The company has offices in Paris, London, and Berlin."]
+Input hypotheses (JSON array of strings, one hypothesis per element):
+[
+  "The sky is blue and the grass is green.",
+  "Water boils at 100 degrees Celsius.",
+  "The company has offices in Paris, London, and Berlin."
+]
 
 Expected output:
-- hypothesis1 → statements: ["The sky is blue.", "The grass is green."]
-- hypothesis2 → statements: ["Water boils at 100 degrees Celsius."]
-- hypothesis3 → statements: ["The company has an office in Paris.", "The company has an office in London.", "The company has an office in Berlin."]
+- hypothesis1 → statements:
+  [
+    "The sky is blue.",
+    "The grass is green."
+  ]
+- hypothesis2 → statements:
+  [
+    "Water boils at 100 degrees Celsius."
+  ]
+- hypothesis3 → statements:
+  [
+    "The company has an office in Paris.",
+    "The company has an office in London.",
+    "The company has an office in Berlin."
+  ]
 
 Request:
-Input hypotheses:
+Input hypotheses (JSON array of strings, one hypothesis per element):
 {{ hypotheses_json }}
 """
 
