@@ -2,7 +2,7 @@
 from langchain_core.prompts import PromptTemplate
 
 decontextualization_template = """
-The task is to replace all pronouns in a segments with their corresponding nouns or proper names when their referents are known.
+The task is to replace all pronouns in segments with their corresponding nouns or proper names when their referents are known.
 You will receive segments.
 If a segment is nonsensical, a reference, link, or meaningless, return it unchanged.
 If unsure what to do with segment, return the original segment.
@@ -36,7 +36,7 @@ List of input segments:
     "segments": {{ sentences_str }}
 }
 ```
-Important: before generating response, check the number and structure of segments. The response must have the same number of segments, split the same way.
+Important: the response must have the same number of segments, split the same way.
 """
 
 decontextualization_prompt = PromptTemplate.from_template(
