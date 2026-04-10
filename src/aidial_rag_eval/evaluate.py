@@ -6,6 +6,9 @@ from langchain_core.language_models import BaseChatModel
 from aidial_rag_eval.dataframe import create_rag_eval_metrics_report
 from aidial_rag_eval.dataframe.match_facts import DEFAULT_MATCHER
 from aidial_rag_eval.dataset import Dataset, source_dataset
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+)
 from aidial_rag_eval.generation.types import MetricBind
 from aidial_rag_eval.retrieval.types import Matcher
 from aidial_rag_eval.utils import get_tools_versions
@@ -22,6 +25,7 @@ def evaluate(
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
     auto_download_nltk: bool = False,
+    structured_output_method: StructuredOutputMethod = "function_calling",
 ) -> Dataset:
     """
     Calculates RAG evaluation metrics from input
@@ -84,6 +88,7 @@ def evaluate(
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
         auto_download_nltk=auto_download_nltk,
+        structured_output_method=structured_output_method,
     )
     aggregated_metrics = df_final.mean(numeric_only=True)
     assert isinstance(aggregated_metrics, pd.Series)

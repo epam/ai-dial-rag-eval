@@ -1,14 +1,18 @@
+import json
 from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.statement_extractor.base_statement_extractor import (
     StatementExtractor,
 )
 from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
-    statement_prompt,
+    StatementsOutput,
+    get_statement_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import ErrorInfo, HypothesisStatements
 from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
@@ -39,28 +43,27 @@ def list_to_statements(
         The extracted statements if the LLM output is valid.
     """
     hypothesis_segments = llm_outputs_with_inputs["hypothesis_segments"]
-    statements_for_hypothesis_segments = llm_outputs_with_inputs[
-        "llm_output_statements"
-    ]
-    assert len(hypothesis_segments) == len(statements_for_hypothesis_segments), (
+    output: StatementsOutput = llm_outputs_with_inputs["llm_output_statements"]
+    assert len(hypothesis_segments) == len(output.hypothesis_statements), (
         f"Statement extraction LLM response"
-        f" has {len(statements_for_hypothesis_segments)} items,"
+        f" has {len(output.hypothesis_statements)} items,"
         f" expected {len(hypothesis_segments)}"
     )
-    return [
-        return_dict["statements"] for return_dict in statements_for_hypothesis_segments
-    ]
+    return [item.statements for item in output.hypothesis_statements]
+
+
+def _make_statement_prompt_input(hypothesis_segments: list) -> Dict:
+    return {
+        "hypotheses_json": json.dumps(
+            hypothesis_segments, ensure_ascii=False, indent=2
+        ),
+    }
 
 
 @chain
 def wrap_hypotheses(input_: Dict) -> Dict:
     assert type(input_) is dict
-    return {
-        "hypotheses": [
-            f"<hypothesis{index + 1}> {hypothesis_segment} </hypothesis{index + 1}>"
-            for index, hypothesis_segment in enumerate(input_["hypothesis_segments"])
-        ],
-    }
+    return _make_statement_prompt_input(input_["hypothesis_segments"])
 
 
 class LLMStatementExtractor(StatementExtractor):
@@ -82,7 +85,13 @@ class LLMStatementExtractor(StatementExtractor):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            StatementsOutput, method=structured_output_method
+        )
+        prompt = get_statement_prompt(structured_output_method)
+
         @chain
         def statement_chain(input_: Union[SegmentedText, ErrorInfo]):
             if isinstance(input_, ErrorInfo):
@@ -90,10 +99,7 @@ class LLMStatementExtractor(StatementExtractor):
             return (
                 segmented_text_result_to_dict
                 | RunnablePassthrough.assign(
-                    llm_output_statements=wrap_hypotheses
-                    | statement_prompt
-                    | model
-                    | json_to_list
+                    llm_output_statements=wrap_hypotheses | prompt | structured_model
                 )
                 | list_to_statements
             )

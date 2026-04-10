@@ -1,45 +1,59 @@
 # flake8: noqa
+from typing import List
+
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field
+
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
+    get_example_output_note,
+    get_structured_output_instruction,
+)
+
+
+class DecontextualizationOutput(BaseModel):
+    """The list must contain exactly as many segments as in the input, in the same order."""
+
+    segments: List[str] = Field(
+        description=(
+            "Decontextualized segments, one per input segment, in the same order. "
+            "If the input has N segments, this list must have exactly N items."
+        )
+    )
+
 
 decontextualization_template = """
-The task is to replace all pronouns in a segments with their corresponding nouns or proper names when their referents are known.
+The task is to replace all pronouns in segments with their corresponding nouns or proper names when their referents are known.
 You will receive segments.
 If a segment is nonsensical, a reference, link, or meaningless, return it unchanged.
 If unsure what to do with segment, return the original segment.
 Only perform the task; do not shorten, simplify, or correct errors.
 Do not provide explanations.
 
-For example: "My mom is a good person.", "She always takes care of me." you must return:
-```json
+For example:
+[
+  "My mom is a good person.",
+  "She always takes care of me."
+]
+the expected output is:
 {
-    "segments": [
-        "My mom is a good person.",
-        "My mom always takes care of me.",
-        ...
-    ]
+  "segments": [
+    "My mom is a good person.",
+    "My mom always takes care of me."
+  ]
 }
-```
 
-Your response template:
-```json
-{
-    "segments": [
-        << Segment 1 >>,
-        << Segment 2 >>,
-        ...
-    ]
-}
-```
-List of input segments:
-```json
-{
-    "segments": {{ sentences_str }}
-}
-```
-Important: before generating response, check the number and structure of segments. The response must have the same number of segments, split the same way.
+Important: the response must have the same number of segments, split the same way.
+
+List of input segments (JSON array of strings, one segment per element):
+{{ sentences_str }}
 """
 
-decontextualization_prompt = PromptTemplate.from_template(
-    template=decontextualization_template,
-    template_format="jinja2",
-)
+
+def get_decontextualization_prompt(method: StructuredOutputMethod) -> PromptTemplate:
+    return PromptTemplate.from_template(
+        template=decontextualization_template
+        + get_example_output_note(method)
+        + get_structured_output_instruction(method),
+        template_format="jinja2",
+    )

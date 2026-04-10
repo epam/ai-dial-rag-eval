@@ -1,17 +1,59 @@
-from unittest.mock import patch
-
-from langchain_core.language_models.fake_chat_models import FakeListChatModel
-
+# flake8: noqa: E501
+from aidial_rag_eval.generation.models.converters.decontextualization_template import (
+    DecontextualizationOutput,
+)
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
     LLMNoPronounsConverter,
 )
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
+from tests.chain_tests.fake_models import FakeStructuredChatModel
+
+EXPECTED_DECONTEXTUALIZATION_PROMPT = (
+    "\nThe task is to replace all pronouns in segments with their corresponding nouns or proper names when their referents are known.\n"
+    "You will receive segments.\n"
+    "If a segment is nonsensical, a reference, link, or meaningless, return it unchanged.\n"
+    "If unsure what to do with segment, return the original segment.\n"
+    "Only perform the task; do not shorten, simplify, or correct errors.\n"
+    "Do not provide explanations.\n"
+    "\n"
+    "For example:\n"
+    "[\n"
+    '  "My mom is a good person.",\n'
+    '  "She always takes care of me."\n'
+    "]\n"
+    "the expected output is:\n"
+    "{\n"
+    '  "segments": [\n'
+    '    "My mom is a good person.",\n'
+    '    "My mom always takes care of me."\n'
+    "  ]\n"
+    "}\n"
+    "\n"
+    "Important: the response must have the same number of segments, split the same way.\n"
+    "\n"
+    "List of input segments (JSON array of strings, one segment per element):\n"
+    "[\n"
+    '  "John went to the store.",\n'
+    '  "He bought milk."\n'
+    "]\n"
+    "\n"
+    "Note: the example output above illustrates the expected data structure. When using function calling, return the data via a tool call with the same structure."
+    "\n"
+    "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
+)
 
 
 def test_valid_json_response():
-    fake_llm = FakeListChatModel(
-        responses=['{"segments": ["John went to the store.", "John bought milk."]}']
+    fake_llm = FakeStructuredChatModel(
+        responses=[
+            (
+                EXPECTED_DECONTEXTUALIZATION_PROMPT,
+                DecontextualizationOutput(
+                    segments=["John went to the store.", "John bought milk."]
+                ),
+            )
+        ]
     )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
@@ -27,34 +69,10 @@ def test_valid_json_response():
     ]
 
 
-def test_invalid_json_response():
-    fake_llm = FakeListChatModel(responses=["not a valid json at all"])
-    converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
-
-    segmented_text = SegmentedText(
-        segments=["John went to the store.", "He bought milk."], delimiters=[" "]
-    )
-
-    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert isinstance(result, ErrorInfo)
-
-
-def test_json_missing_segments_key():
-    fake_llm = FakeListChatModel(
-        responses=['{"wrong_key": ["John went to the store.", "John bought milk."]}']
-    )
-    converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
-
-    segmented_text = SegmentedText(
-        segments=["John went to the store.", "He bought milk."], delimiters=[" "]
-    )
-
-    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert isinstance(result, ErrorInfo)
-
-
 def test_segment_count_mismatch():
-    fake_llm = FakeListChatModel(responses=['{"segments": ["only one segment"]}'])
+    fake_llm = FakeStructuredChatModel(
+        responses=[DecontextualizationOutput(segments=["only one segment"])]
+    )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
     segmented_text = SegmentedText(
@@ -65,29 +83,43 @@ def test_segment_count_mismatch():
     assert isinstance(result, ErrorInfo)
 
 
-def test_empty_response():
-    fake_llm = FakeListChatModel(responses=[""])
+def test_prompt_contains_segments():
+    segments = ["John went to the store.", "He bought milk."]
+    fake_llm = FakeStructuredChatModel(
+        responses=[
+            DecontextualizationOutput(
+                segments=["John went to the store.", "John bought milk."]
+            )
+        ]
+    )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
-    segmented_text = SegmentedText(
-        segments=["John went to the store.", "He bought milk."], delimiters=[" "]
+    converter.transform_texts(
+        [SegmentedText(segments=segments, delimiters=[" "])],
+        show_progress_bar=False,
     )
 
-    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-    assert isinstance(result, ErrorInfo)
+
+def test_single_segment_skips_llm():
+    fake_llm = FakeStructuredChatModel(responses=[])
+    converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
+
+    result = converter.transform_texts(
+        [SegmentedText(segments=["Only one segment."], delimiters=[])],
+        show_progress_bar=False,
+    )[0]
+
+    assert not isinstance(result, ErrorInfo)
+    assert result.segments == ["Only one segment."]
 
 
 def test_invoke_raises_exception():
-    fake_llm = FakeListChatModel(responses=[""])
-
+    fake_llm = FakeStructuredChatModel(side_effect=Exception("LLM invoke failed"))
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
     segmented_text = SegmentedText(
         segments=["John went to the store.", "He bought milk."], delimiters=[" "]
     )
 
-    with patch.object(
-        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
-    ):
-        result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
-        assert isinstance(result, ErrorInfo)
+    result = converter.transform_texts([segmented_text], show_progress_bar=False)[0]
+    assert isinstance(result, ErrorInfo)

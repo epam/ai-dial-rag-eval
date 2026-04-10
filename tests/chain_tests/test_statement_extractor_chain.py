@@ -1,34 +1,86 @@
-from unittest.mock import patch
-
-from langchain_core.language_models.fake_chat_models import FakeListChatModel
-
+# flake8: noqa: E501
 from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
     LLMStatementExtractor,
 )
+from aidial_rag_eval.generation.models.statement_extractor.statement_extractor_template import (
+    HypothesisStatements,
+    StatementsOutput,
+)
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
+from tests.chain_tests.fake_models import FakeStructuredChatModel
+
+EXPECTED_STATEMENT_PROMPT = (
+    "\nBreak down each hypothesis into statements, if hypothesis is complex. Else if the hypothesis is already a single statement, return it unchanged as a single statement.\n"
+    "\n"
+    "A statement is a declarative independent self-contained non-overlapping substring forming a complete sentence derived from the hypothesis.\n"
+    "\n"
+    "Single words, signs, numbers, links, etc. are not statements.\n"
+    "\n"
+    "When a hypothesis contains an enumeration or list, split it so that each item in the list becomes a separate statement. Preserve the relationship from the parent clause in each statement.\n"
+    "\n"
+    "Examples:\n"
+    "Input hypotheses (JSON array of strings, one hypothesis per element):\n"
+    "[\n"
+    '  "The sky is blue and the grass is green.",\n'
+    '  "Water boils at 100 degrees Celsius.",\n'
+    '  "The company has offices in Paris, London, and Berlin."\n'
+    "]\n"
+    "\n"
+    "Expected output:\n"
+    "{\n"
+    '  "hypothesis_statements": [\n'
+    "    {\n"
+    '      "statements": [\n'
+    '        "The sky is blue.",\n'
+    '        "The grass is green."\n'
+    "      ]\n"
+    "    },\n"
+    "    {\n"
+    '      "statements": [\n'
+    '        "Water boils at 100 degrees Celsius."\n'
+    "      ]\n"
+    "    },\n"
+    "    {\n"
+    '      "statements": [\n'
+    '        "The company has an office in Paris.",\n'
+    '        "The company has an office in London.",\n'
+    '        "The company has an office in Berlin."\n'
+    "      ]\n"
+    "    }\n"
+    "  ]\n"
+    "}\n"
+    "\n"
+    "Request:\n"
+    "Input hypotheses (JSON array of strings, one hypothesis per element):\n"
+    "[\n"
+    '  "hypothesis_segment1",\n'
+    '  "hypothesis_segment2"\n'
+    "]\n"
+    "\n"
+    "Note: the example output above illustrates the expected data structure. When using function calling, return the data via a tool call with the same structure."
+    "\n"
+    "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
+)
 
 
 def test_valid_json_response():
-    fake_llm = FakeListChatModel(
+    fake_llm = FakeStructuredChatModel(
         responses=[
-            """
-            {
-                "hypothesis_statements":
-                    [
-                        {
-                            "statements": ["statement11"]
-                        },
-                        {
-                            "statements": ["statement21"]
-                        }
+            (
+                EXPECTED_STATEMENT_PROMPT,
+                StatementsOutput(
+                    hypothesis_statements=[
+                        HypothesisStatements(statements=["statement11"]),
+                        HypothesisStatements(statements=["statement21"]),
                     ]
-            }"""
+                ),
+            )
         ]
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
+    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
 
     result = extractor.extract(
         [SegmentedText(hypothesis_segments, [" "] * (len(hypothesis_segments) - 1))],
@@ -39,35 +91,13 @@ def test_valid_json_response():
     assert result == [["statement11"], ["statement21"]]
 
 
-def test_invalid_json_response():
-    fake_llm = FakeListChatModel(responses=["not valid json"])
-    extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
-
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
-
-    result = extractor.extract(
-        [SegmentedText(hypothesis_segments, [" "] * (len(hypothesis_segments) - 1))],
-        show_progress_bar=False,
-    )[0]
-    assert isinstance(result, ErrorInfo)
-
-
-def test_json_wrong_structure():
-    fake_llm = FakeListChatModel(responses=['{"wrong_key": "not a list"}'])
-    extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
-
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
-
-    result = extractor.extract(
-        [SegmentedText(hypothesis_segments, [" "] * (len(hypothesis_segments) - 1))],
-        show_progress_bar=False,
-    )[0]
-    assert isinstance(result, ErrorInfo)
-
-
 def test_statement_count_mismatch():
-    fake_llm = FakeListChatModel(
-        responses=['{"hypothesis_statements": [{"statements": ["statement1"]}]}']
+    fake_llm = FakeStructuredChatModel(
+        responses=[
+            StatementsOutput(
+                hypothesis_statements=[HypothesisStatements(statements=["statement1"])]
+            )
+        ]
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
@@ -80,8 +110,28 @@ def test_statement_count_mismatch():
     assert isinstance(result, ErrorInfo)
 
 
-def test_empty_response():
-    fake_llm = FakeListChatModel(responses=[""])
+def test_prompt_contains_hypotheses():
+    segments = ["hypothesis_segment1", "hypothesis_segment2"]
+    fake_llm = FakeStructuredChatModel(
+        responses=[
+            StatementsOutput(
+                hypothesis_statements=[
+                    HypothesisStatements(statements=["s1"]),
+                    HypothesisStatements(statements=["s2"]),
+                ]
+            )
+        ]
+    )
+    extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
+
+    extractor.extract(
+        [SegmentedText(segments, [" "] * (len(segments) - 1))],
+        show_progress_bar=False,
+    )
+
+
+def test_invoke_raises_exception():
+    fake_llm = FakeStructuredChatModel(side_effect=Exception("LLM invoke failed"))
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
@@ -91,23 +141,3 @@ def test_empty_response():
         show_progress_bar=False,
     )[0]
     assert isinstance(result, ErrorInfo)
-
-
-def test_invoke_raises_exception():
-    fake_llm = FakeListChatModel(responses=[""])
-    extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
-
-    hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment1"]
-
-    with patch.object(
-        FakeListChatModel, "batch", side_effect=Exception("LLM invoke failed")
-    ):
-        result = extractor.extract(
-            [
-                SegmentedText(
-                    hypothesis_segments, [" "] * (len(hypothesis_segments) - 1)
-                )
-            ],
-            show_progress_bar=False,
-        )[0]
-        assert isinstance(result, ErrorInfo)

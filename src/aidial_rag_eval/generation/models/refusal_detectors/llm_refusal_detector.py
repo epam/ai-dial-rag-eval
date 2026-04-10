@@ -1,3 +1,4 @@
+import json
 import math
 from typing import Dict, List
 
@@ -5,12 +6,15 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable, RunnablePassthrough, chain
 from more_itertools import chunked
 
-from aidial_rag_eval.generation.models.lambdas import json_to_list
 from aidial_rag_eval.generation.models.refusal_detectors.base_refusal_detector import (
     RefusalDetector,
 )
 from aidial_rag_eval.generation.models.refusal_detectors.refusal_template import (
-    refusal_prompt,
+    RefusalTagsOutput,
+    get_refusal_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import RefusalReturn
 from aidial_rag_eval.generation.utils.exceptions import make_error_info
@@ -22,7 +26,7 @@ from aidial_rag_eval.types import Answer
 def returns_to_refusal_return(input_: Dict) -> List[RefusalReturn]:
     """
     The final part of the chain, which calculates answer refusals
-    for each answer in the batch based on the JSON output from the LLM.
+    for each answer in the batch based on the LLM output.
 
     Parameters
     -----------
@@ -37,22 +41,21 @@ def returns_to_refusal_return(input_: Dict) -> List[RefusalReturn]:
         Returns a list of RefusalReturn, where each input answer from the batch
         is assigned a 1. if it is an answer refusal, or 0. otherwise.
     """
-    tags = input_["refusal_tags"]
+    output: RefusalTagsOutput = input_["refusal_tags"]
     answers = input_["answers"]
-    assert len(tags) == len(
+    assert len(output.tags) == len(
         answers
-    ), f"Refusal LLM response has {len(tags)} outputs, expected {len(answers)}"
-    return [RefusalReturn(refusal=float(tag == "REJ")) for tag in tags]
+    ), f"Refusal LLM response has {len(output.tags)} outputs, expected {len(answers)}"
+    return [RefusalReturn(refusal=float(tag == "REJ")) for tag in output.tags]
 
 
 @chain
 def wrap_answers(input_: Dict) -> Dict:
     assert type(input_) is dict
+    answers = input_["answers"]
     return {
-        "answers": [
-            f"<answer{index + 1}> {hypothesis} </answer{index + 1}>"
-            for index, hypothesis in enumerate(input_["answers"])
-        ],
+        "answers": answers,
+        "answers_json": json.dumps(answers, ensure_ascii=False),
     }
 
 
@@ -76,13 +79,16 @@ class LLMRefusalDetector(RefusalDetector):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            RefusalTagsOutput, method=structured_output_method
+        )
+        prompt = get_refusal_prompt(structured_output_method)
 
         self._chain = (
             wrap_answers
-            | RunnablePassthrough.assign(
-                refusal_tags=refusal_prompt | model | json_to_list
-            )
+            | RunnablePassthrough.assign(refusal_tags=prompt | structured_model)
             | returns_to_refusal_return
         )
         self.max_concurrency = max_concurrency
@@ -121,7 +127,7 @@ class LLMRefusalDetector(RefusalDetector):
                 return_exceptions=True,
             )
         flat: List[RefusalReturn] = []
-        for result, batch in zip(batch_results, batches):
+        for result, batch in zip(batch_results, batches, strict=True):
             if isinstance(result, Exception):
                 flat.extend(
                     [

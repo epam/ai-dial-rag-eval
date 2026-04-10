@@ -2,13 +2,15 @@ import json
 from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable, RunnablePassthrough, chain
-from langchain_core.utils.json import parse_json_markdown
 
 from aidial_rag_eval.generation.models.converters.base_converter import SegmentConverter
 from aidial_rag_eval.generation.models.converters.decontextualization_template import (
-    decontextualization_prompt,
+    DecontextualizationOutput,
+    get_decontextualization_prompt,
+)
+from aidial_rag_eval.generation.models.structured_output_utils import (
+    StructuredOutputMethod,
 )
 from aidial_rag_eval.generation.types import ErrorInfo
 from aidial_rag_eval.generation.utils.exceptions import wrap_batch_errors
@@ -17,32 +19,13 @@ from aidial_rag_eval.generation.utils.segmented_text import SegmentedText
 
 
 @chain
-def json_to_dict_segments(input_: AIMessage) -> List[str]:
-    """
-    Function is part of a chain that extracts segments from an AIMessage.
-
-    Parameters
-    -----------
-    input_ : AIMessage
-        The output from the LLM which includes content with transformed segments.
-
-    Returns
-    ------------
-    List[str]
-        The transformed segments if the LLM output is valid;
-        otherwise, an empty list is returned.
-    """
-    return_dict = parse_json_markdown(str(input_.content))
-    assert isinstance(
-        return_dict, dict
-    ), f"Decontextualization LLM response is not a dict, got {type(return_dict).__name__}"
-    return return_dict["segments"]
-
-
-@chain
 def segmented_text_to_json_list(input_: Dict) -> Dict:
     assert type(input_) is dict
-    return {"sentences_str": json.dumps(input_["segmented_text"].segments)}
+    return {
+        "sentences_str": json.dumps(
+            input_["segmented_text"].segments, ensure_ascii=False, indent=2
+        )
+    }
 
 
 @chain
@@ -54,12 +37,14 @@ def return_original_segmented_text(input_: Dict) -> SegmentedText:
 @chain
 def dict_segments_to_segmented_text(llm_outputs_with_inputs: Dict) -> SegmentedText:
     original_segmented_text: SegmentedText = llm_outputs_with_inputs["segmented_text"]
-    decontextualized_segments = llm_outputs_with_inputs["decontextualized_segments"]
-    assert len(decontextualized_segments) == len(original_segmented_text.segments), (
-        f"Decontextualization LLM response has {len(decontextualized_segments)} segments,"
+    output: DecontextualizationOutput = llm_outputs_with_inputs[
+        "decontextualized_segments"
+    ]
+    assert len(output.segments) == len(original_segmented_text.segments), (
+        f"Decontextualization LLM response has {len(output.segments)} segments,"
         f" expected {len(original_segmented_text.segments)}"
     )
-    return SegmentedText(decontextualized_segments, original_segmented_text.delimiters)
+    return SegmentedText(output.segments, original_segmented_text.delimiters)
 
 
 class LLMNoPronounsConverter(SegmentConverter):
@@ -87,7 +72,13 @@ class LLMNoPronounsConverter(SegmentConverter):
         self,
         model: BaseChatModel,
         max_concurrency: int,
+        structured_output_method: StructuredOutputMethod = "function_calling",
     ):
+        structured_model = model.with_structured_output(
+            DecontextualizationOutput, method=structured_output_method
+        )
+        prompt = get_decontextualization_prompt(structured_output_method)
+
         @chain
         def pronouns_converter_chain(input_: Dict):
             if len(input_["segmented_text"].segments) < 2:
@@ -95,9 +86,8 @@ class LLMNoPronounsConverter(SegmentConverter):
             return (
                 RunnablePassthrough.assign(
                     decontextualized_segments=segmented_text_to_json_list
-                    | decontextualization_prompt
-                    | model
-                    | json_to_dict_segments
+                    | prompt
+                    | structured_model
                 )
                 | dict_segments_to_segmented_text
             )
