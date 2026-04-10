@@ -13,12 +13,9 @@ A statement is considered an entailment if it is a paraphrase of information exp
 A statement is considered a contradiction if it is logically inconsistent with the premise.
 A statement is considered neutral if the premise neither supports nor contradicts it, or if the statement contains information the premise does not address.
 
-A statement can be entailed even if the premise contains additional details not mentioned in the statement — a subset or summary of the premise is still entailment.
-However, if the statement introduces information not expressed in the premise, it is not entailment.
+A statement can be entailed even if the premise contains more information than the statement covers — a statement that restates only part of the premise, or condenses it, is still entailment, as long as it does not introduce new information.
 
-Important: Base your decision on whether the premise expresses the same information, not on what can be inferred from it.
-Do not use general knowledge, logical inference, or draw conclusions beyond what the premise expresses.
-If the premise is silent on some aspect of the statement, treat that aspect as not supported.
+Important: Do not rely on factual world knowledge or logical inference chains to establish entailment — if a fact is not stated in the premise, it is not entailed. However, recognizing synonyms and paraphrases is not inference: it is identifying the same meaning expressed in different words, which is a core part of determining entailment.
 
 For each statement:
 Provide a brief short(1 sentences) explanation of whether the statement is an entailment, contradiction or neutral with respect to the premise.
