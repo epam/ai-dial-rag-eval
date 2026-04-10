@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from aidial_rag_eval.generation.models.structured_output_utils import (
     StructuredOutputMethod,
+    get_example_output_note,
     get_structured_output_instruction,
 )
 
@@ -35,9 +36,10 @@ Synonymous series:
 Tagging guidelines:
 - Use "REJ" if the answer is answer refusal, else tag it "ANS".
 
-Example:
-An explicit statement: "There is no answer to this question." should be tagged "REJ".
-A statement that is not explicit: "The answer to this question is yes." should be tagged "ANS".
+For example, given the following list of answers:
+["There is no answer to this question.", "The answer to this question is yes."]
+the expected output is:
+{"tags": ["REJ", "ANS"]}
 
 Each answer from the list of answers corresponds to a tag in your response.
 The first answer corresponds to the first tag, the second corresponds to the second.
@@ -51,6 +53,8 @@ List of answers:
 
 def get_refusal_prompt(method: StructuredOutputMethod) -> PromptTemplate:
     return PromptTemplate.from_template(
-        template=refusal_template + get_structured_output_instruction(method),
+        template=refusal_template
+        + get_example_output_note(method)
+        + get_structured_output_instruction(method),
         template_format="jinja2",
     )

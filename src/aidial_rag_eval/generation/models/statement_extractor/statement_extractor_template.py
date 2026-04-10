@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from aidial_rag_eval.generation.models.structured_output_utils import (
     StructuredOutputMethod,
+    get_example_output_note,
     get_structured_output_instruction,
 )
 
@@ -48,21 +49,28 @@ Input hypotheses (JSON array of strings, one hypothesis per element):
 ]
 
 Expected output:
-- hypothesis1 → statements:
-  [
-    "The sky is blue.",
-    "The grass is green."
+{
+  "hypothesis_statements": [
+    {
+      "statements": [
+        "The sky is blue.",
+        "The grass is green."
+      ]
+    },
+    {
+      "statements": [
+        "Water boils at 100 degrees Celsius."
+      ]
+    },
+    {
+      "statements": [
+        "The company has an office in Paris.",
+        "The company has an office in London.",
+        "The company has an office in Berlin."
+      ]
+    }
   ]
-- hypothesis2 → statements:
-  [
-    "Water boils at 100 degrees Celsius."
-  ]
-- hypothesis3 → statements:
-  [
-    "The company has an office in Paris.",
-    "The company has an office in London.",
-    "The company has an office in Berlin."
-  ]
+}
 
 Request:
 Input hypotheses (JSON array of strings, one hypothesis per element):
@@ -72,6 +80,8 @@ Input hypotheses (JSON array of strings, one hypothesis per element):
 
 def get_statement_prompt(method: StructuredOutputMethod) -> PromptTemplate:
     return PromptTemplate.from_template(
-        template=statement_template + get_structured_output_instruction(method),
+        template=statement_template
+        + get_example_output_note(method)
+        + get_structured_output_instruction(method),
         template_format="jinja2",
     )

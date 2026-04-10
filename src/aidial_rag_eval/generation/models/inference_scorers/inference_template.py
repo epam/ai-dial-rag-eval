@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from aidial_rag_eval.generation.models.structured_output_utils import (
     StructuredOutputMethod,
+    get_example_output_note,
     get_structured_output_instruction,
 )
 
@@ -40,21 +41,41 @@ A statement is considered an entailment if it is a paraphrase of information exp
 A statement is considered a contradiction if it is logically inconsistent with the premise.
 A statement is considered neutral if the premise neither supports nor contradicts it, or if the statement contains information the premise does not address.
 
-A statement can be entailed even if the premise contains additional details not mentioned in the statement — a subset or summary of the premise is still entailment.
-However, if the statement introduces information not expressed in the premise, it is not entailment.
+A statement can be entailed even if the premise contains more information than the statement covers — a statement that restates only part of the premise, or condenses it, is still entailment, as long as it does not introduce new information.
 
-Important: Base your decision on whether the premise expresses the same information, not on what can be inferred from it.
-Do not use general knowledge, logical inference, or draw conclusions beyond what the premise expresses.
-If the premise is silent on some aspect of the statement, treat that aspect as not supported.
+Important: Do not rely on factual world knowledge or logical inference chains to establish entailment — if a fact is not stated in the premise, it is not entailed. However, recognizing synonyms and paraphrases is not inference: it is identifying the same meaning expressed in different words, which is a core part of determining entailment.
 
 For each statement:
 Provide a brief short(1 sentences) explanation of whether the statement is an entailment, contradiction or neutral with respect to the premise.
 Assign tags based on your explanation: "ENT" for entailment, "CONT" for contradiction, "NEUT" for neutral or if none of the above tags apply.
 
-For example, if the premise is "I am a biology graduate and I work at a tech company." and the list of statements is ["I am a graduate.", "I work at a hospital.", "I am employed at a tech firm."] your response should be:
-- explanation: "It is true that I am a graduate", tag: "ENT"
-- explanation: "Premise states I work at a tech company, not a hospital.", tag: "CONT"
-- explanation: "Employed at a tech firm is a paraphrase of working at a tech company.", tag: "ENT"
+For example, given the following request:
+{
+  "document_name": "biology_article",
+  "premise": "I am a biology graduate and I work at a tech company.",
+  "statements": [
+    "I am a graduate.",
+    "I work at a hospital.",
+    "I am employed at a tech firm."
+  ]
+}
+the expected output is:
+{
+  "statement_inference": [
+    {
+      "explanation": "It is true that I am a graduate.",
+      "tag": "ENT"
+    },
+    {
+      "explanation": "Premise states I work at a tech company, not a hospital.",
+      "tag": "CONT"
+    },
+    {
+      "explanation": "Employed at a tech firm is a paraphrase of working at a tech company.",
+      "tag": "ENT"
+    }
+  ]
+}
 
 Request:
 {{ request_json }}
@@ -63,6 +84,8 @@ Request:
 
 def get_inference_prompt(method: StructuredOutputMethod) -> PromptTemplate:
     return PromptTemplate.from_template(
-        template=inference_template + get_structured_output_instruction(method),
+        template=inference_template
+        + get_example_output_note(method)
+        + get_structured_output_instruction(method),
         template_format="jinja2",
     )

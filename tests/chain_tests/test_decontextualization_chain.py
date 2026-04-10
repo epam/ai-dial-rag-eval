@@ -22,11 +22,13 @@ EXPECTED_DECONTEXTUALIZATION_PROMPT = (
     '  "My mom is a good person.",\n'
     '  "She always takes care of me."\n'
     "]\n"
-    "should return segments:\n"
-    "[\n"
-    '  "My mom is a good person.",\n'
-    '  "My mom always takes care of me."\n'
-    "]\n"
+    "the expected output is:\n"
+    "{\n"
+    '  "segments": [\n'
+    '    "My mom is a good person.",\n'
+    '    "My mom always takes care of me."\n'
+    "  ]\n"
+    "}\n"
     "\n"
     "Important: the response must have the same number of segments, split the same way.\n"
     "\n"
@@ -35,6 +37,8 @@ EXPECTED_DECONTEXTUALIZATION_PROMPT = (
     '  "John went to the store.",\n'
     '  "He bought milk."\n'
     "]\n"
+    "\n"
+    "Note: the example output above illustrates the expected data structure. When using function calling, return the data via a tool call with the same structure."
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )

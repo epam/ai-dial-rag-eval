@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from aidial_rag_eval.generation.models.structured_output_utils import (
     StructuredOutputMethod,
+    get_example_output_note,
     get_structured_output_instruction,
 )
 
@@ -34,11 +35,13 @@ For example:
   "My mom is a good person.",
   "She always takes care of me."
 ]
-should return segments:
-[
-  "My mom is a good person.",
-  "My mom always takes care of me."
-]
+the expected output is:
+{
+  "segments": [
+    "My mom is a good person.",
+    "My mom always takes care of me."
+  ]
+}
 
 Important: the response must have the same number of segments, split the same way.
 
@@ -50,6 +53,7 @@ List of input segments (JSON array of strings, one segment per element):
 def get_decontextualization_prompt(method: StructuredOutputMethod) -> PromptTemplate:
     return PromptTemplate.from_template(
         template=decontextualization_template
+        + get_example_output_note(method)
         + get_structured_output_instruction(method),
         template_format="jinja2",
     )

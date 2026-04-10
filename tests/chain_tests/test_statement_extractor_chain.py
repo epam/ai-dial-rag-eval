@@ -28,21 +28,28 @@ EXPECTED_STATEMENT_PROMPT = (
     "]\n"
     "\n"
     "Expected output:\n"
-    "- hypothesis1 \u2192 statements:\n"
-    "  [\n"
-    '    "The sky is blue.",\n'
-    '    "The grass is green."\n'
+    "{\n"
+    '  "hypothesis_statements": [\n'
+    "    {\n"
+    '      "statements": [\n'
+    '        "The sky is blue.",\n'
+    '        "The grass is green."\n'
+    "      ]\n"
+    "    },\n"
+    "    {\n"
+    '      "statements": [\n'
+    '        "Water boils at 100 degrees Celsius."\n'
+    "      ]\n"
+    "    },\n"
+    "    {\n"
+    '      "statements": [\n'
+    '        "The company has an office in Paris.",\n'
+    '        "The company has an office in London.",\n'
+    '        "The company has an office in Berlin."\n'
+    "      ]\n"
+    "    }\n"
     "  ]\n"
-    "- hypothesis2 \u2192 statements:\n"
-    "  [\n"
-    '    "Water boils at 100 degrees Celsius."\n'
-    "  ]\n"
-    "- hypothesis3 \u2192 statements:\n"
-    "  [\n"
-    '    "The company has an office in Paris.",\n'
-    '    "The company has an office in London.",\n'
-    '    "The company has an office in Berlin."\n'
-    "  ]\n"
+    "}\n"
     "\n"
     "Request:\n"
     "Input hypotheses (JSON array of strings, one hypothesis per element):\n"
@@ -50,6 +57,8 @@ EXPECTED_STATEMENT_PROMPT = (
     '  "hypothesis_segment1",\n'
     '  "hypothesis_segment2"\n'
     "]\n"
+    "\n"
+    "Note: the example output above illustrates the expected data structure. When using function calling, return the data via a tool call with the same structure."
     "\n"
     "IMPORTANT: Complete this entire task in a SINGLE response. Call the tool EXACTLY ONCE with ALL results in that one call."
 )
