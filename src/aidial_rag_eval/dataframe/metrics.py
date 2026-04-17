@@ -165,9 +165,9 @@ def calculate_generation_metrics(
     ]
     if nli_columns:
         sub_df_nli = df_metrics[nli_columns]
-        df_metrics["mean_" + inference_column] = sub_df_nli.mean(1)
+        df_metrics["mean_" + inference_column] = sub_df_nli.mean(1, skipna=False)
         df_metrics["median_" + inference_column] = sub_df_nli.median(
-            1
+            1, skipna=False
         )  # pyright: ignore # noqa
 
     return df_metrics
