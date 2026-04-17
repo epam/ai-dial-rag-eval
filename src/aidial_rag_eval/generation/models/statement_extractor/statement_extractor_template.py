@@ -10,44 +10,43 @@ Single words, signs, numbers, links, etc. are not statements.
 
 When a hypothesis contains an enumeration or list, split it so that each item in the list becomes a separate statement. Preserve the relationship from the parent clause in each statement.
 
+The output list must contain exactly as many items as there are input hypotheses, in the same order: the first item corresponds to the first hypothesis, the second item to the second hypothesis, and so on.
+
 Examples:
-Hypothesis 1: "The sky is blue and the grass is green."
-Hypothesis 2: "Water boils at 100 degrees Celsius."
-Hypothesis 3: "The company has offices in Paris, London, and Berlin."
+Input hypotheses (JSON array of strings, one hypothesis per element):
+[
+  "The sky is blue and the grass is green.",
+  "Water boils at 100 degrees Celsius.",
+  "The company has offices in Paris, London, and Berlin."
+]
 
 Expected output:
-- hypothesis1 → ["The sky is blue.", "The grass is green."]
-- hypothesis2 → ["Water boils at 100 degrees Celsius."]
-- hypothesis3 → ["The company has an office in Paris.", "The company has an office in London.", "The company has an office in Berlin."]
-
-Your response must be in JSON format:
-```json
 {
-    "hypothesis_statements": [
-        {
-            "statements": [
-                <<statement1 from the first hypothesis>>,
-                <<statement2 from the first hypothesis>>,
-                ...
-            ]
-        },
-        {
-            "statements": [
-                <<statement1 from the second hypothesis>>,
-                <<statement2 from the second hypothesis>>,
-                ...
-            ]
-        },
-        ...
-    ]
+  "hypothesis_statements": [
+    {
+      "statements": [
+        "The sky is blue.",
+        "The grass is green."
+      ]
+    },
+    {
+      "statements": [
+        "Water boils at 100 degrees Celsius."
+      ]
+    },
+    {
+      "statements": [
+        "The company has an office in Paris.",
+        "The company has an office in London.",
+        "The company has an office in Berlin."
+      ]
+    }
+  ]
 }
-```
 
 Request:
-Hypotheses:
-{% for item in hypotheses %}
-{{ item }}
-{% endfor %}
+Input hypotheses (JSON array of strings, one hypothesis per element):
+{{ hypotheses_json }}
 """
 
 statement_prompt = PromptTemplate.from_template(

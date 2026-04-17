@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Union
 
 from langchain_core.language_models import BaseChatModel
@@ -56,10 +57,9 @@ def list_to_statements(
 def wrap_hypotheses(input_: Dict) -> Dict:
     assert type(input_) is dict
     return {
-        "hypotheses": [
-            f"<hypothesis{index + 1}> {hypothesis_segment} </hypothesis{index + 1}>"
-            for index, hypothesis_segment in enumerate(input_["hypothesis_segments"])
-        ],
+        "hypotheses_json": json.dumps(
+            input_["hypothesis_segments"], ensure_ascii=False, indent=2
+        ),
     }
 
 
