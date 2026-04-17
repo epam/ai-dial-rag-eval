@@ -66,13 +66,13 @@ def inference_inputs_to_dict(input_: InferenceInputs) -> Dict:
 @chain
 def wrap_statements(input_: Dict) -> Dict:
     assert type(input_) is dict
+    request: Dict = {}
+    if input_["document"]:
+        request["document_name"] = input_["document"]
+    request["premise"] = input_["premise"]
+    request["statements"] = input_["statements"]
     return {
-        "premise": input_["premise"],
-        "statements": [
-            f"<statement{index + 1}> {statement} </statement{index + 1}>"
-            for index, statement in enumerate(input_["statements"])
-        ],
-        "document": input_["document"],
+        "request_json": json.dumps(request, ensure_ascii=False, indent=2),
     }
 
 

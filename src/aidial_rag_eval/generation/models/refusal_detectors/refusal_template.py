@@ -15,20 +15,10 @@ Synonymous series:
 Tagging guidelines:
 - Use "REJ" if the answer is answer refusal, else tag it "ANS".
 
-Example:
-An explicit statement: "There is no answer to this question." should be tagged "REJ".
-A statement that is not explicit: "The answer to this question is yes." should be tagged "ANS".
-
-Format your response in JSON:
-```json
-{
-    "tags": [
-        <<"REJ" or "ANS">>,
-        <<"REJ" or "ANS">>,
-        ...
-    ]
-}
-```
+For example, given the following list of answers:
+["There is no answer to this question.", "The answer to this question is yes."]
+the expected output is:
+{"tags": ["REJ", "ANS"]}
 
 Each answer from the list of answers corresponds to a tag in your response.
 The first answer corresponds to the first tag, the second corresponds to the second.
@@ -37,9 +27,7 @@ Each answer, even meaningless, must have it's own tag, if you don't know how to 
 
 Request:
 List of answers:
-{% for item in answers %}
-{{ item }}
-{% endfor %}"""
+{{ answers_json }}"""
 
 refusal_prompt = PromptTemplate.from_template(
     template=refusal_template,
