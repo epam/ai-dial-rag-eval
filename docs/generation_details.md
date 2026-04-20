@@ -14,6 +14,8 @@ The pipeline aims to evaluate the coherence, factual accuracy, and contextual ap
 * **Premise:** A set of sentences used to infer the hypothesis.
 * **Statement:** A substring of the hypothesis.
 * **Answer Refusal:** Explicitly indicating missing or insufficient information or a refusal to answer.
+* **Error:** Information about a failure that occurred during processing of a pipeline stage.
+* **NaN (Not a Number):** The value assigned to a metric when an error prevents its calculation.
 
 ## Inputs
 
@@ -33,6 +35,10 @@ The pipeline aims to evaluate the coherence, factual accuracy, and contextual ap
 ## Pipeline Overview
 
 The pipeline consists of two stages: sentence conversion and NLI evaluation.
+
+### Error Handling
+
+If any stage of the pipeline fails for a given input (e.g., pronoun replacement, statement extraction, or NLI scoring), the error is captured and propagated. The resulting metric for that input is `NaN`. Error details are preserved in the output for diagnosis.
 
 ### Sentence Conversion Stage
 

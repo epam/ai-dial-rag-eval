@@ -80,9 +80,10 @@ In this table:
 
 The algorithm is token-intensive. Considering the balance between quality and price, the following models are recommended:
 
+- **gemini-3.1-flash-lite**
+- **gpt-5.4-mini**
 - **gemini-2.5-flash-lite**
 - **gpt-5-mini**
-- **gemini-2.0-flash-lite**
 - **gpt-5-nano**
 
 ## Developer environment
