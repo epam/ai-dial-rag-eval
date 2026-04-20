@@ -39,7 +39,6 @@ def _make_real_llm(cache: PromptSQLiteCache) -> AzureChatOpenAI:
         timeout=600,
         temperature=0,
         seed=3227,
-        max_retries=0,
         cache=cache,
     )
 
