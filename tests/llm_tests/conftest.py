@@ -50,12 +50,13 @@ def llm(request) -> BaseChatModel:
         if request.config.getoption("--llm-mode")
         else "fake"
     )
-    if not os.path.exists(CACHE_PATH):
-        raise FileNotFoundError(
-            f"Cache not found at {CACHE_PATH}. "
-            "Run tests with --llm-mode real to populate the cache."
-        )
     cache = PromptSQLiteCache(CACHE_PATH)
     if llm_mode == "real":
         return _make_real_llm(cache)
-    return FakeChatModel(cache=cache)
+    else:
+        if not os.path.exists(CACHE_PATH):
+            raise FileNotFoundError(
+                f"Cache not found at {CACHE_PATH}. "
+                "Run tests with --llm-mode real to populate the cache."
+            )
+        return FakeChatModel(cache=cache)
