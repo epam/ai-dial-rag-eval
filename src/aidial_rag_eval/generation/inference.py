@@ -440,6 +440,40 @@ def infer_statements(
     )
 
 
+def _aggregate_segment_inferences(
+    grouped_data_item: List[Tuple[InferenceInputs, InferenceScore]],
+) -> Tuple[float, float, float]:
+    """Returns (inference, min_possible_inference, max_possible_inference).
+
+    Three cases:
+    1. No errors: inference = weighted mean of segment inferences (weight = statement count).
+    2. Error before inference stage (decontextualization / statement extraction):
+       InferenceInputs.error is set -> inference=nan, min=0.0, max=1.0.
+    3. Errors at inference stage only: inference=nan, min/max computed with nan -> 0/1.
+    """
+    total_statements = sum(len(inputs.statements) for inputs, _ in grouped_data_item)
+    if (
+        any(inputs.error is not None for inputs, _ in grouped_data_item)
+        or total_statements == 0
+    ):
+        return math.nan, 0.0, 1.0
+    inferences = np.array(
+        [score.inference for _, score in grouped_data_item], dtype=float
+    )
+    weights = np.array(
+        [float(len(inputs.statements)) for inputs, _ in grouped_data_item],
+        dtype=float,
+    )
+    inference = float(np.average(inferences, weights=weights))
+    min_possible = float(
+        np.average(np.nan_to_num(inferences, nan=0.0), weights=weights)
+    )
+    max_possible = float(
+        np.average(np.nan_to_num(inferences, nan=1.0), weights=weights)
+    )
+    return inference, min_possible, max_possible
+
+
 def calculate_batch_inference(
     premises: List[Premise],
     hypotheses: List[Hypothesis],
@@ -518,24 +552,14 @@ def calculate_batch_inference(
     inference_returns: List[InferenceReturn] = []
     for hypothesis_index, grouped_data_item in enumerate(grouped_data_list):
         segmented_text = segmented_hypotheses[hypothesis_index]
-        inferences = [score.inference for _, score in grouped_data_item]
+        assert not isinstance(segmented_text, ErrorInfo)
+        mean_inference, min_possible_inference, max_possible_inference = (
+            _aggregate_segment_inferences(grouped_data_item)
+        )
         errors = [
             score.error.error_repr if score.error else None
             for _, score in grouped_data_item
         ]
-        mean_inference = (
-            math.nan
-            if any(math.isnan(inference) for inference in inferences)
-            else float(np.mean(cast(List[float], inferences)))
-        )
-        # fill Nones with 0.0
-        min_possible_inference = float(
-            np.nan_to_num(np.array(inferences, dtype=float), nan=0.0).mean()
-        )
-        # fill Nones with 1.0
-        max_possible_inference = float(
-            np.nan_to_num(np.array(inferences, dtype=float), nan=1.0).mean()
-        )
         inference_returns.append(
             InferenceReturn(
                 inference=mean_inference,
