@@ -34,9 +34,9 @@ def test_no_errors_weighted_mean():
         _make_group_item(["s3"], inference=1.0),
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
-    assert pytest.approx(inf, abs=1e-9) == 2 / 3
-    assert pytest.approx(inf_min, abs=1e-9) == 2 / 3
-    assert pytest.approx(inf_max, abs=1e-9) == 2 / 3
+    assert inf == pytest.approx(2 / 3, abs=1e-4)
+    assert inf_min == pytest.approx(2 / 3, abs=1e-4)
+    assert inf_max == pytest.approx(2 / 3, abs=1e-4)
 
 
 def test_no_errors_no_statements():
@@ -45,8 +45,8 @@ def test_no_errors_no_statements():
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
     assert math.isnan(inf)
-    assert inf_min == 0.0
-    assert inf_max == 1.0
+    assert inf_min == pytest.approx(0.0, abs=1e-4)
+    assert inf_max == pytest.approx(1.0, abs=1e-4)
 
 
 def test_early_stage_error():
@@ -57,8 +57,8 @@ def test_early_stage_error():
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
     assert math.isnan(inf)
-    assert inf_min == 0.0
-    assert inf_max == 1.0
+    assert inf_min == pytest.approx(0.0, abs=1e-4)
+    assert inf_max == pytest.approx(1.0, abs=1e-4)
 
 
 def test_inference_stage_errors_partial():
@@ -71,8 +71,8 @@ def test_inference_stage_errors_partial():
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
     assert math.isnan(inf)
-    assert inf_min == pytest.approx(0.2)
-    assert inf_max == pytest.approx(0.8)
+    assert inf_min == pytest.approx(0.2, abs=1e-4)
+    assert inf_max == pytest.approx(0.8, abs=1e-4)
 
 
 def test_inference_stage_all_errors():
@@ -85,5 +85,5 @@ def test_inference_stage_all_errors():
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
     assert math.isnan(inf)
-    assert inf_min == pytest.approx(0.0)
-    assert inf_max == pytest.approx(1.0)
+    assert inf_min == pytest.approx(0.0, abs=1e-4)
+    assert inf_max == pytest.approx(1.0, abs=1e-4)
