@@ -71,4 +71,5 @@ def test_data_inference_from_fsspec(llm):
             metrics[columns],
             expected_metrics[columns],
             atol=1e-4,
+            obj=f"Column: {columns}",
         )

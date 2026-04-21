@@ -5,10 +5,12 @@ def test_inference(llm):
     inference_return = calculate_inference(
         "I am smart.", "I am not smart.", llm, show_progress_bar=False
     )
+    assert inference_return.errors[0] is None
     assert inference_return.inference == 0.0
     inference_return = calculate_inference(
         "I am smart.", "I am clever.", llm, show_progress_bar=False
     )
+    assert inference_return.errors[0] is None
     assert inference_return.inference == 1.0
     inference_return = calculate_inference(
         "John doesn't like football.",
@@ -16,13 +18,16 @@ def test_inference(llm):
         llm=llm,
         show_progress_bar=False,
     )
+    assert inference_return.errors[0] is None
     assert inference_return.inference == 0.0
 
 
 def test_refusal(llm):
     refusal_return = calculate_refusal("I am smart.", llm, show_progress_bar=False)
+    assert refusal_return.refusal_error is None
     assert refusal_return.refusal == 0.0
     refusal_return = calculate_refusal(
         "There is no answer to this question.", llm, show_progress_bar=False
     )
+    assert refusal_return.refusal_error is None
     assert refusal_return.refusal == 1.0
