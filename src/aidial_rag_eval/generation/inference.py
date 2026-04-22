@@ -446,10 +446,11 @@ def _aggregate_segment_inferences(
     """Returns (inference, min_possible_inference, max_possible_inference).
 
     Three cases:
-    1. No errors: inference = weighted mean of segment inferences (weight = statement count).
-    2. Error before inference stage (decontextualization / statement extraction):
-       InferenceInputs.error is set -> inference=nan, min=0.0, max=1.0.
-    3. Errors at inference stage only: inference=nan, min/max computed with nan -> 0/1.
+    1. No errors: inference = weighted mean of segment inferences, weighted by statement count.
+    2. Pre-inference failure — decontextualization/statement extraction error, or 0 statements
+       extracted from the hypothesis: inference=nan, min=0.0, max=1.0.
+    3. Inference-stage errors only: inference=nan, min/max derived by substituting 0/1 for
+       failed segments.
     """
     total_statements = sum(len(inputs.statements) for inputs, _ in grouped_data_item)
     if (

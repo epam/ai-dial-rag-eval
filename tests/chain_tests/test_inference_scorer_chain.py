@@ -174,7 +174,7 @@ def test_empty_statements():
 
     results = scorer.get_inference(inputs, show_progress_bar=False)
 
-    assert results[0].inference == 0.0
+    assert math.isnan(results[0].inference)
     assert results[0].explanation == ""
     assert results[0].error is None
 
