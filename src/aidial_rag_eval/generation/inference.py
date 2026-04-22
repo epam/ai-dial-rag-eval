@@ -203,7 +203,7 @@ def _segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> Tuple[List[SegmentedText], List[Union[SegmentedText, ErrorInfo]]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
@@ -236,7 +236,7 @@ def _segment_hypotheses(
         max_concurrency=max_concurrency,
     )
     segmented_hypotheses = [
-        SegmentedText.from_text(text=hypothesis, auto_download_nltk=auto_download_nltk)
+        SegmentedText.from_text(text=hypothesis)
         for hypothesis in hypotheses
     ]
     if show_progress_bar:
@@ -294,13 +294,12 @@ def _extract_statements(
 def _add_questions_to_premises(
     premises: List[Premise],
     questions: Optional[List[Question]],
-    auto_download_nltk: bool,
 ) -> List[Premise]:
     adjusted_premises: List[Premise] = list(premises)
     if questions is not None:
         for i, question in enumerate(questions):
             question_split = SegmentedText.from_text(
-                text=question, auto_download_nltk=auto_download_nltk
+                text=question
             )
             adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
     return adjusted_premises
@@ -314,7 +313,7 @@ def _infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     """
     Function that infers statements.
@@ -359,7 +358,7 @@ def _infer_statements(
         and the error field set.
     """
     adjusted_premises = _add_questions_to_premises(
-        premises, questions, auto_download_nltk
+        premises, questions
     )
 
     document_names: List[JoinedDocumentsName] = (
@@ -391,14 +390,13 @@ def segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> List[Union[SegmentedText, ErrorInfo]]:
     return _segment_hypotheses(
         hypotheses=hypotheses,
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )[1]
 
 
@@ -426,7 +424,7 @@ def infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
         premises=premises,
@@ -436,7 +434,6 @@ def infer_statements(
         list_documents=list_documents,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )
 
 
@@ -448,7 +445,7 @@ def calculate_batch_inference(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> List[InferenceReturn]:
     """
     Calculates pairwise the inference of a hypotheses from a premises.
@@ -494,7 +491,6 @@ def calculate_batch_inference(
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )
     statements: List[Union[HypothesisStatements, ErrorInfo]] = _extract_statements(
         segmented_hypotheses=decontextualized_segmented_hypotheses,
@@ -511,7 +507,6 @@ def calculate_batch_inference(
             list_documents=list_documents,
             max_concurrency=max_concurrency,
             show_progress_bar=show_progress_bar,
-            auto_download_nltk=auto_download_nltk,
         )
     )
 
@@ -559,7 +554,7 @@ def calculate_inference(
     documents: Optional[Documents] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
+    
 ) -> InferenceReturn:
     """
     Calculates the inference of a hypothesis from a premise.
@@ -605,6 +600,5 @@ def calculate_inference(
         list_documents=list_documents,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )
     return inference_returns[0]

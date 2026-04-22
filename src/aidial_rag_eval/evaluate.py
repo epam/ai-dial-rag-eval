@@ -21,7 +21,6 @@ def evaluate(
     metric_binds: Optional[List[MetricBind]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = False,
 ) -> Dataset:
     """
     Calculates RAG evaluation metrics from input
@@ -83,7 +82,6 @@ def evaluate(
         metric_binds=metric_binds,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )
     aggregated_metrics = df_final.mean(numeric_only=True)
     assert isinstance(aggregated_metrics, pd.Series)
