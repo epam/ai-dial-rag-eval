@@ -114,7 +114,6 @@ def calculate_generation_metrics(
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from df_merged dataframe.
@@ -179,7 +178,6 @@ def create_generation_metrics_report(
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from input dataframes.
@@ -234,7 +232,6 @@ def create_rag_eval_metrics_report(
     metric_binds: Optional[List[MetricBind]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation metrics from input dataframes.

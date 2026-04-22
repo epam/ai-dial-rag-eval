@@ -33,7 +33,6 @@ def _wrapped_dataframe_inference(
     document_column: Optional[str] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> pd.DataFrame:
     inference_returns = calculate_batch_inference(
         premises=_get_column_as_list_str(df_merged, premise_column),
@@ -64,7 +63,6 @@ def _wrapped_dataframe_refusal(
     prefix: str,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> pd.DataFrame:
     refusal_returns = calculate_batch_refusal(
         answers=_get_column_as_list_str(df_merged, answer_column),

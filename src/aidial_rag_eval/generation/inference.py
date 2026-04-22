@@ -203,7 +203,6 @@ def _segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> Tuple[List[SegmentedText], List[Union[SegmentedText, ErrorInfo]]]:
     """
     Function that segments hypotheses into hypothesis segments(roughly into
@@ -236,8 +235,7 @@ def _segment_hypotheses(
         max_concurrency=max_concurrency,
     )
     segmented_hypotheses = [
-        SegmentedText.from_text(text=hypothesis)
-        for hypothesis in hypotheses
+        SegmentedText.from_text(text=hypothesis) for hypothesis in hypotheses
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
@@ -298,9 +296,7 @@ def _add_questions_to_premises(
     adjusted_premises: List[Premise] = list(premises)
     if questions is not None:
         for i, question in enumerate(questions):
-            question_split = SegmentedText.from_text(
-                text=question
-            )
+            question_split = SegmentedText.from_text(text=question)
             adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
     return adjusted_premises
 
@@ -313,7 +309,6 @@ def _infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     """
     Function that infers statements.
@@ -357,9 +352,7 @@ def _infer_statements(
         For items that failed in any stage, InferenceScore will have inference=None
         and the error field set.
     """
-    adjusted_premises = _add_questions_to_premises(
-        premises, questions
-    )
+    adjusted_premises = _add_questions_to_premises(premises, questions)
 
     document_names: List[JoinedDocumentsName] = (
         [""] * len(statements)
@@ -390,7 +383,6 @@ def segment_hypotheses(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> List[Union[SegmentedText, ErrorInfo]]:
     return _segment_hypotheses(
         hypotheses=hypotheses,
@@ -424,7 +416,6 @@ def infer_statements(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> List[List[Tuple[InferenceInputs, InferenceScore]]]:
     return _infer_statements(
         premises=premises,
@@ -445,7 +436,6 @@ def calculate_batch_inference(
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> List[InferenceReturn]:
     """
     Calculates pairwise the inference of a hypotheses from a premises.
@@ -554,7 +544,6 @@ def calculate_inference(
     documents: Optional[Documents] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    
 ) -> InferenceReturn:
     """
     Calculates the inference of a hypothesis from a premise.
