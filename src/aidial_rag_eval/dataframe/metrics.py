@@ -114,6 +114,7 @@ def calculate_generation_metrics(
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from df_merged dataframe.
@@ -155,6 +156,7 @@ def calculate_generation_metrics(
                 llm=llm,
                 max_concurrency=max_concurrency,
                 show_progress_bar=show_progress_bar,
+                auto_download_nltk=auto_download_nltk,
             ).to_dict(orient="series")
         )
     df_metrics = pd.DataFrame(data=metric_results)
@@ -163,9 +165,9 @@ def calculate_generation_metrics(
     ]
     if nli_columns:
         sub_df_nli = df_metrics[nli_columns]
-        df_metrics["mean_" + inference_column] = sub_df_nli.mean(1)
+        df_metrics["mean_" + inference_column] = sub_df_nli.mean(1, skipna=False)
         df_metrics["median_" + inference_column] = sub_df_nli.median(
-            1
+            1, skipna=False
         )  # pyright: ignore # noqa
 
     return df_metrics
@@ -178,6 +180,7 @@ def create_generation_metrics_report(
     metric_binds: List[MetricBind],
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation generation metrics from input dataframes.
@@ -220,6 +223,7 @@ def create_generation_metrics_report(
         metric_binds,
         max_concurrency,
         show_progress_bar,
+        auto_download_nltk,
     )
     return pd.merge(df_merged, df_metrics, left_index=True, right_index=True)
 
@@ -232,6 +236,7 @@ def create_rag_eval_metrics_report(
     metric_binds: Optional[List[MetricBind]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
+    auto_download_nltk: bool = True,
 ) -> pd.DataFrame:
     """
     Calculates RAG evaluation metrics from input dataframes.
@@ -282,5 +287,6 @@ def create_rag_eval_metrics_report(
         metric_binds,
         max_concurrency,
         show_progress_bar,
+        auto_download_nltk,
     )
     return pd.concat([df_merged, retrieval_metrics, generation_metrics], axis=1)
