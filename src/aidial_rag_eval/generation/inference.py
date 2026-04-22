@@ -445,19 +445,20 @@ def _aggregate_segment_inferences(
 ) -> Tuple[float, float, float]:
     """Returns (inference, min_possible_inference, max_possible_inference).
 
-    Three cases:
-    1. No errors: inference = weighted mean of segment inferences, weighted by statement count.
-    2. Pre-inference failure — decontextualization/statement extraction error, or 0 statements
-       extracted from the hypothesis: inference=nan, min=0.0, max=1.0.
-    3. Inference-stage errors only: inference=nan, min/max derived by substituting 0/1 for
+    Four cases:
+    1. No errors, statements present: inference = weighted mean of segment inferences,
+       weighted by statement count.
+    2. No errors, 0 statements total: inference=0.0, min=0.0, max=0.0.
+    3. Pre-inference failure — decontextualization/statement extraction error:
+       inference=nan, min=0.0, max=1.0.
+    4. Inference-stage errors only: inference=nan, min/max derived by substituting 0/1 for
        failed segments.
     """
-    total_statements = sum(len(inputs.statements) for inputs, _ in grouped_data_item)
-    if (
-        any(inputs.error is not None for inputs, _ in grouped_data_item)
-        or total_statements == 0
-    ):
+    if any(inputs.error is not None for inputs, _ in grouped_data_item):
         return math.nan, 0.0, 1.0
+    total_statements = sum(len(inputs.statements) for inputs, _ in grouped_data_item)
+    if total_statements == 0:
+        return 0.0, 0.0, 0.0
     inferences = np.array(
         [score.inference for _, score in grouped_data_item], dtype=float
     )

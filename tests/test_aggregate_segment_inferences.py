@@ -44,9 +44,20 @@ def test_no_errors_no_statements():
         _make_group_item([], inference=0.0),
     ]
     inf, inf_min, inf_max = _aggregate_segment_inferences(data)
-    assert math.isnan(inf)
+    assert inf == pytest.approx(0.0, abs=1e-4)
     assert inf_min == pytest.approx(0.0, abs=1e-4)
-    assert inf_max == pytest.approx(1.0, abs=1e-4)
+    assert inf_max == pytest.approx(0.0, abs=1e-4)
+
+
+def test_one_segment_no_statements():
+    data = [
+        _make_group_item(["s1", "s2"], inference=0.5),
+        _make_group_item([], inference=0.0),
+    ]
+    inf, inf_min, inf_max = _aggregate_segment_inferences(data)
+    assert inf == pytest.approx(0.5, abs=1e-4)
+    assert inf_min == pytest.approx(0.5, abs=1e-4)
+    assert inf_max == pytest.approx(0.5, abs=1e-4)
 
 
 def test_early_stage_error():

@@ -103,7 +103,7 @@ class LLMInferenceScorer(InferenceScorer):
                     inference=math.nan, explanation="", error=input_.error
                 )
             if not input_.statements:
-                return InferenceScore(inference=math.nan, explanation="")
+                return InferenceScore(inference=0.0, explanation="")
             return (
                 inference_inputs_to_dict
                 | RunnablePassthrough.assign(
