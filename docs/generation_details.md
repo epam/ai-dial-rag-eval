@@ -46,8 +46,8 @@ It consists of three sequential LLM stages.
 
 #### Stage 1: Decontextualization
 
-* The hypothesis is split into hypothesis segments (sentences) using NLTK tokenization:
-  1. Split by `nltk.sent_tokenizer`.
+* The hypothesis is split into hypothesis segments (sentences) using spaCy sentence tokenization:
+  1. Split by spaCy sentencizer (`en_core_web_sm`).
   2. For segments exceeding 500 characters, split further by `"\n\n"`, then `"\n"`, then into 500-character chunks.
   3. Merge segments shorter than 20 characters with the following segment.
 * Pronouns and context-dependent references in the segments are replaced with their explicit referents using an LLM, making each segment self-contained.
