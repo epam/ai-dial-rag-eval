@@ -15,7 +15,6 @@ def calculate_batch_refusal(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
 ) -> List[RefusalReturn]:
     """
     Checks if the answers are answer refusal.
@@ -41,10 +40,7 @@ def calculate_batch_refusal(
         Returns the list of the answer refusals.
     """
     detector = LLMRefusalDetector(llm, max_concurrency)
-    answers_split = [
-        SegmentedText.from_text(text=answer, auto_download_nltk=auto_download_nltk)
-        for answer in answers
-    ]
+    answers_split = [SegmentedText.from_text(text=answer) for answer in answers]
     # As a heuristic, we send only the first 3 segments in the prompt.
     # We believe that if there are 3 whole segments with information
     # that is not related to refusal to answer,
@@ -64,7 +60,6 @@ def calculate_refusal(
     llm: BaseChatModel,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
-    auto_download_nltk: bool = True,
 ) -> RefusalReturn:
     """
     Checks if the answer is answer refusal.
@@ -94,6 +89,5 @@ def calculate_refusal(
         llm=llm,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
-        auto_download_nltk=auto_download_nltk,
     )
     return refusal_returns[0]

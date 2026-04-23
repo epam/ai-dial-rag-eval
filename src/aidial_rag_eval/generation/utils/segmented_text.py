@@ -1,11 +1,32 @@
 from typing import Callable, List, Optional, Tuple
 
-import nltk
-from more_itertools import chunked
+import spacy
+from more_itertools import chunked, constrained_batches
 
 from aidial_rag_eval.generation.types import Text, TextSegment
 
 Splitter = Callable[[TextSegment], List[TextSegment]]
+
+_nlp = spacy.load("en_core_web_sm")
+
+_simple_nlp = spacy.blank("en")
+_simple_nlp.add_pipe("sentencizer")
+_simple_nlp.max_length = 1_000_000_000
+
+
+def _sent_tokenize(text: str) -> List[str]:
+    max_len = _nlp.max_length
+    sents = list(_simple_nlp(text).sents)
+
+    chunks = [
+        "".join(s.text_with_ws for s in batch)
+        for batch in constrained_batches(sents, max_len, get_len=lambda s: len(s.text))
+    ]
+    return [
+        s.text.strip() for chunk in chunks for s in _nlp(chunk).sents if s.text.strip()
+    ]
+
+
 SegmentChecker = Callable[[TextSegment], bool]
 
 
@@ -80,10 +101,7 @@ class SegmentedText:
         self.delimiters = delimiters.copy()
 
     @classmethod
-    def from_text(cls, text: Text, auto_download_nltk: bool = True) -> "SegmentedText":
-        if auto_download_nltk:
-            nltk.download("punkt_tab", quiet=True)
-
+    def from_text(cls, text: Text) -> "SegmentedText":
         max_len = 500
         min_len = 10
         conditional_splitters: List[Splitter] = [
@@ -93,7 +111,7 @@ class SegmentedText:
         ]
         segmented_text = cls([text], [])
         segmented_text = apply_splitter_to_segmented_text(
-            segmented_text, nltk.sent_tokenize
+            segmented_text, _sent_tokenize
         )
         for splitter in conditional_splitters:
             segmented_text = apply_splitter_to_segmented_text(
