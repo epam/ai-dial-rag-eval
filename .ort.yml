@@ -48,7 +48,7 @@ resolutions:
       comment: "Apache-2.0 license: https://github.com/apache/arrow/blob/apache-arrow-23.0.1/LICENSE.txt"
     - message: ".*PyPI::pydantic-core:2\\.46\\.3.*"
       reason: "CANT_FIX_EXCEPTION"
-      comment: "MIT License: https://github.com/pydantic/pydantic/blob/v2.13.3/LICENSE"
+      comment: "MIT License: https://github.com/pydantic/pydantic/blob/v2.13.3/pydantic-core/LICENSE"
     - message: ".*PyPI::pydantic:2\\.13\\.3.*"
       reason: "CANT_FIX_EXCEPTION"
       comment: "MIT License: https://github.com/pydantic/pydantic/blob/v2.13.3/LICENSE"
