@@ -213,8 +213,9 @@ def _segment_hypotheses(
     Parameters
     -----------
 
-    hypotheses : List[str]
+    hypotheses : List[Union[str, List[str]]]
         The text of the hypothesis.
+        Each hypothesis can be a single text or a list of text fragments.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
@@ -328,8 +329,9 @@ def _infer_statements(
     Parameters
     -----------
 
-    premises : List[str]
+    premises : List[Union[str, List[str]]]
         The text of the premise from which the hypothesis will be inferred.
+        Each premise can be a single text or a list of text fragments.
 
     statements : List[Union[HypothesisStatements, ErrorInfo]]
         A deeply nested list of statements, where the outermost
