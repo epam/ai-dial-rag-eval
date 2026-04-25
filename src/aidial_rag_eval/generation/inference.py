@@ -30,13 +30,15 @@ from aidial_rag_eval.types import Documents, Question
 
 T = TypeVar("T")
 
+_LIST_DELIMITER = "\n"
+
 
 def _join_documents(documents: Documents) -> JoinedDocumentsName:
     return " ; ".join(documents)
 
 
 def _make_inference_task_inputs(
-    premises: List[Premise],
+    adjusted_premises: List[str],
     statements: List[Union[HypothesisStatements, ErrorInfo]],
     document_names: List[JoinedDocumentsName],
 ) -> List[InferenceInputs]:
@@ -45,7 +47,7 @@ def _make_inference_task_inputs(
 
     Parameters
     -----------
-    premises : List[str]
+    adjusted_premises : List[str]
         A list of premises from which we want to derive hypotheses in pairs.
 
     statements : List[Union[HypothesisStatements, ErrorInfo]]
@@ -73,7 +75,7 @@ def _make_inference_task_inputs(
                 [
                     InferenceInputs(
                         hypothesis_id=i,
-                        premise=premises[i],
+                        premise=adjusted_premises[i],
                         statements=list_statements,
                         document_name=document_names[i],
                     )
@@ -83,7 +85,7 @@ def _make_inference_task_inputs(
                 else [
                     InferenceInputs(
                         hypothesis_id=i,
-                        premise=premises[i],
+        premise=adjusted_premises[i],
                         statements=[],
                         document_name=document_names[i],
                         error=statement_result,
@@ -235,7 +237,12 @@ def _segment_hypotheses(
         max_concurrency=max_concurrency,
     )
     segmented_hypotheses = [
-        SegmentedText.from_text(text=hypothesis) for hypothesis in hypotheses
+        (
+            SegmentedText.from_list(hypothesis, _LIST_DELIMITER)
+            if not isinstance(hypothesis, str)
+            else SegmentedText.from_text(hypothesis)
+        )
+        for hypothesis in hypotheses
     ]
     if show_progress_bar:
         print("Converting hypothesis...")
@@ -290,14 +297,16 @@ def _extract_statements(
 
 
 def _add_questions_to_premises(
-    premises: List[Premise],
+    normalized_premises: List[str],
     questions: Optional[List[Question]],
-) -> List[Premise]:
-    adjusted_premises: List[Premise] = list(premises)
+) -> List[str]:
+    adjusted_premises: List[str] = list(normalized_premises)
     if questions is not None:
         for i, question in enumerate(questions):
             question_split = SegmentedText.from_text(text=question)
-            adjusted_premises[i] = question_split.segments[-1] + "\n" + premises[i]
+            adjusted_premises[i] = (
+                question_split.segments[-1] + "\n" + normalized_premises[i]
+            )
     return adjusted_premises
 
 
@@ -352,7 +361,10 @@ def _infer_statements(
         For items that failed in any stage, InferenceScore will have inference=None
         and the error field set.
     """
-    adjusted_premises = _add_questions_to_premises(premises, questions)
+    normalized_premises: List[str] = [
+        _LIST_DELIMITER.join(p) if not isinstance(p, str) else p for p in premises
+    ]
+    adjusted_premises = _add_questions_to_premises(normalized_premises, questions)
 
     document_names: List[JoinedDocumentsName] = (
         [""] * len(statements)
@@ -479,11 +491,13 @@ def calculate_batch_inference(
     Parameters
     -----------
 
-    premises : List[str]
+    premises : List[Union[str, List[str]]]
         The text of the premise from which the hypothesis will be inferred.
+        Each premise can be a single text or a list of text fragments.
 
-    hypotheses : List[str]
+    hypotheses : List[Union[str, List[str]]]
         The text of the hypothesis.
+        Each hypothesis can be a single text or a list of text fragments.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
@@ -577,11 +591,13 @@ def calculate_inference(
     Parameters
     -----------
 
-    premise : str
+    premise : Union[str, List[str]]
         The text of the premise from which the hypothesis will be inferred.
+        Can be a single text or a list of text fragments.
 
-    hypothesis : str
+    hypothesis : Union[str, List[str]]
         The text of the hypothesis.
+        Can be a single text or a list of text fragments.
 
     llm : BaseChatModel
         The Langchain chat model used for calculating inference.
