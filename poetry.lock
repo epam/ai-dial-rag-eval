@@ -1237,21 +1237,6 @@ files = [
 ]
 
 [[package]]
-name = "en_core_web_sm"
-version = "3.8.0"
-description = "English pipeline optimized for CPU. Components: tok2vec, tagger, parser, senter, ner, attribute_ruler, lemmatizer."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "en_core_web_sm-3.8.0-py3-none-any.whl", hash = "sha256:1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85"},
-]
-
-[package.source]
-type = "url"
-url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
-
-[[package]]
 name = "executing"
 version = "2.2.1"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -6349,4 +6334,4 @@ s3fs = ["s3fs"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11, <3.15"
-content-hash = "ac4921dfa1b008095941b5cde6fa10598383581994a2a13862ae01de340f6a88"
+content-hash = "9d2550e6eae79bd975356cb970de58617f6c0797ab3f1e41cabb6977d6c86db3"
