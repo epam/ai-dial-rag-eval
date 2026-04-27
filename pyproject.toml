@@ -24,7 +24,6 @@ tqdm = "^4.66.4"
 langchain-core = ">=0.3.80,<2"
 more-itertools = "^10.5.0"
 pyarrow = ">=20.0.0"
-en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"}
 
 [tool.poetry.extras]
 s3fs = ["s3fs"]

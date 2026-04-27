@@ -14,6 +14,13 @@ Install the library using [pip](https://pip.pypa.org/en/stable/getting-started):
 pip install aidial-rag-eval
 ```
 
+The generation metrics require the English language model for [spaCy](https://spacy.io/).
+Download it after installation:
+
+```sh
+python -m spacy download en_core_web_sm
+```
+
 ### Example
 
 The example of how to get retrieval metrics along with answer inference based on the context.

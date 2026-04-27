@@ -46,6 +46,8 @@ It consists of three sequential LLM stages.
 
 #### Stage 1: Decontextualization
 
+> **Note:** Requires the `en_core_web_sm` spaCy model (`python -m spacy download en_core_web_sm`).
+
 * The hypothesis is split into hypothesis segments (sentences) using spaCy sentence tokenization:
   1. Split by spaCy sentencizer (`en_core_web_sm`).
   2. For segments exceeding 500 characters, split further by `"\n\n"`, then `"\n"`, then into 500-character chunks.

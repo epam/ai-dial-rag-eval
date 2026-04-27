@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-03-16T09:43:22.720552",
+  "created_at": "2026-04-27T12:14:45.211685",
   "sources": [
     {
       "metadata_path": "./example_parquets/ground_truth.parquet.metadata.json",
@@ -12,13 +12,13 @@
           "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/ground_truth.parquet",
           "size": 4958,
           "type": "file",
-          "created": 1748278709.0742927,
+          "created": 1776434191.148323,
           "islink": false,
           "mode": 33279,
           "uid": 1000,
           "gid": 1000,
-          "mtime": 1748278709.0742927,
-          "ino": 1407374884781850,
+          "mtime": 1776434191.148323,
+          "ino": 1970324838203162,
           "nlink": 1
         },
         "metrics": {},
@@ -36,13 +36,13 @@
           "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/answer.parquet",
           "size": 5705,
           "type": "file",
-          "created": 1748278709.0742927,
+          "created": 1776434191.1463237,
           "islink": false,
           "mode": 33279,
           "uid": 1000,
           "gid": 1000,
-          "mtime": 1748278709.0742927,
-          "ino": 1407374884781849,
+          "mtime": 1776434191.1463237,
+          "ino": 1970324838203161,
           "nlink": 1
         },
         "metrics": {},
@@ -51,19 +51,19 @@
     }
   ],
   "tools": {
-    "aidial-rag-eval": "0.6.0rc0"
+    "aidial-rag-eval": "0.0.0"
   },
   "file_info": {
     "name": "/mnt/c/Users/Mikalai_Pechaneu/Work/dial-rag-eval/github/ai-dial-rag-eval/examples/example_parquets/metrics.parquet",
-    "size": 38110,
+    "size": 37918,
     "type": "file",
-    "created": 1773672202.7175121,
+    "created": 1777310085.2087567,
     "islink": false,
     "mode": 33279,
     "uid": 1000,
     "gid": 1000,
-    "mtime": 1773672202.7175121,
-    "ino": 72339069015181302,
+    "mtime": 1777310085.2087567,
+    "ino": 4785074604165353,
     "nlink": 1
   },
   "metrics": {
@@ -74,15 +74,15 @@
     "ctx_ans_inference": 0.6666666666666666,
     "ctx_ans_inference_min": 0.6666666666666666,
     "ctx_ans_inference_max": 0.6666666666666666,
-    "ans_gt_inference": 0.6666666666666666,
-    "ans_gt_inference_min": 0.6666666666666666,
-    "ans_gt_inference_max": 0.6666666666666666,
+    "ans_gt_inference": 0.5,
+    "ans_gt_inference_min": 0.5,
+    "ans_gt_inference_max": 0.5,
     "gt_ans_inference": 0.6666666666666666,
     "gt_ans_inference_min": 0.6666666666666666,
     "gt_ans_inference_max": 0.6666666666666666,
     "answer_refusal": 0.0,
     "ground_truth_refusal": 0.0,
-    "mean_inference": 0.6666666666666666,
+    "mean_inference": 0.6111111111111112,
     "median_inference": 0.6666666666666666
   },
   "statistics": {
