@@ -1,5 +1,6 @@
 from aidial_rag_eval.generation.metric_binds import (
     ANSWER_REFUSAL,
+    ANSWER_TO_FACTS_INFERENCE,
     ANSWER_TO_GROUND_TRUTH_INFERENCE,
     CONTEXT_TO_ANSWER_INFERENCE,
     GROUND_TRUTH_REFUSAL,
@@ -9,6 +10,7 @@ from aidial_rag_eval.generation.metric_binds import (
 __all__ = [
     "CONTEXT_TO_ANSWER_INFERENCE",
     "ANSWER_TO_GROUND_TRUTH_INFERENCE",
+    "ANSWER_TO_FACTS_INFERENCE",
     "GROUND_TRUTH_TO_ANSWER_INFERENCE",
     "ANSWER_REFUSAL",
     "GROUND_TRUTH_REFUSAL",

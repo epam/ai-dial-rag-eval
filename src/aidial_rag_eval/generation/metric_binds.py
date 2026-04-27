@@ -13,6 +13,7 @@ from aidial_rag_eval.types import MergedColumns
 C2A_INFERENCE_PREFIX = "ctx_ans_"
 A2GT_INFERENCE_PREFIX = "ans_gt_"
 GT2A_INFERENCE_PREFIX = "gt_ans_"
+A2F_INFERENCE_PREFIX = "ans_fct_"
 
 ANSWER_REFUSAL_PREFIX = "answer_"
 GT_ANSWER_REFUSAL_PREFIX = "ground_truth_"
@@ -94,6 +95,14 @@ GROUND_TRUTH_TO_ANSWER_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.GROUND_TRUTH_ANSWER,
     hypothesis_column=MergedColumns.ANSWER,
     prefix=GT2A_INFERENCE_PREFIX,
+    use_question=True,
+    document_column=MergedColumns.DOCUMENTS,
+)
+
+ANSWER_TO_FACTS_INFERENCE = InferenceMetricBind(
+    premise_column=MergedColumns.FACTS,
+    hypothesis_column=MergedColumns.ANSWER,
+    prefix=A2F_INFERENCE_PREFIX,
     use_question=True,
     document_column=MergedColumns.DOCUMENTS,
 )

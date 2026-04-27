@@ -5,6 +5,7 @@ import pytest
 from aidial_rag_eval.evaluate import evaluate
 from aidial_rag_eval.metric_binds import (
     ANSWER_REFUSAL,
+    ANSWER_TO_FACTS_INFERENCE,
     ANSWER_TO_GROUND_TRUTH_INFERENCE,
     CONTEXT_TO_ANSWER_INFERENCE,
     GROUND_TRUTH_REFUSAL,
@@ -30,6 +31,7 @@ def test_inference_dataset(tmp_path, llm):
         metric_binds=[
             CONTEXT_TO_ANSWER_INFERENCE,
             ANSWER_TO_GROUND_TRUTH_INFERENCE,
+            ANSWER_TO_FACTS_INFERENCE,
             GROUND_TRUTH_TO_ANSWER_INFERENCE,
             ANSWER_REFUSAL,
             GROUND_TRUTH_REFUSAL,
@@ -57,6 +59,9 @@ def test_inference_dataset(tmp_path, llm):
         "ans_gt_inference": pytest.approx(0.333333, abs=1e-4),
         "ans_gt_inference_min": pytest.approx(0.333333, abs=1e-4),
         "ans_gt_inference_max": pytest.approx(0.333333, abs=1e-4),
+        "ans_fct_inference": pytest.approx(0.333333, abs=1e-4),
+        "ans_fct_inference_min": pytest.approx(0.333333, abs=1e-4),
+        "ans_fct_inference_max": pytest.approx(0.333333, abs=1e-4),
         "gt_ans_inference": pytest.approx(0.333333, abs=1e-4),
         "gt_ans_inference_min": pytest.approx(0.333333, abs=1e-4),
         "gt_ans_inference_max": pytest.approx(0.333333, abs=1e-4),
@@ -93,6 +98,12 @@ def test_inference_dataset(tmp_path, llm):
         "ans_gt_json",
         "ans_gt_highlight",
         "ans_gt_errors",
+        "ans_fct_inference",
+        "ans_fct_inference_min",
+        "ans_fct_inference_max",
+        "ans_fct_json",
+        "ans_fct_highlight",
+        "ans_fct_errors",
         "gt_ans_inference",
         "gt_ans_inference_min",
         "gt_ans_inference_max",
