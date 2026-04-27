@@ -14,6 +14,8 @@ Install the library using [pip](https://pip.pypa.org/en/stable/getting-started):
 pip install aidial-rag-eval
 ```
 
+### spaCy language model
+
 The generation metrics require the English language model for [spaCy](https://spacy.io/).
 Download it after installation:
 
@@ -21,7 +23,17 @@ Download it after installation:
 python -m spacy download en_core_web_sm
 ```
 
-For other installation scenarios see [production guide](https://spacy.io/usage/models#production).
+Alternatively, you can install the model directly via URL:
+
+```sh
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+```
+
+Or as a [Poetry](https://python-poetry.org/) dependency:
+
+```toml
+en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"}
+```
 
 ### Example
 
