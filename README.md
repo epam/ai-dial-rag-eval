@@ -21,6 +21,8 @@ Download it after installation:
 python -m spacy download en_core_web_sm
 ```
 
+For other installation scenarios see [production guide](https://spacy.io/usage/models#production).
+
 ### Example
 
 The example of how to get retrieval metrics along with answer inference based on the context.
