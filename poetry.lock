@@ -1242,7 +1242,7 @@ version = "3.8.0"
 description = "English pipeline optimized for CPU. Components: tok2vec, tagger, parser, senter, ner, attribute_ruler, lemmatizer."
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["test"]
 files = [
     {file = "en_core_web_sm-3.8.0-py3-none-any.whl", hash = "sha256:1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85"},
 ]
@@ -6349,4 +6349,4 @@ s3fs = ["s3fs"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11, <3.15"
-content-hash = "ac4921dfa1b008095941b5cde6fa10598383581994a2a13862ae01de340f6a88"
+content-hash = "2d67da327afa4472985651a33f7a945b5b8af1312f3eb49f79696ec550f457fe"
