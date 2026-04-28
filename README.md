@@ -14,6 +14,27 @@ Install the library using [pip](https://pip.pypa.org/en/stable/getting-started):
 pip install aidial-rag-eval
 ```
 
+### spaCy language model
+
+The generation metrics require the English language model for [spaCy](https://spacy.io/).
+Download it after installation:
+
+```sh
+python -m spacy download en_core_web_sm
+```
+
+Alternatively, you can install the model directly via URL:
+
+```sh
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+```
+
+Or as a [Poetry](https://python-poetry.org/) dependency:
+
+```toml
+en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"}
+```
+
 ### Example
 
 The example of how to get retrieval metrics along with answer inference based on the context.
@@ -80,10 +101,11 @@ In this table:
 
 The algorithm is token-intensive. Considering the balance between quality and price, the following models are recommended:
 
+- **gemini-3.1-flash-lite**
 - **gemini-2.5-flash-lite**
 - **gpt-5-mini**
-- **gemini-2.0-flash-lite**
 - **gpt-5-nano**
+- **gpt-5.4-mini**
 
 ## Developer environment
 
