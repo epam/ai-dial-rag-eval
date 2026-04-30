@@ -85,7 +85,7 @@ def _make_inference_task_inputs(
                 else [
                     InferenceInputs(
                         hypothesis_id=i,
-        premise=adjusted_premises[i],
+                        premise=adjusted_premises[i],
                         statements=[],
                         document_name=document_names[i],
                         error=statement_result,

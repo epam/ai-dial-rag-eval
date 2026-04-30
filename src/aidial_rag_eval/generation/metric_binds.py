@@ -14,6 +14,7 @@ C2A_INFERENCE_PREFIX = "ctx_ans_"
 A2GT_INFERENCE_PREFIX = "ans_gt_"
 GT2A_INFERENCE_PREFIX = "gt_ans_"
 A2F_INFERENCE_PREFIX = "ans_fct_"
+F2A_INFERENCE_PREFIX = "fct_ans_"
 
 ANSWER_REFUSAL_PREFIX = "answer_"
 GT_ANSWER_REFUSAL_PREFIX = "ground_truth_"
@@ -100,10 +101,18 @@ GROUND_TRUTH_TO_ANSWER_INFERENCE = InferenceMetricBind(
 )
 
 ANSWER_TO_FACTS_INFERENCE = InferenceMetricBind(
-    premise_column=MergedColumns.FACTS,
-    hypothesis_column=MergedColumns.ANSWER,
+    premise_column=MergedColumns.ANSWER,
+    hypothesis_column=MergedColumns.FACTS,
     prefix=A2F_INFERENCE_PREFIX,
     use_question=True,
+    document_column=MergedColumns.DOCUMENTS,
+)
+
+FACTS_TO_ANSWER_INFERENCE = InferenceMetricBind(
+    premise_column=MergedColumns.FACTS,
+    hypothesis_column=MergedColumns.ANSWER,
+    prefix=F2A_INFERENCE_PREFIX,
+    use_question=False,
     document_column=MergedColumns.DOCUMENTS,
 )
 
