@@ -137,7 +137,7 @@ def calculate_generation_metrics(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8
@@ -221,7 +221,7 @@ def create_generation_metrics_report(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8
@@ -279,7 +279,7 @@ def create_rag_eval_metrics_report(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8

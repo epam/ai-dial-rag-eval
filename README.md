@@ -44,7 +44,8 @@ import pandas as pd
 from langchain_openai import AzureChatOpenAI
 from aidial_rag_eval import create_rag_eval_metrics_report
 from aidial_rag_eval.metric_binds import CONTEXT_TO_ANSWER_INFERENCE,\
-    ANSWER_TO_GROUND_TRUTH_INFERENCE, GROUND_TRUTH_TO_ANSWER_INFERENCE
+    ANSWER_TO_GROUND_TRUTH_INFERENCE, GROUND_TRUTH_TO_ANSWER_INFERENCE,\
+    ANSWER_TO_FACTS_INFERENCE, FACTS_TO_ANSWER_INFERENCE
 
 llm = AzureChatOpenAI(model="gemini-2.5-flash-lite")
 
@@ -75,16 +76,18 @@ df_metrics = create_rag_eval_metrics_report(
         CONTEXT_TO_ANSWER_INFERENCE,
         ANSWER_TO_GROUND_TRUTH_INFERENCE,
         GROUND_TRUTH_TO_ANSWER_INFERENCE,
+        ANSWER_TO_FACTS_INFERENCE,
+        FACTS_TO_ANSWER_INFERENCE,
     ],
 )
-print(df_metrics[["facts_ranks", "recall", 'precision', 'mrr', 'f1', 'ctx_ans_inference', 'ans_gt_inference', 'gt_ans_inference']])
+print(df_metrics[["facts_ranks", "recall", 'precision', 'mrr', 'f1', 'ctx_ans_inference', 'ans_gt_inference', 'gt_ans_inference', 'ans_fct_inference', 'fct_ans_inference']])
 ```
 
 It is expected to see the following results:
 
-| recall | precision | mrr | f1  | ctx_ans_inference | ans_gt_inference | gt_ans_inference |
-| ------ | --------- | --- | --- | ----------------- | ---------------- | ---------------- |
-| 0.5    | 0.5       | 0.5 | 0.5 | 1.0               | 0.5              | 1.0              |
+| recall | precision | mrr | f1  | ctx_ans_inference | ans_gt_inference | gt_ans_inference | ans_fct_inference | fct_ans_inference |
+| ------ | --------- | --- | --- | ----------------- | ---------------- | ---------------- | ----------------- | ----------------- |
+| 0.5    | 0.5       | 0.5 | 0.5 | 1.0               | 0.5              | 1.0              | 0.5               | 1.0               |
 
 In this table:
 
@@ -94,8 +97,12 @@ In this table:
   - "ctx" refers to 'context'
   - "ans" refers to 'answer'
   - "gt" refers to 'ground truth answer'
-- "ctx_ans_inference" and "ans_gt_inference" values of 1.0 mean our answer can be derived directly from the context and the ground truth answer, respectively.
-- "gt_ans_inference" of 0.5, denotes that the ground truth answer can only be partially inferred from our answer.
+  - "fct" refers to 'facts'
+- "ctx_ans_inference" of 1.0 means our answer can be fully derived from the context.
+- "ans_gt_inference" of 0.5 means the ground truth answer is only partially entailed by our answer.
+- "gt_ans_inference" of 1.0 means our answer can be fully derived from the ground truth answer.
+- "ans_fct_inference" of 0.5 means only half of the ground truth facts are entailed by our answer (the Pacific Ocean fact is missing).
+- "fct_ans_inference" of 1.0 means our answer can be fully derived from the ground truth facts.
 
 ## Recommended models
 

@@ -8,6 +8,7 @@ The pipeline aims to evaluate the coherence, factual accuracy, and contextual ap
 * **Document:** Original source containing the information.
 * **Context:** Text excerpts retrieved from the document.
 * **Ground Truth Answer:** The expected answer.
+* **Facts:** A list of ground truth facts — expected crucial information necessary to form a correct answer.
 * **Answer:** The generated response.
 * **Inference:** Determining whether information expressed in a hypothesis is stated in a premise.
 * **Hypothesis:** A text to be evaluated for entailment.
@@ -23,6 +24,7 @@ The pipeline aims to evaluate the coherence, factual accuracy, and contextual ap
 * Context
 * Question
 * Ground Truth Answer
+* Facts
 * Answer
 
 ## Outputs
@@ -30,6 +32,8 @@ The pipeline aims to evaluate the coherence, factual accuracy, and contextual ap
 * Entailment score between the answer and the context.
 * Entailment score between the answer and the ground truth answer.
 * Entailment score between the ground truth answer and the answer.
+* Entailment score between the answer and the facts.
+* Entailment score between the facts and the answer.
 * Answer refusal flag.
 * Ground truth answer refusal flag.
 
@@ -88,10 +92,12 @@ The inference pipeline is run for three pairs:
 | Context -> Answer      | Joined context chunks | Answer |
 | Answer -> Ground Truth | Last segment of the question + Answer | Ground Truth Answer |
 | Ground Truth -> Answer | Last segment of the question + Ground Truth Answer | Answer |
+| Answer -> Facts        | Last segment of the question + Answer | Facts |
+| Facts -> Answer        | Joined facts | Answer |
 
 #### Final Score
 
-`mean_inference` and `median_inference` are computed as the mean and median of all three inference scores per row.
+`mean_inference` and `median_inference` are computed as the mean and median of all configured inference scores per row.
 
 ### Answer Refusal Pipeline
 
