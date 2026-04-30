@@ -305,7 +305,9 @@ def _add_questions_to_premises(
     if questions is not None:
         for i, question in enumerate(questions):
             question_split = SegmentedText.from_text(text=question)
-            adjusted_premises[i] = _LIST_DELIMITER.join([question_split.segments[-1], normalized_premises[i]])
+            adjusted_premises[i] = _LIST_DELIMITER.join(
+                [question_split.segments[-1], normalized_premises[i]]
+            )
     return adjusted_premises
 
 
