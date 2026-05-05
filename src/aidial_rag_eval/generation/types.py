@@ -3,19 +3,32 @@ import json
 from dataclasses import dataclass, fields
 from typing import List, Optional, Union
 
-from aidial_rag_eval.types import Answer, GroundTruthAnswer, Text
-
 TextSegment = str
-JoinedContext = Text
 
-Premise = Union[JoinedContext, Answer, GroundTruthAnswer]
-Hypothesis = Union[Answer, GroundTruthAnswer]
+Premise = Union[str, List[str]]
+Hypothesis = Union[str, List[str]]
 Statement = str
 HypothesisSegmentStatements = List[Statement]
 HypothesisStatements = List[HypothesisSegmentStatements]
 JoinedDocumentsName = str
 
-MetricBind = str
+
+@dataclass(frozen=True)
+class InferenceMetricBind:
+    premise_column: str
+    hypothesis_column: str
+    prefix: str
+    premise_prefix_column: Optional[str] = None
+    document_column: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class RefusalMetricBind:
+    answer_column: str
+    prefix: str
+
+
+MetricBind = Union[InferenceMetricBind, RefusalMetricBind]
 
 
 @dataclass

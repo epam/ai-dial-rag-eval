@@ -6,8 +6,10 @@ import pandas as pd
 from aidial_rag_eval.dataframe import create_rag_eval_metrics_report
 from aidial_rag_eval.metric_binds import (
     ANSWER_REFUSAL,
+    ANSWER_TO_FACTS_INFERENCE,
     ANSWER_TO_GROUND_TRUTH_INFERENCE,
     CONTEXT_TO_ANSWER_INFERENCE,
+    FACTS_TO_ANSWER_INFERENCE,
     GROUND_TRUTH_REFUSAL,
     GROUND_TRUTH_TO_ANSWER_INFERENCE,
 )
@@ -35,6 +37,8 @@ def test_data_inference_from_fsspec(llm):
         metric_binds=[
             CONTEXT_TO_ANSWER_INFERENCE,
             ANSWER_TO_GROUND_TRUTH_INFERENCE,
+            ANSWER_TO_FACTS_INFERENCE,
+            FACTS_TO_ANSWER_INFERENCE,
             GROUND_TRUTH_TO_ANSWER_INFERENCE,
             ANSWER_REFUSAL,
             GROUND_TRUTH_REFUSAL,
@@ -57,6 +61,9 @@ def test_data_inference_from_fsspec(llm):
             "gt_ans_inference": [0.0, 1.0, 0.0],
             "gt_ans_inference_min": [0.0, 1.0, 0.0],
             "gt_ans_inference_max": [0.0, 1.0, 0.0],
+            "fct_ans_inference": [0.0, 1.0, 0.0],
+            "fct_ans_inference_min": [0.0, 1.0, 0.0],
+            "fct_ans_inference_max": [0.0, 1.0, 0.0],
             "mean_inference": [0.0, 1.0, 0.0],
             "median_inference": [0.0, 1.0, 0.0],
             "answer_refusal": [0.0, 0.0, 1.0],

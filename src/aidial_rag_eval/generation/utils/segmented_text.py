@@ -3,7 +3,7 @@ from typing import Callable, List, Optional, Tuple
 import spacy
 from more_itertools import chunked, constrained_batches
 
-from aidial_rag_eval.generation.types import Text, TextSegment
+from aidial_rag_eval.generation.types import TextSegment
 
 Splitter = Callable[[TextSegment], List[TextSegment]]
 
@@ -30,7 +30,7 @@ def _sent_tokenize(text: str) -> List[str]:
 SegmentChecker = Callable[[TextSegment], bool]
 
 
-def get_delimiters(text: Text, segmented_text: List[TextSegment]) -> List[str]:
+def get_delimiters(text: str, segmented_text: List[TextSegment]) -> List[str]:
     delimiters = []
     start = 0
     for i, part in enumerate(segmented_text[:-1]):
@@ -48,7 +48,7 @@ def get_delimiters(text: Text, segmented_text: List[TextSegment]) -> List[str]:
 
 def join_with_delimiters(
     segmented_text: List[TextSegment], delimiters: List[str]
-) -> Text:
+) -> str:
     result = []
     for i in range(len(segmented_text)):
         result.append(segmented_text[i])
@@ -101,7 +101,18 @@ class SegmentedText:
         self.delimiters = delimiters.copy()
 
     @classmethod
-    def from_text(cls, text: Text) -> "SegmentedText":
+    def from_list(cls, texts: List[str], delimiter: str = "\n") -> "SegmentedText":
+        segmented = [cls.from_text(text) for text in texts]
+        segments = segmented[0].segments.copy()
+        delimiters = segmented[0].delimiters.copy()
+        for st in segmented[1:]:
+            delimiters.append(delimiter)
+            segments.extend(st.segments)
+            delimiters.extend(st.delimiters)
+        return cls(segments, delimiters)
+
+    @classmethod
+    def from_text(cls, text: str) -> "SegmentedText":
         max_len = 500
         min_len = 10
         conditional_splitters: List[Splitter] = [

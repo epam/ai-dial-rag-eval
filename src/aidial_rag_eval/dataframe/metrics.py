@@ -8,13 +8,20 @@ from aidial_rag_eval.dataframe.match_facts import (
     apply_matcher_to_merged_dataframe,
 )
 from aidial_rag_eval.dataframe.merge import merge_ground_truth_and_answers
-from aidial_rag_eval.generation.metric_binds import metric_binds_dict
-from aidial_rag_eval.generation.types import MetricBind, inference_column
+from aidial_rag_eval.generation.metric_binds import (
+    _wrapped_dataframe_inference,
+    _wrapped_dataframe_refusal,
+)
+from aidial_rag_eval.generation.types import (
+    InferenceMetricBind,
+    MetricBind,
+    RefusalMetricBind,
+    inference_column,
+)
 from aidial_rag_eval.retrieval.metrics import (
     calculate_metrics as calculate_metrics_by_row,
 )
 from aidial_rag_eval.retrieval.types import Matcher
-from aidial_rag_eval.types import MergedColumns
 
 
 def apply_metrics_to_matched_results(match_result_data: pd.DataFrame) -> pd.DataFrame:
@@ -129,7 +136,7 @@ def calculate_generation_metrics(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8
@@ -144,19 +151,32 @@ def calculate_generation_metrics(
         Returns generation metrics dataframe.
     """
     df_merged_copy = df_merged.copy()
-    df_merged_copy[MergedColumns.JOINED_CONTEXT] = df_merged_copy[
-        MergedColumns.CONTEXT
-    ].apply(lambda x: "\n".join(x))
     metric_results = dict()
     for metric_bind in metric_binds:
-        metric_results.update(
-            metric_binds_dict[metric_bind](
+        if isinstance(metric_bind, InferenceMetricBind):
+            result = _wrapped_dataframe_inference(
                 df_merged=df_merged_copy,
+                premise_column=metric_bind.premise_column,
+                hypothesis_column=metric_bind.hypothesis_column,
                 llm=llm,
+                prefix=metric_bind.prefix,
+                premise_prefix_column=metric_bind.premise_prefix_column,
+                document_column=metric_bind.document_column,
                 max_concurrency=max_concurrency,
                 show_progress_bar=show_progress_bar,
-            ).to_dict(orient="series")
-        )
+            )
+        elif isinstance(metric_bind, RefusalMetricBind):
+            result = _wrapped_dataframe_refusal(
+                df_merged=df_merged_copy,
+                answer_column=metric_bind.answer_column,
+                llm=llm,
+                prefix=metric_bind.prefix,
+                max_concurrency=max_concurrency,
+                show_progress_bar=show_progress_bar,
+            )
+        else:
+            raise ValueError(f"Unknown metric bind type: {type(metric_bind)}")
+        metric_results.update(result.to_dict(orient="series"))
     df_metrics = pd.DataFrame(data=metric_results)
     nli_columns = [
         column for column in metric_results.keys() if column.endswith(inference_column)
@@ -198,7 +218,7 @@ def create_generation_metrics_report(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8
@@ -256,7 +276,7 @@ def create_rag_eval_metrics_report(
         A Langchain chat model used for calculating generation metrics.
 
     metric_binds : List[MetricBind], optional, default=None
-        A list of string constants from `aidial_rag_eval.metric_binds`
+        A list of metric bind instances from `aidial_rag_eval.metric_binds`
         specifying the generation metrics.
 
     max_concurrency : int, default=8

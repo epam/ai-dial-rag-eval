@@ -5,14 +5,13 @@ from typing import List, TypeVar
 FactType = TypeVar("FactType")
 ContextChunk = str
 Document = str
-Text = str
 
 Context = List[ContextChunk]
 Facts = List[FactType]
 Documents = List[Document]
-Question = Text
-Answer = Text
-GroundTruthAnswer = Text
+Question = str
+Answer = str
+GroundTruthAnswer = str
 
 
 @dataclass
@@ -52,7 +51,6 @@ class MergedColumns(str, Enum):
     GROUND_TRUTH_ANSWER = "ground_truth_answer"
     DOCUMENTS = GroundTruthColumns.DOCUMENTS.value
     FACTS = GroundTruthColumns.FACTS.value
-    JOINED_CONTEXT = "joined_context"
 
 
 MERGED_KEY_COLUMNS = [MergedColumns.DOCUMENTS, MergedColumns.QUESTION]
