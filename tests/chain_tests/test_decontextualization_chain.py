@@ -1,3 +1,5 @@
+import json
+
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.converters.llm_decontextualization_converter import (
@@ -40,7 +42,9 @@ List of input segments (JSON array of strings, one segment per element):
 
 def test_valid_json_response():
     fake_llm = FakeListChatModel(
-        responses=['{"segments": ["John went to the store.", "John bought milk."]}']
+        responses=[
+            json.dumps({"segments": ["John went to the store.", "John bought milk."]})
+        ]
     )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
@@ -70,7 +74,9 @@ def test_invalid_json_response():
 
 def test_json_missing_segments_key():
     fake_llm = FakeListChatModel(
-        responses=['{"wrong_key": ["John went to the store.", "John bought milk."]}']
+        responses=[
+            json.dumps({"wrong_key": ["John went to the store.", "John bought milk."]})
+        ]
     )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
@@ -83,7 +89,9 @@ def test_json_missing_segments_key():
 
 
 def test_segment_count_mismatch():
-    fake_llm = FakeListChatModel(responses=['{"segments": ["only one segment"]}'])
+    fake_llm = FakeListChatModel(
+        responses=[json.dumps({"segments": ["only one segment"]})]
+    )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
     segmented_text = SegmentedText(
@@ -137,7 +145,9 @@ def test_single_segment_skips_llm():
 def test_prompt_contains_segments():
     segments = ["John went to the store.", "He bought milk."]
     fake_llm = FakeRecordingChatModel(
-        responses=['{"segments": ["John went to the store.", "John bought milk."]}']
+        responses=[
+            json.dumps({"segments": ["John went to the store.", "John bought milk."]})
+        ]
     )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 

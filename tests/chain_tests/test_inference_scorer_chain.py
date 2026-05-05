@@ -1,3 +1,4 @@
+import json
 import math
 
 import pytest
@@ -81,7 +82,7 @@ def _create_inference_input(
 
 def test_valid_json_response():
     fake_llm = FakeListChatModel(
-        responses=['{"results": [{"tag": "ENT", "explanation": "test"}]}']
+        responses=[json.dumps({"results": [{"tag": "ENT", "explanation": "test"}]})]
     )
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 
@@ -112,7 +113,9 @@ def test_invalid_json_response():
 
 
 def test_json_missing_tag_key():
-    fake_llm = FakeListChatModel(responses=['{"results": [{"explanation": "value"}]}'])
+    fake_llm = FakeListChatModel(
+        responses=[json.dumps({"results": [{"explanation": "value"}]})]
+    )
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 
     inputs = [_create_inference_input(["Statement1"])]
@@ -126,7 +129,7 @@ def test_json_missing_tag_key():
 
 @pytest.mark.skip(reason="explanation key check is not implemented")
 def test_json_missing_explanation_key():
-    fake_llm = FakeListChatModel(responses=['{"results": [{"tag": "ENT"}]}'])
+    fake_llm = FakeListChatModel(responses=[json.dumps({"results": [{"tag": "ENT"}]})])
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 
     inputs = [_create_inference_input(["Statement1"])]
@@ -140,7 +143,7 @@ def test_json_missing_explanation_key():
 
 def test_output_count_mismatch():
     fake_llm = FakeListChatModel(
-        responses=['{"results": [{"tag": "ENT", "explanation": "test"}]}']
+        responses=[json.dumps({"results": [{"tag": "ENT", "explanation": "test"}]})]
     )
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 
@@ -196,7 +199,9 @@ def test_invoke_raises_exception():
 def test_prompt_contains_statements():
     statements = ["Water is wet."]
     fake_llm = FakeRecordingChatModel(
-        responses=['{"statement_inference": [{"tag": "ENT", "explanation": "test"}]}']
+        responses=[
+            json.dumps({"statement_inference": [{"tag": "ENT", "explanation": "test"}]})
+        ]
     )
     scorer = LLMInferenceScorer(model=fake_llm, max_concurrency=1)
 

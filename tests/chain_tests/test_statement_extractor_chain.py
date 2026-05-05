@@ -1,3 +1,5 @@
+import json
+
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from aidial_rag_eval.generation.models.statement_extractor.llm_statement_extractor import (
@@ -62,18 +64,14 @@ Input hypotheses (JSON array of strings, one hypothesis per element):
 def test_valid_json_response():
     fake_llm = FakeListChatModel(
         responses=[
-            """
-            {
-                "hypothesis_statements":
-                    [
-                        {
-                            "statements": ["statement11"]
-                        },
-                        {
-                            "statements": ["statement21"]
-                        }
+            json.dumps(
+                {
+                    "hypothesis_statements": [
+                        {"statements": ["statement11"]},
+                        {"statements": ["statement21"]},
                     ]
-            }"""
+                }
+            )
         ]
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
@@ -103,7 +101,7 @@ def test_invalid_json_response():
 
 
 def test_json_wrong_structure():
-    fake_llm = FakeListChatModel(responses=['{"wrong_key": "not a list"}'])
+    fake_llm = FakeListChatModel(responses=[json.dumps({"wrong_key": "not a list"})])
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]
@@ -117,7 +115,9 @@ def test_json_wrong_structure():
 
 def test_statement_count_mismatch():
     fake_llm = FakeListChatModel(
-        responses=['{"hypothesis_statements": [{"statements": ["statement1"]}]}']
+        responses=[
+            json.dumps({"hypothesis_statements": [{"statements": ["statement1"]}]})
+        ]
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
@@ -162,7 +162,14 @@ def test_prompt_contains_hypotheses():
     segments = ["hypothesis_segment1", "hypothesis_segment2"]
     fake_llm = FakeRecordingChatModel(
         responses=[
-            '{"hypothesis_statements": [{"statements": ["s1"]}, {"statements": ["s2"]}]}'
+            json.dumps(
+                {
+                    "hypothesis_statements": [
+                        {"statements": ["s1"]},
+                        {"statements": ["s2"]},
+                    ]
+                }
+            )
         ]
     )
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
