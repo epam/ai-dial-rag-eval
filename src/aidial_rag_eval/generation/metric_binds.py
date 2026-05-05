@@ -30,7 +30,7 @@ def _wrapped_dataframe_inference(
     hypothesis_column: str,
     llm: BaseChatModel,
     prefix: str,
-    question_column: Optional[str] = None,
+    premise_prefix_column: Optional[str] = None,
     document_column: Optional[str] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -39,9 +39,9 @@ def _wrapped_dataframe_inference(
         premises=_get_column_as_list(df_merged, premise_column),
         hypotheses=_get_column_as_list(df_merged, hypothesis_column),
         llm=llm,
-        questions=(
-            _get_column_as_list(df_merged, question_column)
-            if question_column is not None
+        premise_prefixes=(
+            _get_column_as_list(df_merged, premise_prefix_column)
+            if premise_prefix_column is not None
             else None
         ),
         list_documents=(
@@ -87,7 +87,7 @@ ANSWER_TO_GROUND_TRUTH_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.ANSWER,
     hypothesis_column=MergedColumns.GROUND_TRUTH_ANSWER,
     prefix=A2GT_INFERENCE_PREFIX,
-    question_column=MergedColumns.QUESTION,
+    premise_prefix_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -95,7 +95,7 @@ GROUND_TRUTH_TO_ANSWER_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.GROUND_TRUTH_ANSWER,
     hypothesis_column=MergedColumns.ANSWER,
     prefix=GT2A_INFERENCE_PREFIX,
-    question_column=MergedColumns.QUESTION,
+    premise_prefix_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -103,7 +103,7 @@ ANSWER_TO_FACTS_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.ANSWER,
     hypothesis_column=MergedColumns.FACTS,
     prefix=A2F_INFERENCE_PREFIX,
-    question_column=MergedColumns.QUESTION,
+    premise_prefix_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 

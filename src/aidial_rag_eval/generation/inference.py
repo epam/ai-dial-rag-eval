@@ -297,16 +297,16 @@ def _extract_statements(
     return extractor.extract(segmented_hypotheses, show_progress_bar)
 
 
-def _add_questions_to_premises(
+def _prepend_premise_prefixes(
     normalized_premises: List[str],
-    questions: Optional[List[Question]],
+    premise_prefixes: Optional[List[Question]],
 ) -> List[str]:
     adjusted_premises: List[str] = list(normalized_premises)
-    if questions is not None:
-        for i, question in enumerate(questions):
-            question_split = SegmentedText.from_text(text=question)
+    if premise_prefixes is not None:
+        for i, prefix in enumerate(premise_prefixes):
+            prefix_split = SegmentedText.from_text(text=prefix)
             adjusted_premises[i] = _LIST_DELIMITER.join(
-                [question_split.segments[-1], normalized_premises[i]]
+                [prefix_split.segments[-1], normalized_premises[i]]
             )
     return adjusted_premises
 
@@ -315,7 +315,7 @@ def _infer_statements(
     premises: List[Premise],
     statements: List[Union[HypothesisStatements, ErrorInfo]],
     llm: BaseChatModel,
-    questions: Optional[List[Question]] = None,
+    premise_prefixes: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -366,7 +366,7 @@ def _infer_statements(
     normalized_premises: List[str] = [
         _LIST_DELIMITER.join(p) if not isinstance(p, str) else p for p in premises
     ]
-    adjusted_premises = _add_questions_to_premises(normalized_premises, questions)
+    adjusted_premises = _prepend_premise_prefixes(normalized_premises, premise_prefixes)
 
     document_names: List[JoinedDocumentsName] = (
         [""] * len(statements)
@@ -426,7 +426,7 @@ def infer_statements(
     premises: List[Premise],
     statements: List[HypothesisStatements],
     llm: BaseChatModel,
-    questions: Optional[List[Question]] = None,
+    premise_prefixes: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -435,7 +435,7 @@ def infer_statements(
         premises=premises,
         statements=cast(List[Union[HypothesisStatements, ErrorInfo]], statements),
         llm=llm,
-        questions=questions,
+        premise_prefixes=premise_prefixes,
         list_documents=list_documents,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,
@@ -482,7 +482,7 @@ def calculate_batch_inference(
     premises: List[Premise],
     hypotheses: List[Hypothesis],
     llm: BaseChatModel,
-    questions: Optional[List[Question]] = None,
+    premise_prefixes: Optional[List[Question]] = None,
     list_documents: Optional[List[Documents]] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -545,7 +545,7 @@ def calculate_batch_inference(
             premises=premises,
             statements=statements,
             llm=llm,
-            questions=questions,
+            premise_prefixes=premise_prefixes,
             list_documents=list_documents,
             max_concurrency=max_concurrency,
             show_progress_bar=show_progress_bar,
@@ -582,7 +582,7 @@ def calculate_inference(
     premise: Premise,
     hypothesis: Hypothesis,
     llm: BaseChatModel,
-    question: Optional[Question] = None,
+    premise_prefix: Optional[Question] = None,
     documents: Optional[Documents] = None,
     max_concurrency: int = 8,
     show_progress_bar: bool = True,
@@ -623,13 +623,13 @@ def calculate_inference(
         along with a JSON string that explains how the inference was derived and
         highlights string used for highlighting each segment of the hypothesis.
     """
-    questions = None if question is None else [question]
+    premise_prefixes = None if premise_prefix is None else [premise_prefix]
     list_documents = None if documents is None else [documents]
     inference_returns = calculate_batch_inference(
         premises=[premise],
         hypotheses=[hypothesis],
         llm=llm,
-        questions=questions,
+        premise_prefixes=premise_prefixes,
         list_documents=list_documents,
         max_concurrency=max_concurrency,
         show_progress_bar=show_progress_bar,

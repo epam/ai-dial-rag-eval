@@ -18,7 +18,7 @@ class InferenceMetricBind:
     premise_column: str
     hypothesis_column: str
     prefix: str
-    question_column: Optional[str] = None
+    premise_prefix_column: Optional[str] = None
     document_column: Optional[str] = None
 
 

@@ -160,7 +160,7 @@ def calculate_generation_metrics(
                 hypothesis_column=metric_bind.hypothesis_column,
                 llm=llm,
                 prefix=metric_bind.prefix,
-                question_column=metric_bind.question_column,
+                premise_prefix_column=metric_bind.premise_prefix_column,
                 document_column=metric_bind.document_column,
                 max_concurrency=max_concurrency,
                 show_progress_bar=show_progress_bar,
