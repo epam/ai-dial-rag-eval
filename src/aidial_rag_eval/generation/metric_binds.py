@@ -80,7 +80,6 @@ CONTEXT_TO_ANSWER_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.CONTEXT,
     hypothesis_column=MergedColumns.ANSWER,
     prefix=C2A_INFERENCE_PREFIX,
-    use_question=False,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -88,7 +87,7 @@ ANSWER_TO_GROUND_TRUTH_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.ANSWER,
     hypothesis_column=MergedColumns.GROUND_TRUTH_ANSWER,
     prefix=A2GT_INFERENCE_PREFIX,
-    use_question=True,
+    question_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -96,7 +95,7 @@ GROUND_TRUTH_TO_ANSWER_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.GROUND_TRUTH_ANSWER,
     hypothesis_column=MergedColumns.ANSWER,
     prefix=GT2A_INFERENCE_PREFIX,
-    use_question=True,
+    question_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -104,7 +103,7 @@ ANSWER_TO_FACTS_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.ANSWER,
     hypothesis_column=MergedColumns.FACTS,
     prefix=A2F_INFERENCE_PREFIX,
-    use_question=True,
+    question_column=MergedColumns.QUESTION,
     document_column=MergedColumns.DOCUMENTS,
 )
 
@@ -112,7 +111,6 @@ FACTS_TO_ANSWER_INFERENCE = InferenceMetricBind(
     premise_column=MergedColumns.FACTS,
     hypothesis_column=MergedColumns.ANSWER,
     prefix=F2A_INFERENCE_PREFIX,
-    use_question=False,
     document_column=MergedColumns.DOCUMENTS,
 )
 

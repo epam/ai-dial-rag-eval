@@ -22,7 +22,6 @@ from aidial_rag_eval.retrieval.metrics import (
     calculate_metrics as calculate_metrics_by_row,
 )
 from aidial_rag_eval.retrieval.types import Matcher
-from aidial_rag_eval.types import MergedColumns
 
 
 def apply_metrics_to_matched_results(match_result_data: pd.DataFrame) -> pd.DataFrame:
@@ -161,9 +160,7 @@ def calculate_generation_metrics(
                 hypothesis_column=metric_bind.hypothesis_column,
                 llm=llm,
                 prefix=metric_bind.prefix,
-                question_column=(
-                    MergedColumns.QUESTION if metric_bind.use_question else None
-                ),
+                question_column=metric_bind.question_column,
                 document_column=metric_bind.document_column,
                 max_concurrency=max_concurrency,
                 show_progress_bar=show_progress_bar,
