@@ -101,7 +101,7 @@ def test_invalid_json_response():
 
 
 def test_json_wrong_structure():
-    fake_llm = FakeListChatModel(responses=[json.dumps({"wrong_key": "not a list"})])
+    fake_llm = FakeListChatModel(responses=['{"wrong_key": "not a list"}'])
     extractor = LLMStatementExtractor(model=fake_llm, max_concurrency=1)
 
     hypothesis_segments = ["hypothesis_segment1", "hypothesis_segment2"]

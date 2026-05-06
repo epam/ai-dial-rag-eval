@@ -47,6 +47,10 @@ isort = "^5.13.2"
 flake8-isort = "^6.1.1"
 pyright = "^1.1.360"
 
+[tool.poetry.group.format.dependencies]
+black = "^24.3.0"
+isort = "^5.13.2"
+
 [tool.poetry.group.dev.dependencies]
 nox = "^2024.3.2"
 notebook = "^7.2.1"

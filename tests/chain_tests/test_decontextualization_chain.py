@@ -74,9 +74,7 @@ def test_invalid_json_response():
 
 def test_json_missing_segments_key():
     fake_llm = FakeListChatModel(
-        responses=[
-            json.dumps({"wrong_key": ["John went to the store.", "John bought milk."]})
-        ]
+        responses=['{"wrong_key": ["John went to the store.", "John bought milk."]}']
     )
     converter = LLMNoPronounsConverter(model=fake_llm, max_concurrency=1)
 
