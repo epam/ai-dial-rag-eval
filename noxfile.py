@@ -62,6 +62,5 @@ def isort(session):
 
 @nox.session(python=["3.11"])
 def format(session):
-    session.run("poetry", "sync", "--with", "lint", external=True)
     session.notify("black")
     session.notify("isort")
