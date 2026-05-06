@@ -6,7 +6,7 @@ excludes:
       comment: "Packages for development only."
     - pattern: "lint"
       reason: "DEV_DEPENDENCY_OF"
-      comment: "Packages for static code analysis only."
+      comment: "Packages for static code analysis and code formatting only."
     - pattern: "test"
       reason: "TEST_DEPENDENCY_OF"
       comment: "Packages for testing only."

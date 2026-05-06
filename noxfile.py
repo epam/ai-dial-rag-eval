@@ -49,14 +49,14 @@ def lint(session):
 @nox.session(python=["3.11"])
 def black(session):
     args = session.posargs or LOCATIONS
-    session.install("black")
+    session.run("poetry", "sync", "--with", "lint", external=True)
     session.run("black", *args)
 
 
 @nox.session(python=["3.11"])
 def isort(session):
     args = session.posargs or LOCATIONS
-    session.install("isort")
+    session.run("poetry", "sync", "--with", "lint", external=True)
     session.run("isort", *args)
 
 
