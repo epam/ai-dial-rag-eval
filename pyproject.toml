@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aidial-rag-eval"
-version = "0.0.0"
+version = "0.6.0"
 description = "Library for RAG evaluation"
 authors = ["EPAM RAIL <SpecialEPM-DIALDevTeam@epam.com>"]
 homepage = "https://github.com/epam/ai-dial-rag-eval"
