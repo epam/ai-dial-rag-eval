@@ -1,11 +1,7 @@
-import os
-
 import nox
 
 nox.options.sessions = ("lint", "test")
 nox.options.reuse_existing_virtualenvs = True
-if os.environ.get("CI"):
-    nox.options.default_venv_backend = "none"
 
 LOCATIONS = ("src", "tests", "noxfile.py")
 PYTHON_VERSIONS = ["3.11", "3.12"]
@@ -38,13 +34,7 @@ def test(session: nox.Session, numpy: str, langchain_core: str):
     else:
         args = session.posargs
     session.run("poetry", "sync", external=True)
-    session.run(
-        "pip",
-        "install",
-        f"langchain-core=={langchain_core}",
-        f"numpy=={numpy}",
-        external=True,
-    )
+    session.install(f"langchain-core=={langchain_core}", f"numpy=={numpy}")
     session.run("pytest", *args)
 
 
