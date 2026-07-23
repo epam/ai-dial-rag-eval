@@ -1,12 +1,18 @@
 ARGS ?=
 POETRY ?= poetry
+POETRY_PYTHON ?= python
 
-.PHONY: all install build clean lint format test help
+# Any non-empty CI value (even 'false' or '0') means that CI is enabled
+CI ?=
+
+.PHONY: all init_env install build clean lint format test help
 
 all: build
 
+init_env:
+	$(if $(CI),,$(POETRY) env use $(POETRY_PYTHON))
 
-install:
+install: init_env
 	$(POETRY) install --all-extras
 
 build: install

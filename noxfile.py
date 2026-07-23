@@ -38,7 +38,13 @@ def test(session: nox.Session, numpy: str, langchain_core: str):
     else:
         args = session.posargs
     session.run("poetry", "sync", external=True)
-    session.install(f"langchain-core=={langchain_core}", f"numpy=={numpy}")
+    session.run(
+        "pip",
+        "install",
+        f"langchain-core=={langchain_core}",
+        f"numpy=={numpy}",
+        external=True,
+    )
     session.run("pytest", *args)
 
 
