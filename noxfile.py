@@ -1,7 +1,11 @@
+import os
+
 import nox
 
 nox.options.sessions = ("lint", "test")
 nox.options.reuse_existing_virtualenvs = True
+if os.environ.get("CI"):
+    nox.options.default_venv_backend = "none"
 
 LOCATIONS = ("src", "tests", "noxfile.py")
 PYTHON_VERSIONS = ["3.11", "3.12"]
