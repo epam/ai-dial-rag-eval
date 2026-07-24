@@ -88,3 +88,6 @@ resolutions:
     - message: ".*PyPI::annotated-doc:0\\.0\\.4.*"
       reason: "CANT_FIX_EXCEPTION"
       comment: "MIT License: https://github.com/fastapi/annotated-doc/blob/0.0.4/LICENSE"
+    - message: ".*PyPI::websockets:16.*"
+      reason: "CANT_FIX_EXCEPTION"
+      comment: "BSD 3-Clause License: https://github.com/python-websockets/websockets/blob/16.x/LICENSE"
