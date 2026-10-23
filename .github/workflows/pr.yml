@@ -16,3 +16,5 @@ jobs:
       python-version: 3.11
       poetry-version: 2.2.1
       code-checks-python-versions: '["3.11", "3.12", "3.13", "3.14"]'
+      trivy-severity: "CRITICAL,HIGH,MEDIUM,LOW"
+      trivy-severity-for-sarif: "CRITICAL,HIGH,MEDIUM,LOW"
